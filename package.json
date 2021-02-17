@@ -7,10 +7,11 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rollup -c rollup.config-base.js",
-    "dev": "rollup -c rollup.config-dev.js -w",
+    "build:dev": "rollup -c rollup.config-dev.js -w",
     "lint:dev": "nodemon --ignore dist/ -e ts --exec \"npm run lint\"",
     "lint": "eslint src/*",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:dev": "jest --runInBand --watch"
   },
   "repository": {
     "type": "git",

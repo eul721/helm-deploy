@@ -1,0 +1,28 @@
+name: develop
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux]
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: "https://npm.pkg.github.com/"
+          scope: take-two-t2gp
+      - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.T2GP_BUILD_TOKEN }}
+      - run: npm run test
+      - run: npm run lint
