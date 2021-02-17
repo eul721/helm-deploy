@@ -1,0 +1,16 @@
+{
+  "extends": "@take-two-t2gp/eslint-config-t2gp/lib/tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "module": "ES6",
+    "moduleResolution": "Node",
+    "noImplicitReturns": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "rootDir": "src",
+    "sourceMap": true,
+    "target": "ES6"
+  },
+  "exclude": ["scripts/*", "dist"],
+  "include": ["**/*"]
+}
