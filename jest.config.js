@@ -8,5 +8,6 @@ Object.keys(TestEnv).forEach(key => {
 });
 
 module.exports = {
-  modulePathIgnorePatterns: ['dist'],
+  modulePathIgnorePatterns: ['dist', 'docs'],
+  preset: 'ts-jest',
 };

@@ -14,6 +14,7 @@ export default {
   external: [
     'cors',
     'express',
+    'sequelize',
   ],
   plugins: [commonjs(), typescript()],
 }

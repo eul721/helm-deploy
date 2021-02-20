@@ -12,5 +12,5 @@
     "target": "ES6"
   },
   "exclude": ["scripts/*", "dist"],
-  "include": ["**/*"]
+  "include": ["**/*.ts"]
 }
