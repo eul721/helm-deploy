@@ -8,11 +8,12 @@
   "scripts": {
     "build:dev": "rollup -c -w",
     "build": "rollup -c",
-    "dev": "nodemon --inspect dist/index.cjs.js --delay 1",
+    "dev": "concurrently \"npm:build:dev\" \"npm:lint:dev\" \"npm:doc:dev\" \"python -m SimpleHTTPServer\"",
     "doc:dev": "nodemon --ignore docs/ -e ts --exec \"npm run doc\" --delay 1",
     "doc": "apidoc -i src/ -o docs/",
     "lint:dev": "nodemon --ignore dist/ -e ts --exec \"npm run lint\"",
     "lint": "eslint .",
+    "run:dev": "nodemon --inspect dist/index.cjs.js --delay 1",
     "test:dev": "jest --runInBand --watch",
     "test": "jest --runInBand"
   },
@@ -36,6 +37,7 @@
     "@types/node": "^14.14.28",
     "@types/supertest": "^2.0.10",
     "apidoc": "^0.25.0",
+    "concurrently": "^6.0.0",
     "eslint": "^7.20.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jest": "^24.1.4",

@@ -62,7 +62,7 @@ export const Branch: ModelAttributes = {
     unique: true,
   },
   gameId: {
-    allowNull: true,
+    allowNull: false,
     type: INTERNAL_ID_TYPE(),
     unique: false,
     references: {
@@ -76,7 +76,7 @@ export const Branch: ModelAttributes = {
     unique: true,
   },
   buildId: {
-    allowNull: true,
+    allowNull: false,
     type: INTERNAL_ID_TYPE(),
     unique: false,
     references: {
