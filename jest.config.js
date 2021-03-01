@@ -1,6 +1,8 @@
 // Place test-specific environment properies and values here
 const TestEnv = {
   NODE_ENVIRONMENT: 'test',
+  DATABASE_DBG: 'false',
+  DATABASE_NAME: 'publisher_test',
 };
 
 Object.keys(TestEnv).forEach(key => {
@@ -8,5 +10,6 @@ Object.keys(TestEnv).forEach(key => {
 });
 
 module.exports = {
-  modulePathIgnorePatterns: ['dist'],
+  modulePathIgnorePatterns: ['dist', 'docs'],
+  preset: 'ts-jest',
 };

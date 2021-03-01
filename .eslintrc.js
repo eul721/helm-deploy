@@ -3,6 +3,6 @@ module.exports = {
   "rules": {
     "no-plusplus": "off",
     "no-underscore-dangle": "off",
-    "no-use-before-define": ["error", { "functions": false }]
+    "@typescript-eslint/no-use-before-define": ["error", { "functions": false }],
   }
 };

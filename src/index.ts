@@ -1,13 +1,15 @@
-import Express from 'express';
-import cors from 'cors';
+import { app } from './app';
+import { initializeDB } from './models/database';
+import { info, warn } from './logger';
 
 const { PORT = 5000 } = process.env;
 
-const app = Express();
-
-app.use(cors());
-app.use(Express.json());
-
-app.listen(PORT, () => {
-  console.info(`Server listening on port ${PORT}`);
-});
+initializeDB()
+  .then(() => {
+    app.listen(PORT, () => {
+      info(`Server listening on port ${PORT}`);
+    });
+  })
+  .catch(initErr => {
+    warn('Failed initializing database:', initErr);
+  });
