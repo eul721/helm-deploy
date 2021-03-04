@@ -86,32 +86,29 @@ export const Branch: ModelAttributes = {
   },
 };
 
+export enum PermissionType {
+  CREATE = 'create',
+  READ = 'read',
+  UPDATE = 'update',
+  DELETE = 'delete',
+}
+
 /**
  * To avoid RBAC table names conflicting with potential real application table names,
  * manually specify each tablename
  */
 export enum RBACTableNames {
-  Namespace = 'rbac_namespaces',
+  Group = 'rbac_groups',
+  GroupRole = 'rbac_grouproles',
+  Permission = 'rbac_permissions',
   Resource = 'rbac_resources',
   Role = 'rbac_roles',
-  Permission = 'rbac_permissions',
   RolePermission = 'rbac_rolepermissions',
   User = 'rbac_users',
-  Group = 'rbac_groups',
   UserGroup = 'rbac_usergroups',
   UserRole = 'rbac_userroles',
-  GroupRole = 'rbac_grouproles',
+  UserRoleResource = 'rbac_userroleresources',
 }
-
-export const Namespace: ModelAttributes = {
-  id: {
-    allowNull: false,
-    autoIncrement: true,
-    primaryKey: true,
-    type: INTERNAL_ID_TYPE(),
-    unique: true,
-  },
-};
 
 export const Role: ModelAttributes = {
   id: {
@@ -233,11 +230,12 @@ export const UserRoleResource: ModelAttributes = {
       key: 'id',
       model: RBACTableNames.UserRole,
     },
+    unique: 'uc_idtonamespace',
   },
   namespace: {
-    primaryKey: true,
-    unique: true,
+    allowNull: false,
     type: DataTypes.STRING(128),
+    unique: 'uc_idtonamespace',
   },
 };
 

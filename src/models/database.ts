@@ -1,5 +1,5 @@
 import { Options, Sequelize } from 'sequelize';
-import { info, warn } from '../logger';
+import { debug, info, warn } from '../logger';
 
 const { NODE_ENVIRONMENT = 'development' } = process.env;
 
@@ -16,7 +16,7 @@ function getDBConf(): Options {
   const opts: Options = {
     database: DATABASE_NAME,
     host: DATABASE_HOST,
-    logging: DATABASE_DBG === 'true',
+    logging: DATABASE_DBG === 'true' ? debug : false,
     password: DATABASE_PASS,
     username: DATABASE_USER,
   };
@@ -60,7 +60,11 @@ export function getDBInstance() {
 }
 
 export async function initializeDB() {
-  const sq = await getDBInstance().sync({ match: /_dev$/ });
-  await sq.authenticate();
-  info('Successfully authenticated SQL connection');
+  try {
+    const sq = await getDBInstance().sync({ force: NODE_ENVIRONMENT === 'development', match: /_dev$/ });
+    await sq.authenticate();
+    info('Successfully authenticated SQL connection');
+  } catch (dbError) {
+    console.log('DBError:', dbError);
+  }
 }

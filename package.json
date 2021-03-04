@@ -14,7 +14,7 @@
     "lint:dev": "nodemon --ignore dist/ -e ts --exec \"npm run lint\"",
     "lint": "eslint .",
     "serve": "node dist/index.cjs.js",
-    "serve:dev": "nodemon -r dotenv/config --inspect dist/index.cjs.js --delay 1",
+    "serve:dev": "nodemon -r dotenv/config --inspect dist/index.cjs.js --delay 2",
     "test:dev": "jest --watch --verbose",
     "test": "jest --runInBand"
   },
