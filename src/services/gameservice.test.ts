@@ -1,9 +1,11 @@
-import { getDBInstance } from '../models/database';
-import * as GameService from './gameservice';
+import { getDBInstance } from '../models/db/database';
+import { GameModel } from '../models/db/game';
+import { HttpCode } from '../models/http/httpcode';
+import { GameService } from './gameservice';
 
 describe('src/service/gameservice', () => {
-  let titleId: number;
   let contentfulId: string;
+  let bdsTitleId: number;
 
   beforeEach(async () => {
     await getDBInstance().sync({ force: true });
@@ -11,13 +13,15 @@ describe('src/service/gameservice', () => {
 
   describe('with valid input', () => {
     beforeEach(() => {
-      titleId = 12345;
       contentfulId = 'abcd12345';
+      bdsTitleId = 123456;
+      GameModel.createEntry({ bdsTitleId, contentfulId });
     });
 
     it('should return a newly created Game', async () => {
-      const result = await GameService.createGame(titleId, contentfulId);
-      expect(result).toHaveProperty('id');
+      const result = await GameService.getAllGames();
+      expect(result.code).toBe(HttpCode.OK);
+      expect(result.payload?.items).toHaveLength(1);
     });
   });
 });

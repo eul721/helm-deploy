@@ -1,4 +1,5 @@
 import { NextFunction } from 'express';
+import { debug } from '../logger';
 
 /**
  * @apiDefine T2Auth
@@ -8,6 +9,7 @@ import { NextFunction } from 'express';
  */
 export function basicAuth() {
   return (_req: Express.Request, _res: Express.Response, next: NextFunction) => {
+    debug('Sending token to auth service to check validity goes here');
     next();
   };
 }

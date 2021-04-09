@@ -1,5 +1,5 @@
-import { getDBInstance } from './database';
-import { PermissionType } from './definitions';
+import { getDBInstance } from '../db/database';
+import { PermissionType } from '../db/definitions';
 import {
   Group,
   GroupRole,
@@ -13,7 +13,7 @@ import {
   UserGroup,
   UserRole,
   UserRoleResource,
-} from './rbac';
+} from '../db/rbac';
 
 const Mocks = {
   GROUP1: {

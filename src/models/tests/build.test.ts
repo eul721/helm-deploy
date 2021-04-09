@@ -1,5 +1,5 @@
-import { getDBInstance } from './database';
-import { Build } from './build';
+import { BuildModel } from '../db/build';
+import { getDBInstance } from '../db/database';
 
 describe('src/models/branch', () => {
   beforeEach(async () => {
@@ -7,13 +7,13 @@ describe('src/models/branch', () => {
   });
 
   it('should initialize correctly', async () => {
-    const firstResult = await Build.findAll();
+    const firstResult = await BuildModel.findAll();
     expect(firstResult).toHaveLength(0);
-    await Build.create({
+    await BuildModel.create({
       contentfulId: 'test12345',
-      titleId: 'testtitle',
+      bdsBuildId: 1234,
     });
-    const secondResult = await Build.findAll();
+    const secondResult = await BuildModel.findAll();
     expect(secondResult).toHaveLength(1);
   });
 });

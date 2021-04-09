@@ -1,4 +1,5 @@
 # `t2gp-publisher-service`
+
 > Publisher Service Backend for T2GP publishing platform
 
 ## Overview
@@ -11,23 +12,25 @@ T2GP Publisher Service is the backend wrapper to glue together BDS, Contentful, 
 
 ### Requirements
 
-* NodeJS (v12+)
-    + [nvm](https://github.com/nvm-sh/nvm) simplifies local development and a similar project is available on [Windows](https://github.com/coreybutler/nvm-windows)
-    + After istall, you will need to configure access to the `@take-two-t2gp` private registry. Steps are located [here](https://hub.gametools.dev/display/TGP/T2GP+Engineering+Getting+Started)
-* [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
-    + to run local MariaDB instance
+- NodeJS (v12+)
+  - [nvm](https://github.com/nvm-sh/nvm) simplifies local development and a similar project is available on [Windows](https://github.com/coreybutler/nvm-windows)
+  - After istall, you will need to configure access to the `@take-two-t2gp` private registry. Steps are located [here](https://hub.gametools.dev/display/TGP/T2GP+Engineering+Getting+Started)
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
+  - to run local MariaDB instance
 
 ### Environment Configuration
+
 Before starting, populate a `.env` file in the root of the project (this project uses [dotenv](https://www.npmjs.com/package/dotenv) in development, which populates `process.env` with the contents of a `.env` file).
 
-| Name                    | Description                           | Example   |
-|-------------------------|---------------------------------------|-----------|
-| DATABASE_HOST           | Database server host | http://localhost |
-| DATABASE_PORT           | Database server port | 3306 |
-| DATABASE_NAME           | Database name        | `publisher_services_dev` |
-| DATABASE_USER           | Database login name  | `dbuser_1` |
-| DATABASE_PASS           | Database password    | `hunter2` |
-| DATABASE_DBG (optional) | Debug SQL queries (verbose) | `true`, `false` |
+| Name                     | Description                 | Example                  |
+| ------------------------ | --------------------------- | ------------------------ |
+| DATABASE_HOST            | Database server host        | http://localhost         |
+| DATABASE_PORT            | Database server port        | 3306                     |
+| DATABASE_NAME            | Database name               | `publisher_services_dev` |
+| DATABASE_USER            | Database login name         | `dbuser_1`               |
+| DATABASE_PASS            | Database password           | `hunter2`                |
+| DATABASE_DBG (optional)  | Debug SQL queries (verbose) | `true`, `false`          |
+| DATABASE_DROP (optional) | Dev only, allow db drop     | `true`, `false`          |
 
 ### Getting Started
 
@@ -47,7 +50,6 @@ Run the server with the `dev` command
 
     $ npm run serve:dev
 
-
 ### Development shortcuts
 
 If your IDE doesn't support the automated tools, or you prefer the command line, most of the automated tasks (building, linting, and docgen) can be combined via the `concurrently` package.
@@ -57,10 +59,13 @@ If your IDE doesn't support the automated tools, or you prefer the command line,
 This will run each script defined in parallel in the same terminal window. Note that for performance reasons, `serve` and `test` are excluded from this parallel task.
 
 ## Deployment
+
 > TODO
 
 ## Lint
+
 > TODO
 
 ## Versioning
+
 > TODO

@@ -1,5 +1,5 @@
-import { getDBInstance } from './database';
-import { Game } from './game';
+import { getDBInstance } from '../db/database';
+import { GameModel } from '../db/game';
 
 describe('src/models/game', () => {
   beforeEach(async () => {
@@ -7,13 +7,13 @@ describe('src/models/game', () => {
   });
 
   it('should initialize correctly', async () => {
-    const firstResult = await Game.findAll();
+    const firstResult = await GameModel.findAll();
     expect(firstResult).toHaveLength(0);
-    await Game.create({
+    await GameModel.create({
       contentfulId: 'test12345',
-      titleId: 'testtitle',
+      bdsTitleId: 1234,
     });
-    const secondResult = await Game.findAll();
+    const secondResult = await GameModel.findAll();
     expect(secondResult).toHaveLength(1);
   });
 });

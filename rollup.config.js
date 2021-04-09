@@ -11,10 +11,6 @@ export default {
     format: 'cjs',
     sourcemap: true,
   },
-  external: [
-    'cors',
-    'express',
-    'sequelize',
-  ],
+  external: ['cors', 'express', 'sequelize'],
   plugins: [commonjs(), typescript()],
-}
+};

@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { Model, QueryTypes } from 'sequelize';
-import { debug } from '../logger';
+import { debug, info } from '../../logger';
 
 import { getDBInstance } from './database';
 import {
@@ -89,7 +89,7 @@ export class UserRoleResource extends Model {
  * @param resource Fully qualified namespace path of the resource to test against
  */
 export async function userCanRead(userId: number, resource: string): Promise<boolean> {
-  console.log('Testing userId=%s resource=%s', userId, resource);
+  info('Testing userId=%s resource=%s', userId, resource);
   const userResourseDefs = await User.getUserResourceDefinitions(userId, PermissionType.READ);
   return (
     userResourseDefs.filter(userResourceDef => isResourceContainedByNamespace(resource, userResourceDef)).length > 0

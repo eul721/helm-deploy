@@ -1,4 +1,4 @@
-import { getDBInstance } from './database';
+import { getDBInstance } from '../db/database';
 
 describe('src/models/database', () => {
   beforeEach(async () => {
