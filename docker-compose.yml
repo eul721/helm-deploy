@@ -8,3 +8,13 @@ services:
       - '3306:3306'
     environment:
       - MYSQL_ROOT_PASSWORD=password
+  # Uncomment publisherservice to run a local version inside Docker
+  # publisherservice:
+  #   build:
+  #     args:
+  #       NPM_TOKEN: ${NPM_TOKEN}
+  #     context: .
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - '5000:5000'

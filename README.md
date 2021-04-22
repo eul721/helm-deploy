@@ -31,6 +31,7 @@ Before starting, populate a `.env` file in the root of the project (this project
 | DATABASE_PASS            | Database password           | `hunter2`                |
 | DATABASE_DBG (optional)  | Debug SQL queries (verbose) | `true`, `false`          |
 | DATABASE_DROP (optional) | Dev only, allow db drop     | `true`, `false`          |
+| NPM_TOKEN (if building)  | NPM Token to access protected `@take-two-t2gp` modules in Github repository | `abcd1234` |
 
 ### Getting Started
 
