@@ -15,7 +15,7 @@ describe('src/service/gameservice', () => {
     beforeEach(() => {
       contentfulId = 'abcd12345';
       bdsTitleId = 123456;
-      GameModel.createEntry({ bdsTitleId, contentfulId });
+      GameModel.create({ bdsTitleId, contentfulId });
     });
 
     it('should return a newly created Game', async () => {

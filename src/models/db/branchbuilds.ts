@@ -1,33 +1,12 @@
 import { ModelAttributes, Optional, WhereOptions } from 'sequelize/types';
-import { INTERNAL_ID_TYPE, TableNames } from './definitions';
+import { TableNames } from '../defines/tablenames';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
 import { ModelBase } from './modelbase';
 
 export const BranchBuildsDef: ModelAttributes = {
-  id: {
-    allowNull: false,
-    autoIncrement: true,
-    primaryKey: true,
-    type: INTERNAL_ID_TYPE(),
-    unique: true,
-  },
-  branchId: {
-    allowNull: false,
-    type: INTERNAL_ID_TYPE(),
-    unique: false,
-    references: {
-      key: 'id',
-      model: TableNames.Branch,
-    },
-  },
-  buildId: {
-    allowNull: false,
-    type: INTERNAL_ID_TYPE(),
-    unique: false,
-    references: {
-      key: 'id',
-      model: TableNames.Build,
-    },
-  },
+  id: INTERNAL_ID(),
+  branchId: INTERNAL_ID_REFERENCE(TableNames.Branch),
+  buildId: INTERNAL_ID_REFERENCE(TableNames.Build),
 };
 
 export interface BranchBuildsAttributes {
@@ -46,10 +25,6 @@ export class BranchBuildsModel
   branchId!: number;
 
   buildId!: number;
-
-  public static async createEntry(params: BranchBuildsCreationAttributes): Promise<BranchBuildsModel> {
-    return <BranchBuildsModel>await this.createEntryBase(params);
-  }
 
   public static async findEntry(filter: WhereOptions<BranchBuildsAttributes>): Promise<BranchBuildsModel | null> {
     return <BranchBuildsModel>await this.findEntryBase(filter);

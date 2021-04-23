@@ -1,33 +1,12 @@
 import { ModelAttributes, Optional, WhereOptions } from 'sequelize/types';
-import { INTERNAL_ID_TYPE, TableNames } from './definitions';
+import { TableNames } from '../defines/tablenames';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
 import { ModelBase } from './modelbase';
 
 export const GameBranchesDef: ModelAttributes = {
-  id: {
-    allowNull: false,
-    autoIncrement: true,
-    primaryKey: true,
-    type: INTERNAL_ID_TYPE(),
-    unique: true,
-  },
-  gameId: {
-    allowNull: false,
-    type: INTERNAL_ID_TYPE(),
-    unique: false,
-    references: {
-      key: 'id',
-      model: TableNames.Game,
-    },
-  },
-  branchId: {
-    allowNull: false,
-    type: INTERNAL_ID_TYPE(),
-    unique: false,
-    references: {
-      key: 'id',
-      model: TableNames.Branch,
-    },
-  },
+  id: INTERNAL_ID(),
+  gameId: INTERNAL_ID_REFERENCE(TableNames.Game),
+  branchId: INTERNAL_ID_REFERENCE(TableNames.Branch),
 };
 
 export interface GameBranchesAttributes {
@@ -46,10 +25,6 @@ export class GameBranchesModel
   gameId!: number;
 
   branchId!: number;
-
-  public static async createEntry(params: GameBranchesCreationAttributes): Promise<GameBranchesModel> {
-    return <GameBranchesModel>await this.createEntryBase(params);
-  }
 
   public static async findEntry(filter: WhereOptions<GameBranchesAttributes>): Promise<GameBranchesModel | null> {
     return <GameBranchesModel>await this.findEntryBase(filter);

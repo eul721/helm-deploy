@@ -6,7 +6,7 @@ import { ContentfulService, EContentfulResourceType } from './contentfulservice'
 export class TitleService {
   public static async onCreated(bdsTitleId: number): Promise<ControllerResponse> {
     const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Game);
-    await GameModel.createEntry({ bdsTitleId, contentfulId });
+    await GameModel.create({ bdsTitleId, contentfulId });
     return { code: HttpCode.OK };
   }
 

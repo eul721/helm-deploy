@@ -8,11 +8,12 @@ import { Branch } from '../models/http/branch';
 import { ControllerResponse } from '../models/http/controllerresponse';
 import { warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
-import { GameBranchesModel } from '../models/db/gameBranches';
-import { BranchBuildsModel } from '../models/db/branchBuilds';
+import { GameBranchesModel } from '../models/db/gamebranches';
+import { BranchBuildsModel } from '../models/db/branchbuilds';
 import { Catalogue } from '../models/http/catalogue';
 import { CatalogueItem } from '../models/http/catalogueItem';
 import { ContentfulService } from './contentfulservice';
+import { UserContext } from './usercontext';
 
 export class GameService {
   /**
@@ -24,6 +25,7 @@ export class GameService {
    * @param branchOverridePassword password for branch override, only used if it's non public and password protected
    */
   public static async getGameDownloadModel(
+    _userContext: UserContext,
     contentfulId: string,
     branchContentfulIdOverride?: string,
     branchOverridePassword?: string
@@ -57,7 +59,7 @@ export class GameService {
    * Returns download data of all games, returns only publicly released branches
    * TODO should be restricted to games owned by the player
    */
-  public static async getOwnedGames(): Promise<ControllerResponse<DownloadDataRoot>> {
+  public static async getOwnedGames(_userContext: UserContext): Promise<ControllerResponse<DownloadDataRoot>> {
     try {
       const games = await GameModel.findAll();
       const gameModelsJson: { [key: string]: DownloadData }[] = [];
@@ -83,7 +85,10 @@ export class GameService {
   /**
    * Returns all branches of the specified game
    */
-  public static async getBranches(titleContentfulId: string): Promise<ControllerResponse<Branch[]>> {
+  public static async getBranches(
+    titleContentfulId: string,
+    userContext: UserContext
+  ): Promise<ControllerResponse<Branch[]>> {
     try {
       const game = await GameModel.findEntry({ contentfulId: titleContentfulId });
       if (!game) {
@@ -106,11 +111,15 @@ export class GameService {
           const branchContentfulModel = await ContentfulService.getBranchModel(branchModel.contentfulId);
           if (!branchContentfulModel) return;
 
+          // non-studio users are not allowed to touch private branches
+          if (!userContext.studioUserId && !branchContentfulModel.isPublic) return;
+
           branches.push({
             name: branchContentfulModel.name,
             branchContentfulId: branchModel.contentfulId,
             passwordProtected: branchContentfulModel.password !== null,
             publicRelease: gameContentfulModel.publicReleaseBranch === branchModel.contentfulId,
+            isPublic: branchContentfulModel.isPublic,
           });
         })
       );
@@ -132,11 +141,13 @@ export class GameService {
     });
 
     const downloadData: DownloadData = {
+      name: contentfulGameModel.name,
       agreements,
       branchId: branch.bdsBranchId,
       titleId: game.bdsTitleId,
       prerequisites,
       versions: [],
+      supportedLanguages: contentfulGameModel.supportedLanguages,
     };
 
     const branchBuilds = await BranchBuildsModel.findEntries({ branchId: branch.id });

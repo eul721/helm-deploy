@@ -1,88 +1,108 @@
 import { app } from './app';
 import { info, warn } from './logger';
+import { DivisionModel } from './models/db/division';
+import { PermissionModel, Permissions } from './models/db/permission';
+import { UserModel } from './models/db/user';
+import { RoleModel } from './models/db/role';
+import { RolePermissionsModel } from './models/db/rolepermissions';
+import { GameModel } from './models/db/game';
+import { RoleGamesModel } from './models/db/rolegames';
+import { GroupModel } from './models/db/group';
+import { GroupUsersModel } from './models/db/groupusers';
+import { GroupRolesModel } from './models/db/grouproles';
 import { initializeDB } from './models/db/database';
-import { PermissionType } from './models/db/definitions';
-import * as RBAC from './models/db/rbac';
 
 const { NODE_ENVIRONMENT, PORT = 5000, DATABASE_DROP } = process.env;
 
 async function reinitializeDummyData() {
   info('====================================\n       Generating Test Data\n====================================');
-  await RBAC.Permission.create({ id: PermissionType.CREATE });
-  await RBAC.Permission.create({ id: PermissionType.READ });
-  await RBAC.Permission.create({ id: PermissionType.UPDATE });
-  await RBAC.Permission.create({ id: PermissionType.DELETE });
+  Promise.all(Permissions.map(async id => PermissionModel.create({ id })));
 
-  await RBAC.User.create({
-    id: 1111111111,
-    external_id: 'larrydavid@comedy.tv',
+  const divisionInstance = await DivisionModel.create({ name: 'NotFake Division' });
+
+  const user1 = await UserModel.create({
+    externalId: 'larrydavid@comedy.tv',
+    parentDivision: divisionInstance.id,
   });
-  await RBAC.User.create({
-    id: 1111111112,
-    external_id: 'teddanson@thegood.place',
+  const user2 = await UserModel.create({
+    externalId: 'teddanson@thegood.place',
+    parentDivision: divisionInstance.id,
   });
-  await RBAC.User.create({
-    id: 1111111113,
-    external_id: 'julia@vice.president',
+  const user3 = await UserModel.create({
+    externalId: 'julia@vice.president',
+    parentDivision: divisionInstance.id,
+  });
+  const user4 = await UserModel.create({
+    externalId: 'test@user',
+    parentDivision: divisionInstance.id,
   });
 
-  await RBAC.Role.create({
-    id: 3333333333,
+  const gameCiv = await GameModel.create({ bdsTitleId: 11, contentfulId: 'qwerty' });
+  const gameKerbel = await GameModel.create({ bdsTitleId: 12, contentfulId: 'abcdefg' });
+
+  const adminRole = await RoleModel.create({
     name: 'admin',
+    parentDivision: divisionInstance.id,
   });
+
   await Promise.all([
-    RBAC.RolePermission.create({ roleId: 3333333333, permissionId: PermissionType.CREATE }),
-    RBAC.RolePermission.create({ roleId: 3333333333, permissionId: PermissionType.READ }),
-    RBAC.RolePermission.create({ roleId: 3333333333, permissionId: PermissionType.UPDATE }),
-    RBAC.RolePermission.create({ roleId: 3333333333, permissionId: PermissionType.DELETE }),
+    RolePermissionsModel.create({ roleId: adminRole.id, permissionId: 'create' }),
+    RolePermissionsModel.create({ roleId: adminRole.id, permissionId: 'read' }),
+    RolePermissionsModel.create({ roleId: adminRole.id, permissionId: 'update' }),
+    RolePermissionsModel.create({ roleId: adminRole.id, permissionId: 'delete' }),
+    RolePermissionsModel.create({ roleId: adminRole.id, permissionId: 'all-games-access' }),
   ]);
 
-  await RBAC.Role.create({
-    id: 3333333334,
+  const creatorRole = await RoleModel.create({
     name: 'creator',
+    parentDivision: divisionInstance.id,
   });
   await Promise.all([
-    RBAC.RolePermission.create({ roleId: 3333333334, permissionId: PermissionType.CREATE }),
-    RBAC.RolePermission.create({ roleId: 3333333334, permissionId: PermissionType.READ }),
+    RolePermissionsModel.create({ roleId: creatorRole.id, permissionId: 'create' }),
+    RolePermissionsModel.create({ roleId: creatorRole.id, permissionId: 'read' }),
+    RolePermissionsModel.create({ roleId: creatorRole.id, permissionId: 'all-games-access' }),
   ]);
 
-  await RBAC.Role.create({
-    id: 3333333335,
-    name: 'editor',
+  const civEditorRole = await RoleModel.create({
+    name: 'civ editor',
+    parentDivision: divisionInstance.id,
   });
   await Promise.all([
-    RBAC.RolePermission.create({ roleId: 3333333335, permissionId: PermissionType.UPDATE }),
-    RBAC.RolePermission.create({ roleId: 3333333335, permissionId: PermissionType.READ }),
+    RolePermissionsModel.create({ roleId: civEditorRole.id, permissionId: 'update' }),
+    RolePermissionsModel.create({ roleId: civEditorRole.id, permissionId: 'read' }),
+  ]);
+  RoleGamesModel.create({ roleId: civEditorRole.id, gameId: gameCiv.id });
+
+  const viewerRole = await RoleModel.create({
+    name: 'viewer-all',
+    parentDivision: divisionInstance.id,
+  });
+  await RolePermissionsModel.create({ roleId: viewerRole.id, permissionId: 'read' });
+  await RolePermissionsModel.create({ roleId: viewerRole.id, permissionId: 'all-games-access' });
+  RoleGamesModel.create({ roleId: viewerRole.id, gameId: gameKerbel.id });
+  RoleGamesModel.create({ roleId: viewerRole.id, gameId: gameCiv.id });
+
+  const adminGroup = await GroupModel.create({ parentDivision: divisionInstance.id, name: 'admins' });
+  const devopsGroup = await GroupModel.create({ parentDivision: divisionInstance.id, name: 'devops' });
+  const qaGroup = await GroupModel.create({ parentDivision: divisionInstance.id, name: 'QA' });
+  const civDevGroup = await GroupModel.create({ parentDivision: divisionInstance.id, name: 'civ devs' });
+
+  await Promise.all([
+    GroupRolesModel.create({ groupId: adminGroup.id, roleId: adminRole.id }),
+    GroupRolesModel.create({ groupId: devopsGroup.id, roleId: creatorRole.id }),
+    GroupRolesModel.create({ groupId: qaGroup.id, roleId: viewerRole.id }),
+    GroupRolesModel.create({ groupId: civDevGroup.id, roleId: viewerRole.id }),
+    GroupRolesModel.create({ groupId: civDevGroup.id, roleId: civEditorRole.id }),
   ]);
 
-  await RBAC.Role.create({
-    id: 3333333336,
-    name: 'viewer',
-  });
-  await RBAC.RolePermission.create({ roleId: 3333333336, permissionId: PermissionType.READ });
+  await Promise.all([
+    GroupUsersModel.create({ groupId: adminGroup.id, userId: user1.id }),
+    GroupUsersModel.create({ groupId: devopsGroup.id, userId: user2.id }),
+    GroupUsersModel.create({ groupId: qaGroup.id, userId: user3.id }),
+    GroupUsersModel.create({ groupId: civDevGroup.id, userId: user3.id }),
+    GroupUsersModel.create({ groupId: civDevGroup.id, userId: user4.id }),
+  ]);
 
-  await RBAC.UserRole.create({
-    id: 5555555555,
-    userId: 1111111113,
-    roleId: 3333333333,
-  });
-
-  await RBAC.UserRole.create({
-    id: 5555555556,
-    userId: 1111111112,
-    roleId: 3333333334,
-  });
-
-  await RBAC.UserRole.create({
-    id: 5555555557,
-    userId: 1111111111,
-    roleId: 3333333336,
-  });
-
-  await RBAC.UserRoleResource.create({
-    userRoleId: 5555555555,
-    namespace: '/privatedivision/games/kerbalspaceprogram',
-  });
   info('====================================\n        Finished Test Data\n====================================');
 }
 

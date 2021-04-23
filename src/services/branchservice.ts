@@ -6,8 +6,8 @@ import { BranchModel } from '../models/db/branch';
 import { GameModel } from '../models/db/game';
 import { ControllerResponse } from '../models/http/controllerresponse';
 import { HttpCode } from '../models/http/httpcode';
-import { GameBranchesModel } from '../models/db/gameBranches';
-import { BranchBuildsModel } from '../models/db/branchBuilds';
+import { GameBranchesModel } from '../models/db/gamebranches';
+import { BranchBuildsModel } from '../models/db/branchbuilds';
 
 export class BranchService {
   public static async onCreated(
@@ -17,14 +17,14 @@ export class BranchService {
   ): Promise<ControllerResponse> {
     const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Branch);
 
-    const branch = await BranchModel.createEntry({
+    const branch = await BranchModel.create({
       bdsBranchId,
       contentfulId,
     });
 
     const game = await GameModel.findEntry({ bdsTitleId });
     if (game) {
-      GameBranchesModel.createEntry({ gameId: game.id, branchId: branch.id });
+      GameBranchesModel.create({ gameId: game.id, branchId: branch.id });
     } else {
       warn('Created a branch not corresponding to a game, this is unexpected but potentially valid');
     }
@@ -90,7 +90,7 @@ export class BranchService {
             [Op.and]: [{ branchId: branch.id }, { buildId: { [Op.gte]: build.id } }],
           },
         });
-        BranchBuildsModel.createEntry({ branchId: branch.id, buildId: build.id });
+        BranchBuildsModel.create({ branchId: branch.id, buildId: build.id });
         return true;
       }
     } catch (sqlErr) {

@@ -1,15 +1,9 @@
 import { DataTypes, ModelAttributes, Optional, WhereOptions } from 'sequelize';
 import { ModelBase } from './modelbase';
-import { INTERNAL_ID_TYPE } from './definitions';
+import { INTERNAL_ID } from '../defines/definitions';
 
 export const BranchDef: ModelAttributes = {
-  id: {
-    allowNull: false,
-    autoIncrement: true,
-    primaryKey: true,
-    type: INTERNAL_ID_TYPE(),
-    unique: true,
-  },
+  id: INTERNAL_ID(),
   contentfulId: {
     allowNull: false,
     type: DataTypes.STRING(256),
@@ -36,10 +30,6 @@ export class BranchModel extends ModelBase<BranchAttributes, BranchCreationAttri
   public contentfulId!: string;
 
   public bdsBranchId!: number;
-
-  public static async createEntry(params: BranchCreationAttributes): Promise<BranchModel> {
-    return <BranchModel>await this.createEntryBase(params);
-  }
 
   public static async findEntry(filter: WhereOptions<BranchAttributes>): Promise<BranchModel | null> {
     return <BranchModel>await this.findEntryBase(filter);

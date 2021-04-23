@@ -1,11 +1,20 @@
 import { Options, Sequelize } from 'sequelize';
 import { debug, info, warn } from '../../logger';
-import { TableNames } from './definitions';
 import { BranchDef, BranchModel } from './branch';
-import { BranchBuildsDef, BranchBuildsModel } from './branchBuilds';
-import { GameBranchesDef, GameBranchesModel } from './gameBranches';
+import { BranchBuildsDef, BranchBuildsModel } from './branchbuilds';
+import { GameBranchesDef, GameBranchesModel } from './gamebranches';
 import { BuildDef, BuildModel } from './build';
 import { GameDef, GameModel } from './game';
+import { UserDef, UserModel } from './user';
+import { DivisionDef, DivisionModel } from './division';
+import { PermissionDef, PermissionModel } from './permission';
+import { RoleDef, RoleModel } from './role';
+import { RolePermissionsModel, RolePermissionsDef } from './rolepermissions';
+import { TableNames } from '../defines/tablenames';
+import { GroupDef, GroupModel } from './group';
+import { GroupUsersDef, GroupUsersModel } from './groupusers';
+import { GroupRolesDef, GroupRolesModel } from './grouproles';
+import { RoleGamesDef, RoleGamesModel } from './rolegames';
 
 const { NODE_ENVIRONMENT = 'development' } = process.env;
 
@@ -62,6 +71,7 @@ export function getDBInstance() {
   if (!_sequelize) {
     _sequelize = new Sequelize(getDBConf());
     initModels();
+    info('Successfully initialized db models');
   }
 
   return _sequelize;
@@ -81,18 +91,30 @@ export async function initializeDB() {
   }
 }
 
-async function initModels() {
+function initModels() {
   BuildModel.init(BuildDef, { sequelize: getDBInstance(), tableName: TableNames.Build });
-  BranchModel.init(BranchDef, { sequelize: getDBInstance(), tableName: TableNames.Branch });
-  GameModel.init(GameDef, { sequelize: getDBInstance(), tableName: TableNames.Game });
 
+  BranchModel.init(BranchDef, { sequelize: getDBInstance(), tableName: TableNames.Branch });
   BranchBuildsModel.init(BranchBuildsDef, {
     sequelize: getDBInstance(),
     tableName: TableNames.BranchBuilds,
   });
 
+  GameModel.init(GameDef, { sequelize: getDBInstance(), tableName: TableNames.Game });
   GameBranchesModel.init(GameBranchesDef, {
     sequelize: getDBInstance(),
     tableName: TableNames.GameBranches,
   });
+
+  DivisionModel.init(DivisionDef, { sequelize: getDBInstance(), tableName: TableNames.Division });
+  UserModel.init(UserDef, { sequelize: getDBInstance(), tableName: TableNames.User });
+  PermissionModel.init(PermissionDef, { sequelize: getDBInstance(), tableName: TableNames.Permission });
+
+  RoleModel.init(RoleDef, { sequelize: getDBInstance(), tableName: TableNames.Role });
+  RolePermissionsModel.init(RolePermissionsDef, { sequelize: getDBInstance(), tableName: TableNames.RolePermissions });
+  RoleGamesModel.init(RoleGamesDef, { sequelize: getDBInstance(), tableName: TableNames.RoleGames });
+
+  GroupModel.init(GroupDef, { sequelize: getDBInstance(), tableName: TableNames.Group });
+  GroupUsersModel.init(GroupUsersDef, { sequelize: getDBInstance(), tableName: TableNames.GroupUsers });
+  GroupRolesModel.init(GroupRolesDef, { sequelize: getDBInstance(), tableName: TableNames.GroupRole });
 }

@@ -1,8 +1,20 @@
 import { Router } from 'express';
 import { HttpCode } from '../models/http/httpcode';
 import { GameService } from '../services/gameservice';
+import { UserContext } from '../services/usercontext';
 
-export const router = Router();
+export const downloadApiRouter = Router();
+
+/**
+ * Validate user (player) credentials
+ */
+downloadApiRouter.use((_req, res, next) => {
+  // TODO external service call to verify user, set required information (possibly just id) as request local data
+  const userContext: UserContext = { authenticated: true };
+  res.locals.userContext = userContext;
+
+  next();
+});
 
 /**
  * @api {GET} /api/games Get games catalogue
@@ -13,7 +25,7 @@ export const router = Router();
  *
  * @apiUse T2Auth
  */
-router.get('/games', async (_req, res) => {
+downloadApiRouter.get('/games', async (_req, res) => {
   const response = await GameService.getAllGames();
   res.status(response.code).json(response.payload);
 });
@@ -27,8 +39,8 @@ router.get('/games', async (_req, res) => {
  *
  * @apiUse T2Auth
  */
-router.get('/games/download', async (_req, res) => {
-  const response = await GameService.getOwnedGames();
+downloadApiRouter.get('/games/download', async (_req, res) => {
+  const response = await GameService.getOwnedGames(res.locals.userContext);
   res.status(response.code).json(response.payload);
 });
 
@@ -41,10 +53,10 @@ router.get('/games/download', async (_req, res) => {
  *
  * @apiUse T2Auth
  */
-router.get('/games/branches', async (req, res) => {
+downloadApiRouter.get('/games/branches', async (req, res) => {
   const titleContentfulId = req.query.title?.toString();
   if (titleContentfulId) {
-    const response = await GameService.getBranches(titleContentfulId);
+    const response = await GameService.getBranches(titleContentfulId, res.locals.userContext);
     res.status(response.code).json(response.payload);
   } else {
     res.status(HttpCode.BAD_REQUEST).json();
@@ -60,12 +72,17 @@ router.get('/games/branches', async (req, res) => {
  *
  * @apiUse T2Auth
  */
-router.get('/games/download/branch', async (req, res) => {
+downloadApiRouter.get('/games/download/branch', async (req, res) => {
   const titleContentfulId = req.query.title?.toString();
   const branchContentfulId = req.query.branch?.toString();
   const password = req.query.password?.toString();
   if (titleContentfulId) {
-    const response = await GameService.getGameDownloadModel(titleContentfulId, branchContentfulId, password);
+    const response = await GameService.getGameDownloadModel(
+      res.locals.userContext,
+      titleContentfulId,
+      branchContentfulId,
+      password
+    );
     res.status(response.code).json(response.payload);
   } else {
     res.status(HttpCode.BAD_REQUEST).json();

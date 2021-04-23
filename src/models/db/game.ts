@@ -1,15 +1,9 @@
 import { DataTypes, ModelAttributes, Optional, WhereOptions } from 'sequelize';
 import { ModelBase } from './modelbase';
-import { INTERNAL_ID_TYPE } from './definitions';
+import { INTERNAL_ID } from '../defines/definitions';
 
 export const GameDef: ModelAttributes = {
-  id: {
-    allowNull: false,
-    autoIncrement: true,
-    primaryKey: true,
-    type: INTERNAL_ID_TYPE(),
-    unique: true,
-  },
+  id: INTERNAL_ID(),
   contentfulId: {
     allowNull: false,
     type: DataTypes.STRING(256),
@@ -22,7 +16,7 @@ export const GameDef: ModelAttributes = {
   },
 };
 
-interface GameAttributes {
+export interface GameAttributes {
   id: number;
   contentfulId: string;
   bdsTitleId: number;
@@ -36,10 +30,6 @@ export class GameModel extends ModelBase<GameAttributes, GameCreationAttributes>
   public contentfulId!: string;
 
   public bdsTitleId!: number;
-
-  public static async createEntry(params: GameCreationAttributes): Promise<GameModel> {
-    return <GameModel>await this.createEntryBase(params);
-  }
 
   public static async findEntry(filter: WhereOptions<GameAttributes>): Promise<GameModel | null> {
     return <GameModel>await this.findEntryBase(filter);

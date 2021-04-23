@@ -15,16 +15,6 @@ export class ModelBase<TModelAttributes, TCreationAttributes = TModelAttributes>
     }
   }
 
-  protected static async createEntryBase<TCreationAttributesAlias>(params: TCreationAttributesAlias) {
-    try {
-      const newRecord = await this.create(params);
-      return newRecord;
-    } catch (sqlErr) {
-      warn('Encountered error creating record with params=%j, error=%s', params, sqlErr);
-      throw new Error('DB error');
-    }
-  }
-
   protected static async findEntryBase<TModelAttributesAlias>(
     filter: WhereOptions<TModelAttributesAlias>
   ): Promise<Model | null> {

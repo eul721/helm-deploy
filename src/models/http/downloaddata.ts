@@ -12,9 +12,11 @@ export interface Model {
 }
 
 export interface DownloadData {
+  name: string;
   titleId: number;
   branchId: number;
   versions: Version[];
   agreements: Agreement[];
   prerequisites: Prerequisite[];
+  supportedLanguages: string[];
 }

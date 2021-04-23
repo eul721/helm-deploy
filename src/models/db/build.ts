@@ -1,15 +1,9 @@
 import { DataTypes, ModelAttributes, Optional, WhereOptions } from 'sequelize';
 import { ModelBase } from './modelbase';
-import { INTERNAL_ID_TYPE } from './definitions';
+import { INTERNAL_ID } from '../defines/definitions';
 
 export const BuildDef: ModelAttributes = {
-  id: {
-    allowNull: false,
-    autoIncrement: true,
-    primaryKey: true,
-    type: INTERNAL_ID_TYPE(),
-    unique: true,
-  },
+  id: INTERNAL_ID(),
   contentfulId: {
     allowNull: false,
     type: DataTypes.STRING(256),
@@ -22,7 +16,7 @@ export const BuildDef: ModelAttributes = {
   },
 };
 
-interface BuildAttributes {
+export interface BuildAttributes {
   id: number;
   contentfulId: string;
   bdsBuildId: number;
@@ -36,10 +30,6 @@ export class BuildModel extends ModelBase<BuildAttributes, BuildCreationAttribut
   public contentfulId!: string;
 
   public bdsBuildId!: number;
-
-  public static async createEntry(params: BuildCreationAttributes): Promise<BuildModel> {
-    return <BuildModel>await this.createEntryBase(params);
-  }
 
   public static async findEntry(filter: WhereOptions<BuildAttributes>): Promise<BuildModel | null> {
     return <BuildModel>await this.findEntryBase(filter);

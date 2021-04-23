@@ -3,11 +3,11 @@ import request from 'supertest';
 import { getDBInstance } from '../models/db/database';
 import { WebhookPayload } from '../models/http/webhookpayload';
 import { WebhookTrigger } from '../models/http/webhooktrigger';
-import { router } from './webhooks';
+import { webhookRouter } from './webhooks';
 
 const app = express();
 app.use(express.json());
-app.use('/webhooks', router);
+app.use('/webhooks', webhookRouter);
 
 describe('src/controllers/webhooks', () => {
   describe('POST /webhooks', () => {

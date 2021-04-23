@@ -1,5 +1,5 @@
 import { warn } from '../logger';
-import { BranchBuildsModel } from '../models/db/branchBuilds';
+import { BranchBuildsModel } from '../models/db/branchbuilds';
 import { BuildModel } from '../models/db/build';
 import { ControllerResponse } from '../models/http/controllerresponse';
 import { HttpCode } from '../models/http/httpcode';
@@ -8,7 +8,7 @@ import { ContentfulService, EContentfulResourceType } from './contentfulservice'
 export class BuildService {
   public static async onCreated(bdsBuildId: number): Promise<ControllerResponse> {
     const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Patch);
-    await BuildModel.createEntry({ bdsBuildId, contentfulId });
+    await BuildModel.create({ bdsBuildId, contentfulId });
     return { code: HttpCode.OK };
   }
 

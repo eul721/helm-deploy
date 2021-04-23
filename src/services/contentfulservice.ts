@@ -53,6 +53,7 @@ export class ContentfulService {
       versionName: 'mockVersion',
       mandatory: mockMandatory,
       releaseNotes: 'mock release notes',
+      patchArticleSlug: 'mock unknown field',
     };
   }
 
@@ -78,6 +79,7 @@ export class ContentfulService {
     };
 
     return {
+      name: 'mock game name',
       prerequisites: [mockPrerequisite],
       agreements: [mockAgreement],
       childIds: [],
@@ -97,6 +99,7 @@ export class ContentfulService {
     return {
       name: 'mock branch name',
       password: null,
+      isPublic: true,
     };
   }
 }
