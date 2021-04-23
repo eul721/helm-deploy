@@ -1,6 +1,5 @@
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { Prerequisite } from '../models/http/prerequisite';
-import { BuildModel } from '../models/db/build';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import { Agreement } from '../models/http/agreement';
@@ -8,8 +7,6 @@ import { Branch } from '../models/http/branch';
 import { ControllerResponse } from '../models/http/controllerresponse';
 import { warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
-import { GameBranchesModel } from '../models/db/gamebranches';
-import { BranchBuildsModel } from '../models/db/branchbuilds';
 import { Catalogue } from '../models/http/catalogue';
 import { CatalogueItem } from '../models/http/catalogueItem';
 import { ContentfulService } from './contentfulservice';
@@ -31,7 +28,7 @@ export class GameService {
     branchOverridePassword?: string
   ): Promise<ControllerResponse<DownloadData>> {
     try {
-      const game = await GameModel.findEntry({ contentfulId });
+      const game = await GameModel.findOne({ where: { contentfulId } });
       if (!game) return { code: HttpCode.NOT_FOUND };
 
       const branch = await GameService.findBranch(game, branchContentfulIdOverride, branchOverridePassword);
@@ -64,7 +61,7 @@ export class GameService {
       const games = await GameModel.findAll();
       const gameModelsJson: { [key: string]: DownloadData }[] = [];
 
-      Promise.all(
+      await Promise.all(
         games.map(async game => {
           const branch = await GameService.findBranch(game);
           if (branch) {
@@ -90,7 +87,7 @@ export class GameService {
     userContext: UserContext
   ): Promise<ControllerResponse<Branch[]>> {
     try {
-      const game = await GameModel.findEntry({ contentfulId: titleContentfulId });
+      const game = await GameModel.findOne({ where: { contentfulId: titleContentfulId } });
       if (!game) {
         return { code: HttpCode.NOT_FOUND };
       }
@@ -100,14 +97,11 @@ export class GameService {
         return { code: HttpCode.CONFLICT };
       }
 
-      const gameBranches = await GameBranchesModel.findEntries({ gameId: game.id });
+      const gameBranches = await game.getBranches();
 
       const branches: Branch[] = [];
-      Promise.all(
-        gameBranches.map(async model => {
-          const branchModel = await BranchModel.findByPk(model.branchId);
-          if (!branchModel) return;
-
+      await Promise.all(
+        gameBranches.map(async branchModel => {
           const branchContentfulModel = await ContentfulService.getBranchModel(branchModel.contentfulId);
           if (!branchContentfulModel) return;
 
@@ -150,10 +144,9 @@ export class GameService {
       supportedLanguages: contentfulGameModel.supportedLanguages,
     };
 
-    const branchBuilds = await BranchBuildsModel.findEntries({ branchId: branch.id });
-    Promise.all(
-      branchBuilds.map(async model => {
-        const build = await BuildModel.findByPk(model.buildId);
+    const branchBuilds = await branch.getBuilds();
+    await Promise.all(
+      branchBuilds.map(async build => {
         const version = build ? await ContentfulService.getPatchModel(build.contentfulId) : null;
         if (version && build) {
           downloadData.versions.push({ ...version, buildId: build.bdsBuildId });
@@ -173,17 +166,17 @@ export class GameService {
     if (branchContentfulIdOverride) {
       const branchContentfulModel = await ContentfulService.getBranchModel(branchContentfulIdOverride);
       if (branchContentfulModel.password === null || branchContentfulModel.password === branchOverridePassword) {
-        branch = await BranchModel.findEntry({ contentfulId: branchContentfulIdOverride });
+        branch = await BranchModel.findOne({ where: { contentfulId: branchContentfulIdOverride } });
       }
     } else {
       const gameModel = await ContentfulService.getGameModel(game.contentfulId);
       if (gameModel.publicReleaseBranch) {
-        branch = await BranchModel.findEntry({ contentfulId: gameModel.publicReleaseBranch });
+        branch = await BranchModel.findOne({ where: { contentfulId: gameModel.publicReleaseBranch } });
       }
     }
 
-    const gameBranches = await GameBranchesModel.findEntries({ gameId: game.id });
-    branch = gameBranches.some(model => model.branchId === branch?.id) ? branch : null;
+    const gameBranches = await game.getBranches();
+    branch = gameBranches.some(model => model.id === branch?.id) ? branch : null;
     return branch;
   }
 }

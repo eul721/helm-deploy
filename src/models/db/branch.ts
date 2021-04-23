@@ -1,6 +1,17 @@
-import { DataTypes, ModelAttributes, Optional, WhereOptions } from 'sequelize';
-import { ModelBase } from './modelbase';
+import {
+  Association,
+  BelongsToGetAssociationMixin,
+  BelongsToManyAddAssociationMixin,
+  BelongsToManyGetAssociationsMixin,
+  BelongsToManyRemoveAssociationMixin,
+  DataTypes,
+  Model,
+  ModelAttributes,
+  Optional,
+} from 'sequelize';
 import { INTERNAL_ID } from '../defines/definitions';
+import { BuildModel } from './build';
+import { GameModel } from './game';
 
 export const BranchDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -24,14 +35,31 @@ export interface BranchAttributes {
 
 export type BranchCreationAttributes = Optional<BranchAttributes, 'id'>;
 
-export class BranchModel extends ModelBase<BranchAttributes, BranchCreationAttributes> implements BranchAttributes {
+export class BranchModel extends Model<BranchAttributes, BranchCreationAttributes> implements BranchAttributes {
   public id!: number;
 
   public contentfulId!: string;
 
   public bdsBranchId!: number;
 
-  public static async findEntry(filter: WhereOptions<BranchAttributes>): Promise<BranchModel | null> {
-    return <BranchModel>await this.findEntryBase(filter);
-  }
+  // #region association: builds
+  public readonly builds?: BuildModel[];
+
+  public removeBuild!: BelongsToManyRemoveAssociationMixin<BuildModel, number>;
+
+  public getBuilds!: BelongsToManyGetAssociationsMixin<BuildModel>;
+
+  public addBuild!: BelongsToManyAddAssociationMixin<BuildModel, number>;
+  // #endregion
+
+  // #region association: owner
+  public readonly owner?: GameModel;
+
+  public getOwner!: BelongsToGetAssociationMixin<GameModel>;
+  // #endregion
+
+  public static associations: {
+    builds: Association<BranchModel, BuildModel>;
+    owner: Association<BranchModel, GameModel>;
+  };
 }

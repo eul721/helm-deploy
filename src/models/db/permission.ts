@@ -1,16 +1,24 @@
-import { ModelAttributes, WhereOptions } from 'sequelize';
+import { Model, ModelAttributes } from 'sequelize';
 import { INTERNAL_STRING_ID } from '../defines/definitions';
-import { ModelBase } from './modelbase';
 
 export const PermissionDef: ModelAttributes = {
   id: INTERNAL_STRING_ID(),
 };
 
-export const AccessPermissions: string[] = ['create', 'read', 'update', 'delete', 'update-production'];
-export const UserPermissions: string[] = ['create-account', 'remove-account', 'manage-access'];
-export const Permissions: string[] = ['rbac-admin', 'all-games-access']
-  .concat(AccessPermissions)
-  .concat(UserPermissions);
+export const AccessPermissions = ['create', 'read', 'update', 'delete', 'update-production'] as const;
+export const UserPermissions = ['create-account', 'remove-account', 'manage-access'] as const;
+export const Permissions = [
+  'create',
+  'read',
+  'update',
+  'delete',
+  'update-production',
+  'create-account',
+  'remove-account',
+  'manage-access',
+  'rbac-admin',
+  'all-games-access',
+] as const;
 
 export type AccessPermissionType = typeof AccessPermissions[number];
 export type UserPermissionType = typeof Permissions[number];
@@ -23,11 +31,15 @@ export interface PermissionAttributes {
 export type PermissionCreationAttributes = PermissionAttributes;
 
 export class PermissionModel
-  extends ModelBase<PermissionAttributes, PermissionCreationAttributes>
+  extends Model<PermissionAttributes, PermissionCreationAttributes>
   implements PermissionAttributes {
   id!: PermissionType;
 
-  public static async findEntry(filter: WhereOptions<PermissionAttributes>): Promise<PermissionModel | null> {
-    return <PermissionModel>await this.findEntryBase(filter);
+  public static async getModel(permission: PermissionType): Promise<PermissionModel> {
+    const model = await this.findByPk(permission);
+    if (model) {
+      return model;
+    }
+    throw new Error('No permission model corresponding to passed in PermissionType, looks like db is set up wrong');
   }
 }

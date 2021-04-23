@@ -1,20 +1,14 @@
-import { Options, Sequelize } from 'sequelize';
-import { debug, info, warn } from '../../logger';
+import { BelongsToOptions, HasManyOptions, Options, Sequelize } from 'sequelize';
+import { debug, error, info, warn } from '../../logger';
 import { BranchDef, BranchModel } from './branch';
-import { BranchBuildsDef, BranchBuildsModel } from './branchbuilds';
-import { GameBranchesDef, GameBranchesModel } from './gamebranches';
 import { BuildDef, BuildModel } from './build';
 import { GameDef, GameModel } from './game';
 import { UserDef, UserModel } from './user';
 import { DivisionDef, DivisionModel } from './division';
 import { PermissionDef, PermissionModel } from './permission';
 import { RoleDef, RoleModel } from './role';
-import { RolePermissionsModel, RolePermissionsDef } from './rolepermissions';
 import { TableNames } from '../defines/tablenames';
 import { GroupDef, GroupModel } from './group';
-import { GroupUsersDef, GroupUsersModel } from './groupusers';
-import { GroupRolesDef, GroupRolesModel } from './grouproles';
-import { RoleGamesDef, RoleGamesModel } from './rolegames';
 
 const { NODE_ENVIRONMENT = 'development' } = process.env;
 
@@ -83,38 +77,73 @@ export async function initializeDB() {
     if (dropDb) {
       warn('Dropping old database');
     }
+    info('About to sync db');
     const sq = await getDBInstance().sync({ force: dropDb, match: /_dev$/ });
+    info('Sync done');
     await sq.authenticate();
     info('Successfully authenticated SQL connection');
-  } catch (dbError) {
-    console.log('DBError:', dbError);
+  } catch (exc) {
+    error(exc);
   }
 }
 
 function initModels() {
   BuildModel.init(BuildDef, { sequelize: getDBInstance(), tableName: TableNames.Build });
-
   BranchModel.init(BranchDef, { sequelize: getDBInstance(), tableName: TableNames.Branch });
-  BranchBuildsModel.init(BranchBuildsDef, {
-    sequelize: getDBInstance(),
-    tableName: TableNames.BranchBuilds,
-  });
-
   GameModel.init(GameDef, { sequelize: getDBInstance(), tableName: TableNames.Game });
-  GameBranchesModel.init(GameBranchesDef, {
-    sequelize: getDBInstance(),
-    tableName: TableNames.GameBranches,
-  });
-
   DivisionModel.init(DivisionDef, { sequelize: getDBInstance(), tableName: TableNames.Division });
   UserModel.init(UserDef, { sequelize: getDBInstance(), tableName: TableNames.User });
   PermissionModel.init(PermissionDef, { sequelize: getDBInstance(), tableName: TableNames.Permission });
-
   RoleModel.init(RoleDef, { sequelize: getDBInstance(), tableName: TableNames.Role });
-  RolePermissionsModel.init(RolePermissionsDef, { sequelize: getDBInstance(), tableName: TableNames.RolePermissions });
-  RoleGamesModel.init(RoleGamesDef, { sequelize: getDBInstance(), tableName: TableNames.RoleGames });
-
   GroupModel.init(GroupDef, { sequelize: getDBInstance(), tableName: TableNames.Group });
-  GroupUsersModel.init(GroupUsersDef, { sequelize: getDBInstance(), tableName: TableNames.GroupUsers });
-  GroupRolesModel.init(GroupRolesDef, { sequelize: getDBInstance(), tableName: TableNames.GroupRole });
+
+  const belongsToDefaults: BelongsToOptions = { as: 'owner', targetKey: 'id' };
+  const hasManyDefaults = (as: string): HasManyOptions => {
+    return { as, sourceKey: 'id', foreignKey: 'ownerId' };
+  };
+
+  // games have builds and branches
+  BuildModel.belongsTo(GameModel, belongsToDefaults);
+  GameModel.hasMany(BuildModel, hasManyDefaults('builds'));
+  BranchModel.belongsTo(GameModel, belongsToDefaults);
+  GameModel.hasMany(BranchModel, hasManyDefaults('branches'));
+
+  // divisions own all top level models
+  GameModel.belongsTo(DivisionModel, belongsToDefaults);
+  DivisionModel.hasMany(GameModel, hasManyDefaults('games'));
+  UserModel.belongsTo(DivisionModel, belongsToDefaults);
+  DivisionModel.hasMany(UserModel, hasManyDefaults('users'));
+  RoleModel.belongsTo(DivisionModel, belongsToDefaults);
+  DivisionModel.hasMany(RoleModel, hasManyDefaults('roles'));
+  GroupModel.belongsTo(DivisionModel, belongsToDefaults);
+  DivisionModel.hasMany(GroupModel, hasManyDefaults('groups'));
+
+  // branches have a build history
+  const BranchBuilds = getDBInstance().define('branch_builds', {});
+  BranchModel.belongsToMany(BuildModel, { through: BranchBuilds, as: 'builds' });
+  BuildModel.belongsToMany(BranchModel, { through: BranchBuilds, as: 'branches' });
+
+  // groups have users and roles
+  const GroupUsers = getDBInstance().define('rbac_group_users', {});
+  GroupModel.belongsToMany(UserModel, { through: GroupUsers, as: 'assignedUsers', foreignKey: 'groupId' });
+  UserModel.belongsToMany(GroupModel, { through: GroupUsers, as: 'groupsWithUser', foreignKey: 'userId' });
+  const GroupRoles = getDBInstance().define('rbac_group_roles', {});
+  GroupModel.belongsToMany(RoleModel, { through: GroupRoles, as: 'assignedRoles', foreignKey: 'groupId' });
+  RoleModel.belongsToMany(GroupModel, { through: GroupRoles, as: 'groupsWithRole', foreignKey: 'roleId' });
+
+  // roles have games and permissions
+  const RoleGames = getDBInstance().define('rbac_role_games', {});
+  RoleModel.belongsToMany(GameModel, { through: RoleGames, as: 'assignedGames', foreignKey: 'roleId' });
+  GameModel.belongsToMany(RoleModel, { through: RoleGames, as: 'rolesWithGame', foreignKey: 'gameId' });
+  const RolePermissions = getDBInstance().define('rbac_role_permissions', {});
+  RoleModel.belongsToMany(PermissionModel, {
+    through: RolePermissions,
+    as: 'assignedPermissions',
+    foreignKey: 'roleId',
+  });
+  PermissionModel.belongsToMany(RoleModel, {
+    through: RolePermissions,
+    as: 'rolesWithPermission',
+    foreignKey: 'permissionId',
+  });
 }

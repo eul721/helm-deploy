@@ -1,4 +1,3 @@
-import { Op } from 'sequelize';
 import { ContentfulService, EContentfulResourceType } from './contentfulservice';
 import { info, warn } from '../logger';
 import { BuildModel } from '../models/db/build';
@@ -6,8 +5,6 @@ import { BranchModel } from '../models/db/branch';
 import { GameModel } from '../models/db/game';
 import { ControllerResponse } from '../models/http/controllerresponse';
 import { HttpCode } from '../models/http/httpcode';
-import { GameBranchesModel } from '../models/db/gamebranches';
-import { BranchBuildsModel } from '../models/db/branchbuilds';
 
 export class BranchService {
   public static async onCreated(
@@ -17,40 +14,38 @@ export class BranchService {
   ): Promise<ControllerResponse> {
     const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Branch);
 
-    const branch = await BranchModel.create({
-      bdsBranchId,
-      contentfulId,
-    });
-
-    const game = await GameModel.findEntry({ bdsTitleId });
+    const game = await GameModel.findOne({ where: { bdsTitleId } });
     if (game) {
-      GameBranchesModel.create({ gameId: game.id, branchId: branch.id });
+      const branch = await game.createBranchEntry({
+        bdsBranchId,
+        contentfulId,
+      });
+
+      if (bdsBuildId) {
+        const build = bdsBuildId ? await BuildModel.findOne({ where: { bdsBuildId } }) : null;
+        if (await BranchService.addNewBuildToBranch(branch, build)) {
+          return { code: HttpCode.OK };
+        }
+        warn(
+          'Failed to add build to newly created branch, titleId=%j, branchId=%j, buildId=%j',
+          bdsTitleId,
+          bdsBranchId,
+          bdsBuildId
+        );
+      }
     } else {
       warn('Created a branch not corresponding to a game, this is unexpected but potentially valid');
-    }
-
-    if (bdsBuildId) {
-      const build = bdsBuildId ? await BuildModel.findEntry({ bdsBuildId }) : null;
-      if (await BranchService.addNewBuildToBranch(branch, build)) {
-        return { code: HttpCode.OK };
-      }
-      warn(
-        'Failed to add build to newly created branch, titleId=%j, branchId=%j, buildId=%j',
-        bdsTitleId,
-        bdsBranchId,
-        bdsBuildId
-      );
     }
 
     return { code: HttpCode.INTERNAL_SERVER_ERROR };
   }
 
   public static async onDeleted(bdsTitleId: number, bdsBranchId: number): Promise<ControllerResponse> {
-    const branch = await BranchModel.findEntry({ bdsBranchId });
+    const branch = await BranchModel.findOne({ where: { bdsBranchId } });
 
-    const game = await GameModel.findEntry({ bdsTitleId });
+    const game = await GameModel.findOne({ where: { bdsTitleId } });
     if (game && branch) {
-      GameBranchesModel.destroy({ where: { branchId: branch.id, gameId: game.id } });
+      game.removeBranch(branch);
     } else {
       info('Removed a branch not corresponding to a game');
     }
@@ -71,8 +66,8 @@ export class BranchService {
     bdsBranchId: number,
     bdsBuildId: number
   ): Promise<ControllerResponse> {
-    const branch = await BranchModel.findEntry({ bdsBranchId });
-    const build = await BuildModel.findEntry({ bdsBuildId });
+    const branch = await BranchModel.findOne({ where: { bdsBranchId } });
+    const build = await BuildModel.findOne({ where: { bdsBuildId } });
 
     if (await BranchService.addNewBuildToBranch(branch, build)) {
       return { code: HttpCode.OK };
@@ -84,13 +79,16 @@ export class BranchService {
   private static async addNewBuildToBranch(branch: BranchModel | null, build: BuildModel | null): Promise<boolean> {
     try {
       if (build && branch) {
-        // remove all newer version (in case it's a rollback), also prevents adding same build multiple times
-        BranchBuildsModel.destroy({
-          where: {
-            [Op.and]: [{ branchId: branch.id }, { buildId: { [Op.gte]: build.id } }],
-          },
+        const allBuilds = await branch.getBuilds();
+
+        // un-associate all newer version (in case it's a rollback), also prevents adding same build multiple times
+        allBuilds.forEach(async buildEntry => {
+          if (buildEntry.id >= build.id) {
+            branch.removeBuild(buildEntry);
+          }
         });
-        BranchBuildsModel.create({ branchId: branch.id, buildId: build.id });
+
+        branch.addBuild(build);
         return true;
       }
     } catch (sqlErr) {

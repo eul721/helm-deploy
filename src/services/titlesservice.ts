@@ -11,7 +11,7 @@ export class TitleService {
   }
 
   public static async onDeleted(bdsTitleId: number): Promise<ControllerResponse> {
-    const game = await GameModel.findEntry({ bdsTitleId });
+    const game = await GameModel.findOne({ where: { bdsTitleId } });
     if (!game) {
       return { code: HttpCode.NOT_FOUND };
     }

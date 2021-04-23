@@ -4,3 +4,4 @@ docs/
 *.code-workspace
 .env
 .npmrc
+.vscode/

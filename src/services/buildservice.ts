@@ -1,6 +1,6 @@
 import { warn } from '../logger';
-import { BranchBuildsModel } from '../models/db/branchbuilds';
 import { BuildModel } from '../models/db/build';
+import { GameModel } from '../models/db/game';
 import { ControllerResponse } from '../models/http/controllerresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { ContentfulService, EContentfulResourceType } from './contentfulservice';
@@ -13,10 +13,19 @@ export class BuildService {
   }
 
   public static async onDeleted(bdsTitleId: number, bdsBuildId: number): Promise<ControllerResponse> {
-    const buildModel = await BuildModel.findEntry({ bdsBuildId });
+    const gameModel = await GameModel.findOne({ where: { bdsTitleId }, include: GameModel.associations.branches });
+    const buildModel = await BuildModel.findOne({ where: { bdsBuildId } });
 
     if (buildModel) {
-      BranchBuildsModel.destroy({ where: { buildId: buildModel?.id } });
+      if (gameModel) {
+        await gameModel.removeBuild(buildModel);
+
+        await Promise.all(
+          gameModel.branches!.map(async branch => {
+            await branch.removeBuild(buildModel);
+          })
+        );
+      }
       ContentfulService.removeContentfulResource(buildModel.contentfulId);
       buildModel.destroy();
     } else {

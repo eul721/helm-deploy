@@ -1,7 +1,18 @@
-import { DataTypes, ModelAttributes, Optional, WhereOptions } from 'sequelize';
-import { ModelBase } from './modelbase';
+import {
+  Association,
+  BelongsToGetAssociationMixin,
+  BelongsToManyAddAssociationMixin,
+  BelongsToManyGetAssociationsMixin,
+  BelongsToManyRemoveAssociationMixin,
+  DataTypes,
+  Model,
+  ModelAttributes,
+  Optional,
+} from 'sequelize';
 import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
-import { TableNames } from '../defines/tablenames';
+import { UserModel } from './user';
+import { RoleModel } from './role';
+import { DivisionModel } from './division';
 
 export const GroupDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -10,25 +21,53 @@ export const GroupDef: ModelAttributes = {
     type: DataTypes.STRING(64),
     unique: false,
   },
-  parentDivision: INTERNAL_ID_REFERENCE(TableNames.Division),
+  ownerId: INTERNAL_ID_REFERENCE(),
 };
 
 export interface GroupAttributes {
   id: number;
   name: string;
-  parentDivision: number;
+  ownerId: number;
 }
 
-export type GroupCreationAttributes = Optional<GroupAttributes, 'id'>;
+export type GroupCreationAttributes = Optional<GroupAttributes, 'id' | 'ownerId'>;
 
-export class GroupModel extends ModelBase<GroupAttributes, GroupCreationAttributes> implements GroupAttributes {
+export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> implements GroupAttributes {
   id!: number;
 
   name!: string;
 
-  parentDivision!: number;
+  ownerId!: number;
 
-  public static async findEntry(filter: WhereOptions<GroupAttributes>): Promise<GroupModel | null> {
-    return <GroupModel>await this.findEntryBase(filter);
-  }
+  // #region association: roles
+  public readonly roles?: RoleModel[];
+
+  public addAssignedRole!: BelongsToManyAddAssociationMixin<RoleModel, number>;
+
+  public removeAssignedRole!: BelongsToManyRemoveAssociationMixin<RoleModel, number>;
+
+  public getAssignedRoles!: BelongsToManyGetAssociationsMixin<RoleModel>;
+  // #endregion
+
+  // #region association: roles
+  public readonly users?: UserModel[];
+
+  public addAssignedUser!: BelongsToManyAddAssociationMixin<UserModel, number>;
+
+  public removeAssignedUser!: BelongsToManyRemoveAssociationMixin<UserModel, number>;
+
+  public getAssignedUsers!: BelongsToManyGetAssociationsMixin<UserModel>;
+  // #endregion
+
+  // #region association: owner
+  public readonly owner?: DivisionModel;
+
+  public getOwner!: BelongsToGetAssociationMixin<DivisionModel>;
+  // #endregion
+
+  public static associations: {
+    roles: Association<GroupModel, RoleModel>;
+    users: Association<GroupModel, UserModel>;
+    owner: Association<GroupModel, DivisionModel>;
+  };
 }

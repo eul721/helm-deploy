@@ -1,7 +1,7 @@
-import { getDBInstance } from '../models/db/database';
-import { GameModel } from '../models/db/game';
-import { HttpCode } from '../models/http/httpcode';
-import { GameService } from './gameservice';
+import { getDBInstance } from '../../db/database';
+import { GameModel } from '../../db/game';
+import { HttpCode } from '../../http/httpcode';
+import { GameService } from '../../../services/gameservice';
 
 describe('src/service/gameservice', () => {
   let contentfulId: string;

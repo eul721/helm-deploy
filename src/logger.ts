@@ -21,3 +21,8 @@ export function warn(message: string, ...args: Array<unknown>): void {
   // eslint-disable-next-line no-console
   console.warn(message, ...args);
 }
+
+export function error(message: string, ...args: Array<unknown>): void {
+  // eslint-disable-next-line no-console
+  console.error(message, ...args);
+}

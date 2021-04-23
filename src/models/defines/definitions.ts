@@ -1,5 +1,4 @@
 import { DataTypes } from 'sequelize';
-import { TableNames } from './tablenames';
 
 const IS_TEST = process.env.NODE_ENVIRONMENT === 'test';
 
@@ -25,26 +24,10 @@ export const INTERNAL_STRING_ID = () => {
   return { allowNull: false, primaryKey: true, type: INTERNAL_STRING_ID_TYPE(32), unique: true };
 };
 
-export const INTERNAL_ID_REFERENCE = (table: TableNames) => {
+export const INTERNAL_ID_REFERENCE = () => {
   return {
-    allowNull: false,
+    allowNull: true,
     type: INTERNAL_ID_TYPE(),
     unique: false,
-    references: {
-      key: 'id',
-      model: table,
-    },
-  };
-};
-
-export const INTERNAL_STRING_ID_REFERENCE = (table: TableNames) => {
-  return {
-    allowNull: false,
-    type: INTERNAL_STRING_ID_TYPE(32),
-    unique: false,
-    references: {
-      key: 'id',
-      model: table,
-    },
   };
 };
