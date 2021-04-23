@@ -3,7 +3,7 @@ import { info, warn } from './logger';
 import { initializeDB } from './models/db/database';
 import { SampleDatabase } from './models/tests/testutils';
 
-const { NODE_ENVIRONMENT, PORT = 5000, DATABASE_DROP } = process.env;
+const { NODE_ENVIRONMENT = 'development', PORT = 5000, DATABASE_DROP } = process.env;
 
 async function reinitializeDummyData() {
   info('====================================\n       Generating Test Data\n====================================');
