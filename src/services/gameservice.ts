@@ -59,7 +59,7 @@ export class GameService {
   public static async getOwnedGames(_userContext: UserContext): Promise<ControllerResponse<DownloadDataRoot>> {
     try {
       const games = await GameModel.findAll();
-      const gameModelsJson: { [key: string]: DownloadData }[] = [];
+      const gameModelsJson: { [key: string]: DownloadData } = {};
 
       await Promise.all(
         games.map(async game => {
@@ -67,7 +67,7 @@ export class GameService {
           if (branch) {
             const model = await GameService.constructGameDownloadModel(game, branch);
             const key = game.contentfulId;
-            gameModelsJson.push({ [key]: model });
+            gameModelsJson[key] = model;
           }
         })
       );

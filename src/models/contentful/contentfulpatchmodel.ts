@@ -3,7 +3,7 @@
  */
 export interface ContentfulPatchModel {
   // human-readable version name of this patch
-  versionName: string;
+  version: string;
 
   // release notes for the patch
   releaseNotes: string;

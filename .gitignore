@@ -5,3 +5,4 @@ docs/
 .env
 .npmrc
 .vscode/
+.idea/
