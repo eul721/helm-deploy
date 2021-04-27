@@ -14,7 +14,7 @@
     "lint:dev": "nodemon --ignore dist/ -e ts --exec \"npm run lint\"",
     "lint": "eslint .",
     "serve": "node dist/index.cjs.js",
-    "serve:dev": "nodemon y--delay 2",
+    "serve:dev": "nodemon -r dotenv/config --inspect dist/index.cjs.js --delay 2",
     "test:dev": "jest --watch --verbose",
     "test": "jest --runInBand"
   },
@@ -52,7 +52,7 @@
     "supertest": "^6.1.3",
     "ts-jest": "^26.5.1",
     "typescript": "^4.1.5",
-    "http-proxy-middleware": "^1.2.0"
+    "axios": "^0.21.1"
   },
   "dependencies": {
     "async-retry": "^1.3.1",

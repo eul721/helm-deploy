@@ -1,8 +1,8 @@
-import {Request, Response, Router} from 'express';
+import { Request, Response, Router } from 'express';
 import axios from 'axios';
 import { UserContext } from '../services/usercontext';
-import {error, info} from "../logger";
-import {HttpCode} from "../models/http/httpcode";
+import { error, info } from '../logger';
+import { HttpCode } from '../models/http/httpcode';
 
 const { BINARY_DISTRIBUTION_SERVICE_URL = 'http://localhost:8080/api/v1.0' } = process.env;
 
@@ -57,7 +57,7 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
 }
 
 /**
- * @api {GET} /<title-id>/branches* Get Branches from BDS
+ * @api {GET} /:titleId/branches Get Branches from BDS
  * @apiName GetBdsBranches
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -70,7 +70,7 @@ bdsApiRouter.get('/[0-9]{7}/branches*', async (req, res) => {
 });
 
 /**
- * @api {GET} /<title-id>/builds* Get Branches from BDS
+ * @api {GET} /:titleId/builds Get Branches from BDS
  * @apiName GetBdsBuilds
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -83,7 +83,7 @@ bdsApiRouter.get('/[0-9]{7}/builds*', async (req, res) => {
 });
 
 /**
- * @api {GET} /<title-id>/depots* Get Depots from BDS
+ * @api {GET} /:titleId/depots* Get Depots from BDS
  * @apiName GetBdsDepots
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -96,7 +96,7 @@ bdsApiRouter.get('/[0-9]{7}/depots*', async (req, res) => {
 });
 
 /**
- * @api {GET} /<title-id>/depots* Get Titles from BDS
+ * @api {GET} /:titleId/depots* Get Titles from BDS
  * @apiName GetBdsTitles
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -109,7 +109,7 @@ bdsApiRouter.get('/[0-9]{7}/titles*', async (req, res) => {
 });
 
 /**
- * @api {GET} /<title-id>/launchOptions* Get Launch Options from BDS
+ * @api {GET} /:titleId/launchOptions* Get Launch Options from BDS
  * @apiName GetBdsLaunchOptions
  * @apiGroup BDS
  * @apiVersion  0.0.1
