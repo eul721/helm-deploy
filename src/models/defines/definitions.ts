@@ -1,10 +1,9 @@
 import { DataTypes } from 'sequelize';
-
-const IS_TEST = process.env.NODE_ENVIRONMENT === 'test';
+import { config } from '../../config';
 
 const INTERNAL_ID_TYPE = () =>
   DataTypes.BIGINT({
-    unsigned: !IS_TEST,
+    unsigned: !config.isTest(),
     length: 32,
   });
 

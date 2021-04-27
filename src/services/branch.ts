@@ -1,9 +1,9 @@
-import { ContentfulService, EContentfulResourceType } from './contentfulservice';
+import { ContentfulService, EContentfulResourceType } from './contentful';
 import { info, warn } from '../logger';
 import { BuildModel } from '../models/db/build';
 import { BranchModel } from '../models/db/branch';
 import { GameModel } from '../models/db/game';
-import { ControllerResponse } from '../models/http/controllerresponse';
+import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 
 export class BranchService {
@@ -11,7 +11,7 @@ export class BranchService {
     bdsTitleId: number,
     bdsBranchId: number,
     bdsBuildId?: number
-  ): Promise<ControllerResponse> {
+  ): Promise<ServiceResponse> {
     const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Branch);
 
     const game = await GameModel.findOne({ where: { bdsTitleId } });
@@ -40,7 +40,7 @@ export class BranchService {
     return { code: HttpCode.INTERNAL_SERVER_ERROR };
   }
 
-  public static async onDeleted(bdsTitleId: number, bdsBranchId: number): Promise<ControllerResponse> {
+  public static async onDeleted(bdsTitleId: number, bdsBranchId: number): Promise<ServiceResponse> {
     const branch = await BranchModel.findOne({ where: { bdsBranchId } });
 
     const game = await GameModel.findOne({ where: { bdsTitleId } });
@@ -65,7 +65,7 @@ export class BranchService {
     bdsTitleId: number,
     bdsBranchId: number,
     bdsBuildId: number
-  ): Promise<ControllerResponse> {
+  ): Promise<ServiceResponse> {
     const branch = await BranchModel.findOne({ where: { bdsBranchId } });
     const build = await BuildModel.findOne({ where: { bdsBuildId } });
 

@@ -1,5 +1,5 @@
-import { getDBInstance } from '../db/database';
-import { GameModel } from '../db/game';
+import { getDBInstance } from '../../models/db/database';
+import { GameModel } from '../../models/db/game';
 
 describe('src/models/game', () => {
   beforeEach(async () => {

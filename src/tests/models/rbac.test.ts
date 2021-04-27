@@ -1,8 +1,8 @@
-import { getDBInstance } from '../db/database';
-import { GroupModel } from '../db/group';
-import { PermissionModel } from '../db/permission';
-import { RoleModel } from '../db/role';
-import { UserModel } from '../db/user';
+import { getDBInstance } from '../../models/db/database';
+import { GroupModel } from '../../models/db/group';
+import { PermissionModel } from '../../models/db/permission';
+import { RoleModel } from '../../models/db/role';
+import { UserModel } from '../../models/db/user';
 
 describe('src/models/rbac', () => {
   beforeEach(async () => {

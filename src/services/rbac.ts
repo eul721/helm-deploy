@@ -5,7 +5,7 @@ import { GroupModel } from '../models/db/group';
 */
 import { UserModel } from '../models/db/user';
 import { AccessPermissionType } from '../models/db/permission';
-import { ControllerResponse } from '../models/http/controllerresponse';
+import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 
 export class RbacService {
@@ -13,7 +13,7 @@ export class RbacService {
     userExternalId: number,
     _titleId: number,
     _permission: AccessPermissionType
-  ): Promise<ControllerResponse> {
+  ): Promise<ServiceResponse> {
     const user = await UserModel.findOne({ where: { externalId: userExternalId } });
 
     if (!user) return { code: HttpCode.NOT_FOUND };

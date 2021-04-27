@@ -1,8 +1,8 @@
-import { DivisionModel } from '../db/division';
-import { GameModel } from '../db/game';
-import { GroupModel } from '../db/group';
-import { PermissionModel, Permissions } from '../db/permission';
-import { UserModel } from '../db/user';
+import { DivisionModel } from '../models/db/division';
+import { GameModel } from '../models/db/game';
+import { GroupModel } from '../models/db/group';
+import { PermissionModel, Permissions } from '../models/db/permission';
+import { UserModel } from '../models/db/user';
 
 export class SampleDatabase {
   public division?: DivisionModel;
@@ -46,7 +46,7 @@ export class SampleDatabase {
     // users setup
     [this.userCto, this.userSrDev, this.userJrDev, this.userQA, this.userGuest] = await Promise.all([
       this.division.createUserEntry({
-        externalId: 'larrydavid@comedy.tv',
+        externalId: 'debug@admin',
       }),
       this.division.createUserEntry({
         externalId: 'teddanson@thegood.place',

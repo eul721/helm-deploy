@@ -9,29 +9,18 @@ import { PermissionDef, PermissionModel } from './permission';
 import { RoleDef, RoleModel } from './role';
 import { TableNames } from '../defines/tablenames';
 import { GroupDef, GroupModel } from './group';
-
-const { NODE_ENVIRONMENT = 'development' } = process.env;
-
-const {
-  DATABASE_DBG = '',
-  DATABASE_HOST = '',
-  DATABASE_NAME = '',
-  DATABASE_PASS = '',
-  DATABASE_PORT = '',
-  DATABASE_USER = '',
-  DATABASE_DROP = '',
-} = process.env;
+import { config } from '../../config';
 
 function getDBConf(): Options {
   const opts: Options = {
-    database: DATABASE_NAME,
-    host: DATABASE_HOST,
-    logging: DATABASE_DBG === 'true' ? debug : false,
-    password: DATABASE_PASS,
-    username: DATABASE_USER,
+    database: config.DATABASE_NAME,
+    host: config.DATABASE_HOST,
+    logging: config.DATABASE_DBG === 'true' ? debug : false,
+    password: config.DATABASE_PASS,
+    username: config.DATABASE_USER,
   };
 
-  switch (NODE_ENVIRONMENT) {
+  switch (config.NODE_ENVIRONMENT) {
     // Test environment uses in-memory SQLite instead of MariaDB
     case 'test':
       opts.dialect = 'sqlite';
@@ -39,12 +28,12 @@ function getDBConf(): Options {
       break;
     case 'production':
     case 'development':
-      if (!DATABASE_HOST || !DATABASE_NAME || !DATABASE_PASS || !DATABASE_USER) {
-        warn('Missing environment=%s configuration in DB_CONFIG', NODE_ENVIRONMENT);
+      if (!config.DATABASE_HOST || !config.DATABASE_NAME || !config.DATABASE_PASS || !config.DATABASE_USER) {
+        warn('Missing environment=%s configuration in DB_CONFIG', config.NODE_ENVIRONMENT);
         throw new Error('Missing or invalid configuration');
       }
-      if (DATABASE_PORT !== '') {
-        const dbPort = parseInt(DATABASE_PORT, 10);
+      if (config.DATABASE_PORT !== '') {
+        const dbPort = parseInt(config.DATABASE_PORT, 10);
         if (Number.isNaN(dbPort)) {
           warn('DATABASE_PORT provided is not a valid number');
           throw new Error('Missing or invalid configuration');
@@ -73,7 +62,7 @@ export function getDBInstance() {
 
 export async function initializeDB() {
   try {
-    const dropDb = DATABASE_DROP === 'true' && NODE_ENVIRONMENT === 'development';
+    const dropDb = config.DATABASE_DROP === 'true' && config.isDev();
     if (dropDb) {
       warn('Dropping old database');
     }

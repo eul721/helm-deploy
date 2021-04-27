@@ -1,5 +1,5 @@
-import { BuildModel } from '../db/build';
-import { getDBInstance } from '../db/database';
+import { BuildModel } from '../../models/db/build';
+import { getDBInstance } from '../../models/db/database';
 
 describe('src/models/branch', () => {
   beforeEach(async () => {

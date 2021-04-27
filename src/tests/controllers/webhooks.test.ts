@@ -1,9 +1,11 @@
 import express from 'express';
 import request from 'supertest';
-import { getDBInstance } from '../models/db/database';
-import { WebhookPayload } from '../models/http/webhookpayload';
-import { WebhookTrigger } from '../models/http/webhooktrigger';
-import { webhookRouter } from './webhooks';
+import { getDBInstance } from '../../models/db/database';
+import { WebhookPayload } from '../../models/http/webhookpayload';
+import { WebhookTrigger } from '../../models/http/webhooktrigger';
+import { webhookRouter } from '../../controllers/webhooks';
+import { config } from '../../config';
+import { HTTP_WEBHOOK_HEADER_TOKEN } from '../../middleware/auth.utils';
 
 const app = express();
 app.use(express.json());
@@ -33,7 +35,12 @@ describe('src/controllers/webhooks', () => {
         });
 
         it('should process a title creation event', async () => {
-          await request(app).post('/webhooks').send(payload).set('Content-Type', 'application/json').expect(200);
+          const result = await request(app)
+            .post('/webhooks')
+            .send(payload)
+            .set('Content-Type', 'application/json')
+            .set(HTTP_WEBHOOK_HEADER_TOKEN, config.WEBHOOK_SECRET_KEY);
+          expect(result.status).toBe(200);
         });
       });
     });
