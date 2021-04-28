@@ -2,6 +2,9 @@
  * Contentful model representing a single prerequisite of a game
  */
 export interface ContentfulPrerequisite {
+  // uid for prerequisite
+  id: string;
+
   // human readable name
   title: string;
 

@@ -2,6 +2,9 @@
  * Contentful model representing a single required agreement for a games
  */
 export interface ContentfulAgreement {
+  // uid for agreement
+  id: string;
+
   // human-readable agreement title
   title: string;
 

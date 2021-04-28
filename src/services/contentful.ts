@@ -1,8 +1,7 @@
-import { ContentfulAgreement } from '../models/contentful/contentfulagreement';
 import { ContentfulGameModel } from '../models/contentful/contentfulgamemodel';
 import { ContentfulPatchModel } from '../models/contentful/contentfulpatchmodel';
-import { ContentfulPrerequisite } from '../models/contentful/contentfulprerequisite';
 import { ContentfulBranchModel } from '../models/contentful/contentfulbranchmodel';
+import { ContentfulMockData } from '../models/tests/contentfulMockData';
 
 export enum EContentfulResourceType {
   // general info about a game
@@ -47,14 +46,18 @@ export class ContentfulService {
    * @param contentfulPatchModelId resource identifier
    */
   public static async getPatchModel(_contentfulPatchModelId: string): Promise<ContentfulPatchModel> {
-    // todo implement
-    const mockMandatory = true;
-    return {
-      versionName: 'mockVersion',
-      mandatory: mockMandatory,
-      releaseNotes: 'mock release notes',
-      patchArticleSlug: 'mock unknown field',
-    };
+    // todo Real data from contentful (only mock for now)
+    const text = ContentfulMockData.getPatch(_contentfulPatchModelId);
+    if (text == null) {
+      const mockMandatory = true;
+      return {
+        version: 'mockVersion',
+        mandatory: mockMandatory,
+        releaseNotes: 'mock release notes',
+        patchArticleSlug: 'mock unknown field',
+      };
+    }
+    return JSON.parse(text);
   }
 
   /**
@@ -63,29 +66,32 @@ export class ContentfulService {
    * @param contentfulGameModelId resource identifier
    */
   public static async getGameModel(_contentfulGameModelId: string): Promise<ContentfulGameModel> {
-    // todo implement
-    const mockPrerequisite: ContentfulPrerequisite = {
-      commandLine: 'mock mock mock',
-      relativePath: '../mock1/mock2',
-      required: true,
-      title: 'MockPrerequisiteY',
-      version: '0.0',
-      bdsId: 1,
-    };
-    const mockAgreement: ContentfulAgreement = {
-      isEmbed: true,
-      title: 'mock title',
-      url: 'mock@mock.mock',
-    };
-
+    // todo Real data from contentful (only mock for now)
+    const text = ContentfulMockData.getGame(_contentfulGameModelId);
+    if (text == null) {
+      return {
+        name: '',
+        prerequisites: [],
+        agreements: [],
+        childIds: [],
+        parentId: null,
+        supportedLanguages: [],
+        publicReleaseBranch: null,
+      };
+    }
+    const contentfulGame = JSON.parse(text);
     return {
-      name: 'mock game name',
-      prerequisites: [mockPrerequisite],
-      agreements: [mockAgreement],
-      childIds: [],
-      parentId: null,
-      supportedLanguages: ['DE', 'SK', 'SV'],
-      publicReleaseBranch: null,
+      name: contentfulGame.name,
+      prerequisites: contentfulGame.prerequisites.map((item: any) => {
+        return { ...item, bdsId: 12345 };
+      }),
+      agreements: contentfulGame.agreements.map((item: any) => {
+        return { ...item };
+      }),
+      childIds: contentfulGame.childIds,
+      parentId: contentfulGame.parentId,
+      supportedLanguages: contentfulGame.supportedLanguages,
+      publicReleaseBranch: contentfulGame.publicReleaseBranch,
     };
   }
 
@@ -95,11 +101,15 @@ export class ContentfulService {
    * @param contentfulBranchModelId resource identifier
    */
   public static async getBranchModel(_contentfulBranchModelId: string): Promise<ContentfulBranchModel> {
-    // todo implement
-    return {
-      name: 'mock branch name',
-      password: null,
-      isPublic: true,
-    };
+    // todo Real data from contentful (only mock for now)
+    const text = ContentfulMockData.getBranch(_contentfulBranchModelId);
+    if (text == null) {
+      return {
+        name: 'mock branch name',
+        password: null,
+        isPublic: true,
+      };
+    }
+    return JSON.parse(text);
   }
 }

@@ -70,7 +70,7 @@ export class GameService {
       const games = await GameModel.findAll({
         where: { id: { [Op.any]: userContext.ownedTitles?.map(title => title.id) } },
       });
-      const gameModelsJson: { [key: string]: DownloadData }[] = [];
+      const gameModelsJson: { [key: string]: DownloadData } = {};
 
       await Promise.all(
         games.map(async game => {
@@ -78,7 +78,7 @@ export class GameService {
           if (branch) {
             const model = await GameService.constructGameDownloadModel(game, branch);
             const key = game.contentfulId;
-            gameModelsJson.push({ [key]: model });
+            gameModelsJson[key] = model;
           }
         })
       );
