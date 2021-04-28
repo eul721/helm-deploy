@@ -22,16 +22,17 @@ T2GP Publisher Service is the backend wrapper to glue together BDS, Contentful, 
 
 Before starting, populate a `.env` file in the root of the project (this project uses [dotenv](https://www.npmjs.com/package/dotenv) in development, which populates `process.env` with the contents of a `.env` file).
 
-| Name                     | Description                 | Example                  |
-| ------------------------ | --------------------------- | ------------------------ |
-| DATABASE_HOST            | Database server host        | http://localhost         |
-| DATABASE_PORT            | Database server port        | 3306                     |
-| DATABASE_NAME            | Database name               | `publisher_services_dev` |
-| DATABASE_USER            | Database login name         | `dbuser_1`               |
-| DATABASE_PASS            | Database password           | `hunter2`                |
-| DATABASE_DBG (optional)  | Debug SQL queries (verbose) | `true`, `false`          |
-| DATABASE_DROP (optional) | Dev only, allow db drop     | `true`, `false`          |
-| NPM_TOKEN (if building)  | NPM Token to access protected `@take-two-t2gp` modules in Github repository | `abcd1234` |
+| Name                            | Description                 | Example                  |
+| --------------------------------| --------------------------- | ------------------------ |
+| DATABASE_HOST                   | Database server host        | http://localhost         |
+| DATABASE_PORT                   | Database server port        | 3306                     |
+| DATABASE_NAME                   | Database name               | `publisher_services_dev` |
+| DATABASE_USER                   | Database login name         | `dbuser_1`               |
+| DATABASE_PASS                   | Database password           | `hunter2`                |
+| DATABASE_DBG (optional)         | Debug SQL queries (verbose) | `true`, `false`          |
+| DATABASE_DROP (optional)        | Dev only, allow db drop     | `true`, `false`          |
+| NPM_TOKEN (if building)         | NPM Token to access protected `@take-two-t2gp` modules in Github repository | `abcd1234` |
+| BINARY_DISTRIBUTION_SERVICE_URL | URL of the BDS              |  https://dev.bds.api.2kcoretech.online/api/v1.0 |
 
 ### Getting Started
 
