@@ -1,7 +1,7 @@
 import { ContentfulGameModel } from '../models/contentful/contentfulgamemodel';
 import { ContentfulPatchModel } from '../models/contentful/contentfulpatchmodel';
 import { ContentfulBranchModel } from '../models/contentful/contentfulbranchmodel';
-import { ContentfulMockData } from '../models/tests/contentfulMockData';
+import { ContentfulMockData } from '../tests/models/contentfulMockData';
 
 export enum EContentfulResourceType {
   // general info about a game
