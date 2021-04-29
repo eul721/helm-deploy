@@ -1,20 +1,12 @@
 import { Router } from 'express';
+import { getAuthenticateMiddleware } from '../middleware/authenticate';
+import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 import { HttpCode } from '../models/http/httpcode';
-import { GameService } from '../services/gameservice';
-import { UserContext } from '../services/usercontext';
+import { GameService } from '../services/game';
 
 export const downloadApiRouter = Router();
 
-/**
- * Validate user (player) credentials
- */
-downloadApiRouter.use((_req, res, next) => {
-  // TODO external service call to verify user, set required information (possibly just id) as request local data
-  const userContext: UserContext = { authenticated: true };
-  res.locals.userContext = userContext;
-
-  next();
-});
+downloadApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware());
 
 /**
  * @api {GET} /api/games Get games catalogue
@@ -25,7 +17,7 @@ downloadApiRouter.use((_req, res, next) => {
  *
  * @apiUse T2Auth
  */
-downloadApiRouter.get('/games', async (_req, res) => {
+downloadApiRouter.get('/', async (_req, res) => {
   const response = await GameService.getAllGames();
   res.status(response.code).json(response.payload);
 });
@@ -39,7 +31,7 @@ downloadApiRouter.get('/games', async (_req, res) => {
  *
  * @apiUse T2Auth
  */
-downloadApiRouter.get('/games/download', async (_req, res) => {
+downloadApiRouter.get('/download', async (_req, res) => {
   const response = await GameService.getOwnedGames(res.locals.userContext);
   res.status(response.code).json(response.payload);
 });
@@ -53,7 +45,7 @@ downloadApiRouter.get('/games/download', async (_req, res) => {
  *
  * @apiUse T2Auth
  */
-downloadApiRouter.get('/games/branches', async (req, res) => {
+downloadApiRouter.get('/branches', async (req, res) => {
   const titleContentfulId = req.query.title?.toString();
   if (titleContentfulId) {
     const response = await GameService.getBranches(titleContentfulId, res.locals.userContext);
@@ -72,7 +64,7 @@ downloadApiRouter.get('/games/branches', async (req, res) => {
  *
  * @apiUse T2Auth
  */
-downloadApiRouter.get('/games/download/branch', async (req, res) => {
+downloadApiRouter.get('/download/branch', async (req, res) => {
   const titleContentfulId = req.query.title?.toString();
   const branchContentfulId = req.query.branch?.toString();
   const password = req.query.password?.toString();

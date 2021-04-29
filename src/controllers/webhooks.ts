@@ -1,14 +1,21 @@
 import { Router } from 'express';
 import { info, warn } from '../logger';
-import { ControllerResponse } from '../models/http/controllerresponse';
+import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { WebhookPayload } from '../models/http/webhookpayload';
 import { WebhookTrigger, triggersWebhooks, triggersModifyRedistributable } from '../models/http/webhooktrigger';
-import { BranchService } from '../services/branchservice';
-import { BuildService } from '../services/buildservice';
-import { TitleService } from '../services/titlesservice';
+import { BranchService } from '../services/branch';
+import { BuildService } from '../services/build';
+import { TitleService } from '../services/titles';
+import { secretKeyAuth } from '../middleware/secretkeyauth';
+import { config } from '../config';
+import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
+import { getAuthenticateMiddleware } from '../middleware/authenticate';
+import { HTTP_WEBHOOK_HEADER_TOKEN } from '../middleware/auth.utils';
 
 export const webhookRouter = Router();
+
+webhookRouter.use(secretKeyAuth(config.WEBHOOK_SECRET_KEY!, HTTP_WEBHOOK_HEADER_TOKEN));
 
 /**
  * Automatically parse and validate webhook bodies and assign to local values
@@ -18,18 +25,6 @@ webhookRouter.use((req, res, next) => {
     try {
       const payload: WebhookPayload = req.body as WebhookPayload;
       res.locals.payload = payload;
-      const bearerToken = req.headers.authorization;
-
-      // TODO contact external service to confirm token validity
-
-      if (!bearerToken) {
-        // TODO uncomment once functional
-        // || external service says token invalid
-        // res.status(401).json({ message: 'User not authorised' });
-      } else {
-        // TODO parse token and set user info on the request
-        // if response is res.status(403).json({ message: 'User not authorised' });
-      }
     } catch (jsonException) {
       res.status(400).json({ message: 'Bad Request' });
       return;
@@ -54,7 +49,7 @@ webhookRouter.use((req, res, next) => {
  * | **title**      |  |
  */
 webhookRouter.post('/', async (req, res) => {
-  let result: ControllerResponse = {
+  let result: ServiceResponse = {
     code: 400,
   };
 
@@ -111,6 +106,8 @@ webhookRouter.post('/', async (req, res) => {
   res.status(result.code).json(result.payload);
 });
 
+webhookRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
+
 /**
  * @api {POST} /webhooks/verify Publisher Webhooks for user permissions
  * @apiGroup Webhook
@@ -119,8 +116,8 @@ webhookRouter.post('/', async (req, res) => {
  * can be performed by the given user
  */
 webhookRouter.post('/verify', async (req, res) => {
-  const result: ControllerResponse = {
-    code: 403,
+  const result: ServiceResponse = {
+    code: HttpCode.FORBIDDEN,
   };
 
   const payload: WebhookPayload = res.locals.payload as WebhookPayload;

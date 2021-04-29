@@ -1,7 +1,7 @@
-import { HttpCode } from '../../http/httpcode';
-import { RbacService } from '../../../services/rbacservice';
+import { HttpCode } from '../../models/http/httpcode';
+import { RbacService } from '../../services/rbac';
 import { SampleDatabase } from '../testutils';
-import { getDBInstance } from '../../db/database';
+import { getDBInstance } from '../../models/db/database';
 
 describe('src/services/rbacservice', () => {
   const testDb: SampleDatabase = new SampleDatabase();

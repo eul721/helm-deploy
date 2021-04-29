@@ -1,35 +1,42 @@
+import { Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { Prerequisite } from '../models/http/prerequisite';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import { Agreement } from '../models/http/agreement';
 import { Branch } from '../models/http/branch';
-import { ControllerResponse } from '../models/http/controllerresponse';
+import { ServiceResponse } from '../models/http/serviceresponse';
 import { warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { Catalogue } from '../models/http/catalogue';
 import { CatalogueItem } from '../models/http/catalogueItem';
-import { ContentfulService } from './contentfulservice';
-import { UserContext } from './usercontext';
+import { ContentfulService } from './contentful';
+import { UserContext } from '../models/auth/usercontext';
+import { supplementStudioUserModel } from '../middleware/auth.utils';
 
 export class GameService {
   /**
    * Finds download data of a single a game
-   * TODO should check if game is owned by the player
+   * This is a Player facing method
    *
+   * @param userContext information about the requester
    * @param contentfulId game contentful id
    * @param branchContentfulIdOverride optional override for branch, if not set public one is used
    * @param branchOverridePassword password for branch override, only used if it's non public and password protected
    */
   public static async getGameDownloadModel(
-    _userContext: UserContext,
+    userContext: UserContext,
     contentfulId: string,
     branchContentfulIdOverride?: string,
     branchOverridePassword?: string
-  ): Promise<ControllerResponse<DownloadData>> {
+  ): Promise<ServiceResponse<DownloadData>> {
     try {
       const game = await GameModel.findOne({ where: { contentfulId } });
       if (!game) return { code: HttpCode.NOT_FOUND };
+
+      if (!userContext.ownedTitles?.some(title => title.id === game.id)) {
+        return { code: HttpCode.FORBIDDEN };
+      }
 
       const branch = await GameService.findBranch(game, branchContentfulIdOverride, branchOverridePassword);
       if (!branch) return { code: HttpCode.FORBIDDEN };
@@ -43,9 +50,9 @@ export class GameService {
 
   /**
    * Returns download data of all games, returns only publicly released branches
-   * TODO should be restricted to games owned by the player
+   * This method doesn't care about player/publisher distinction
    */
-  public static async getAllGames(): Promise<ControllerResponse<Catalogue>> {
+  public static async getAllGames(): Promise<ServiceResponse<Catalogue>> {
     const items: CatalogueItem[] = (await GameModel.findAll()).map(item => {
       return { contentfulId: item.contentfulId, bdsTitleId: item.bdsTitleId };
     });
@@ -54,12 +61,16 @@ export class GameService {
 
   /**
    * Returns download data of all games, returns only publicly released branches
-   * TODO should be restricted to games owned by the player
+   * This is a Player facing method
+   *
+   * @param userContext information about the requester
    */
-  public static async getOwnedGames(_userContext: UserContext): Promise<ControllerResponse<DownloadDataRoot>> {
+  public static async getOwnedGames(userContext: UserContext): Promise<ServiceResponse<DownloadDataRoot>> {
     try {
-      const games = await GameModel.findAll();
-      const gameModelsJson: { [key: string]: DownloadData }[] = [];
+      const games = await GameModel.findAll({
+        where: { id: { [Op.any]: userContext.ownedTitles?.map(title => title.id) } },
+      });
+      const gameModelsJson: { [key: string]: DownloadData } = {};
 
       await Promise.all(
         games.map(async game => {
@@ -67,7 +78,7 @@ export class GameService {
           if (branch) {
             const model = await GameService.constructGameDownloadModel(game, branch);
             const key = game.contentfulId;
-            gameModelsJson.push({ [key]: model });
+            gameModelsJson[key] = model;
           }
         })
       );
@@ -81,11 +92,15 @@ export class GameService {
 
   /**
    * Returns all branches of the specified game
+   * This can process both player and publisher requests
+   *
+   * @param titleContentfulId game contentful id
+   * @param userContext information about the requester
    */
   public static async getBranches(
     titleContentfulId: string,
     userContext: UserContext
-  ): Promise<ControllerResponse<Branch[]>> {
+  ): Promise<ServiceResponse<Branch[]>> {
     try {
       const game = await GameModel.findOne({ where: { contentfulId: titleContentfulId } });
       if (!game) {
@@ -98,15 +113,17 @@ export class GameService {
       }
 
       const gameBranches = await game.getBranches();
-
       const branches: Branch[] = [];
+      const studioUser = userContext.studioUserModel ?? (await supplementStudioUserModel(userContext)).studioUserModel;
+      const allowedPrivateBranches = studioUser && (await studioUser.getOwner()).id === (await game.getOwner()).id;
+
       await Promise.all(
         gameBranches.map(async branchModel => {
           const branchContentfulModel = await ContentfulService.getBranchModel(branchModel.contentfulId);
           if (!branchContentfulModel) return;
 
           // non-studio users are not allowed to touch private branches
-          if (!userContext.studioUserId && !branchContentfulModel.isPublic) return;
+          if (!branchContentfulModel.isPublic && !allowedPrivateBranches) return;
 
           branches.push({
             name: branchContentfulModel.name,

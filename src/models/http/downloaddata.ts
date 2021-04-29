@@ -8,7 +8,7 @@ export interface DownloadDataRoot {
 
 // the key is the contentful id
 export interface Model {
-  downloadData: { [key: string]: DownloadData }[];
+  downloadData: { [key: string]: DownloadData };
 }
 
 export interface DownloadData {

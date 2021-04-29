@@ -1,13 +1,13 @@
-import { BranchModel } from '../db/branch';
-import { BuildModel } from '../db/build';
-import { getDBInstance } from '../db/database';
-import { DivisionModel } from '../db/division';
-import { GameModel } from '../db/game';
-import { GroupModel } from '../db/group';
-import { RoleModel } from '../db/role';
-import { UserModel } from '../db/user';
-import { SampleDatabase } from './testutils';
-import { error } from '../../logger';
+import { BranchModel } from '../../models/db/branch';
+import { BuildModel } from '../../models/db/build';
+import { getDBInstance } from '../../models/db/database';
+import { DivisionModel } from '../../models/db/division';
+import { GameModel } from '../../models/db/game';
+import { GroupModel } from '../../models/db/group';
+import { RoleModel } from '../../models/db/role';
+import { UserModel } from '../../models/db/user';
+import { SampleDatabase } from '../testutils';
+import { error, info } from '../../logger';
 
 describe('src/models/database', () => {
   const testDb: SampleDatabase = new SampleDatabase();
@@ -19,7 +19,7 @@ describe('src/models/database', () => {
 
   it('should have defined methods', async () => {
     try {
-      console.info(
+      info(
         'testing one for each association to check that runtime-generated methods match the name-pattern written in the file'
       );
 

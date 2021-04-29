@@ -1,22 +1,15 @@
 import { Request, Response, Router } from 'express';
 import axios from 'axios';
-import { UserContext } from '../services/usercontext';
 import { error, info } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
+import { getAuthenticateMiddleware } from '../middleware/authenticate';
+import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 
 const { BINARY_DISTRIBUTION_SERVICE_URL = 'http://localhost:8080/api/v1.0' } = process.env;
 
 export const bdsApiRouter = Router();
 
-/**
- * Validate user (player) credentials
- */
-bdsApiRouter.use((_req, res, next) => {
-  const userContext: UserContext = { authenticated: true };
-  res.locals.userContext = userContext;
-
-  next();
-});
+bdsApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware());
 
 /**
  * Refactored method to relay requests to the BDS.

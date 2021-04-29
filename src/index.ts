@@ -1,9 +1,8 @@
 import { app } from './app';
+import { config } from './config';
 import { info, warn } from './logger';
 import { initializeDB } from './models/db/database';
-import { SampleDatabase } from './models/tests/testutils';
-
-const { NODE_ENVIRONMENT = 'development', PORT = 5000, DATABASE_DROP } = process.env;
+import { SampleDatabase } from './tests/testutils';
 
 async function reinitializeDummyData() {
   info('====================================\n       Generating Test Data\n====================================');
@@ -14,13 +13,13 @@ async function reinitializeDummyData() {
 
 initializeDB()
   .then(() => {
-    app.listen(PORT, () => {
-      info(`Server listening on port ${PORT}`);
+    app.listen(config.PORT, () => {
+      info(`Server listening on port ${config.PORT}`);
     });
 
-    info(`Env: ${NODE_ENVIRONMENT}`);
+    info(`Env: ${config.NODE_ENVIRONMENT}`);
     // Build and nuke the database if develop
-    if (DATABASE_DROP === 'true' && NODE_ENVIRONMENT === 'development') {
+    if (config.DATABASE_DROP === 'true' && config.isDev()) {
       warn('Reinitializing database');
       reinitializeDummyData();
     }

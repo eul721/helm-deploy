@@ -1,23 +1,15 @@
 import { Router } from 'express';
+import { getAuthenticateMiddleware } from '../middleware/authenticate';
+import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
 import { HttpCode } from '../models/http/httpcode';
-import { GameService } from '../services/gameservice';
-import { UserContext } from '../services/usercontext';
+import { GameService } from '../services/game';
 
 export const publishApiRouter = Router();
 
-/**
- * Validate division members credentials
- */
-publishApiRouter.use((_req, res, next) => {
-  // TODO external service call to verify user, set required information (possibly just id) as request local data
-  const userContext: UserContext = { authenticated: true, studioUserId: 1 };
-  res.locals.userContext = userContext;
-
-  next();
-});
+publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
 
 /**
- * @api {GET} /division/games/branches Get Branches
+ * @api {GET} /api/publisher/branches Get Branches
  * @apiName GetGames
  * @apiGroup Games
  * @apiVersion  0.0.1
@@ -25,7 +17,7 @@ publishApiRouter.use((_req, res, next) => {
  *
  * @apiUse T2Auth
  */
-publishApiRouter.get('/games/branches', async (req, res) => {
+publishApiRouter.get('/branches', async (req, res) => {
   const titleContentfulId = req.query.title?.toString();
   if (titleContentfulId) {
     const response = await GameService.getBranches(titleContentfulId, res.locals.userContext);

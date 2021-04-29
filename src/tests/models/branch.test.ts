@@ -1,7 +1,7 @@
-import { BranchModel } from '../db/branch';
-import { BuildModel } from '../db/build';
-import { getDBInstance } from '../db/database';
-import { GameModel } from '../db/game';
+import { BranchModel } from '../../models/db/branch';
+import { BuildModel } from '../../models/db/build';
+import { getDBInstance } from '../../models/db/database';
+import { GameModel } from '../../models/db/game';
 
 const Mocks = {
   Game1: {
