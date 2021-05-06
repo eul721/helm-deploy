@@ -16,7 +16,8 @@
     "serve": "node dist/index.cjs.js",
     "serve:dev": "nodemon -r dotenv/config --inspect dist/index.cjs.js --delay 2",
     "test:dev": "jest --watch --verbose",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:coverage": "jest --runInBand --coverage=true"
   },
   "repository": {
     "type": "git",

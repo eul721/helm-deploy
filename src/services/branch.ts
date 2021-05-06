@@ -7,6 +7,13 @@ import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 
 export class BranchService {
+  /**
+   * Function for handling BDS webhook input; creating a branch
+   *
+   * @param bdsTitleId id of the owning title
+   * @param bdsBranchId id of the created branch
+   * @param bdsBuildId id of the build that was set on the branch
+   */
   public static async onCreated(
     bdsTitleId: number,
     bdsBranchId: number,
@@ -40,6 +47,12 @@ export class BranchService {
     return { code: HttpCode.INTERNAL_SERVER_ERROR };
   }
 
+  /**
+   * Function for handling BDS webhook input; removing a branch
+   *
+   * @param bdsTitleId id of the owning title
+   * @param bdsBranchId id of the removed branch
+   */
   public static async onDeleted(bdsTitleId: number, bdsBranchId: number): Promise<ServiceResponse> {
     const branch = await BranchModel.findOne({ where: { bdsBranchId } });
 
@@ -61,6 +74,13 @@ export class BranchService {
     return { code: HttpCode.OK };
   }
 
+  /**
+   * Function for handling BDS webhook input; modifying a branch
+   *
+   * @param bdsTitleId id of the owning title
+   * @param bdsBranchId id of the modified branch
+   * @param bdsBuildId id of the build that was set on the branch
+   */
   public static async onModified(
     bdsTitleId: number,
     bdsBranchId: number,

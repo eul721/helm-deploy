@@ -1,8 +1,9 @@
 import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
 import { v1 as uuid } from 'uuid';
 import * as JWT from 'jsonwebtoken';
-import { config } from '../config';
-import { debug } from '../logger';
+import { fetch as crossfetch } from 'cross-fetch';
+import { envConfig } from '../configuration/envconfig';
+import { debug, error } from '../logger';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 
@@ -13,7 +14,11 @@ export class DevTokenGeneratorService {
    * Creates a development JWT
    * @param userID token owner
    */
-  static async createDevJwt(userID: string): Promise<ServiceResponse<string>> {
+  public static async createDevJwt(userID: string): Promise<ServiceResponse<string>> {
+    if (!envConfig.isDev() && !envConfig.isTest()) {
+      throw new Error('Dev/test only function');
+    }
+
     const body = {};
 
     const jwtOpts: JWT.SignOptions = {
@@ -23,7 +28,7 @@ export class DevTokenGeneratorService {
       jwtid: uuid(),
       subject: userID,
     };
-    return { code: HttpCode.OK, payload: JWT.sign(body, config.JWT_SECRET_KEY!, jwtOpts) };
+    return { code: HttpCode.OK, payload: JWT.sign(body, envConfig.JWT_SECRET_KEY!, jwtOpts) };
   }
 
   /**
@@ -33,15 +38,20 @@ export class DevTokenGeneratorService {
    * @param email 2K DNA email
    * @param password 2K DNA password
    */
-  static async createDnaJwt(
+  public static async createDnaJwt(
     email: string,
     password: string
   ): Promise<ServiceResponse<Record<string, string | undefined>>> {
-    if (!config.isDev) {
-      throw new Error('Dev only function');
+    if (!envConfig.isDev() && !envConfig.isTest()) {
+      throw new Error('Dev/test only function');
     }
 
-    const tokenGenEndpoint = DNA.config.getUrl('sso')?.baseUrl;
+    const serviceInfo = DNA.config.getUrl('sso');
+    const tokenGenEndpoint = serviceInfo?.baseUrl;
+    if (!tokenGenEndpoint) {
+      error('discovery failed');
+      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+    }
     const appID = DNA.config.getAppID();
     const payload = {
       locale: 'en-US',
@@ -55,7 +65,7 @@ export class DevTokenGeneratorService {
 
     const fetchUrl = `${tokenGenEndpoint}/auth/tokens`;
     debug('[DEV] Getting token for user=%s from %s', email, fetchUrl);
-    const fetchResult = await fetch(fetchUrl, {
+    const fetchResult = await crossfetch(fetchUrl, {
       body: JSON.stringify(payload),
       headers: {
         Authorization: `Application ${appID}`,

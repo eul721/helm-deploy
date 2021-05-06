@@ -3,11 +3,16 @@ import { warn } from '../logger';
 import { UserContext } from '../models/auth/usercontext';
 import { UserModel } from '../models/db/user';
 import { HttpCode } from '../models/http/httpcode';
-import { Middleware, middlewareExceptionWrapper, supplementStudioUserModel, useDummyAuth } from './auth.utils';
+import { SampleDatabase } from '../tests/testutils';
+import { Middleware, middlewareExceptionWrapper, useDummyAuth } from './utils';
 
+/**
+ * @apiDefine AuthorizePublisherMiddleware
+ * @apiVersion 0.0.1
+ */
 async function authorizePublisherMiddleware(_req: Request, res: Response, next: NextFunction) {
-  const context = await supplementStudioUserModel(res.locals.userContext as UserContext);
-  if (!context.studioUserModel) {
+  const context = res.locals.userContext as UserContext;
+  if (!(await context.getStudioUserModel())) {
     res.status(HttpCode.NOT_FOUND).json({ message: 'User not found in RBAC' });
     return;
   }
@@ -16,9 +21,15 @@ async function authorizePublisherMiddleware(_req: Request, res: Response, next: 
 }
 
 async function dummyAuthorizePublisherMiddleware(_req: Request, res: Response, next: NextFunction) {
-  let model = await UserModel.findOne({ where: { externalId: 'debug@admin' } });
-  model = model ?? (await UserModel.findByPk(1)) ?? (await UserModel.create());
-  res.locals.userContext = { studioUserModel: model } as UserContext;
+  const context = new UserContext(SampleDatabase.debugAdminEmail);
+
+  // replace the studio model getter with a debug-version if running with auth disabled
+  context.getStudioUserModel = async () => {
+    let model = await UserModel.findOne({ where: { externalId: SampleDatabase.debugAdminEmail } });
+    model = model ?? (await UserModel.findByPk(1)) ?? (await UserModel.create());
+    return model;
+  };
+  res.locals.userContext = context;
   next();
 }
 

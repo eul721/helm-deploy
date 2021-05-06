@@ -8,10 +8,6 @@ import { UserModel } from '../models/db/user';
 export class SampleDatabase {
   public division?: DivisionModel;
 
-  public gameCiv?: GameModel;
-
-  public gameKerbel?: GameModel;
-
   public gameXcom2?: GameModel;
 
   public gameWarOfChosen?: GameModel;
@@ -54,6 +50,16 @@ export class SampleDatabase {
 
   public permissions: PermissionModel[] = [];
 
+  public static contentfulIds: { game: string; branch: string }[] = [
+    { game: '6sAfVxoGuShx9DV38DcFxI', branch: 'xcom2TestBranch' },
+    { game: '5Apf8DiUW6dVyqmwjytKzf', branch: 'warOfChosenTestBranch' },
+    { game: '6MjdXYJ6dk2kxSXh0C0H60', branch: 'civ6TestBranch' },
+    { game: '5r3Loln4BEezgXtidiCxHm', branch: 'gatheringStormTestBranch' },
+    { game: 'tz1zm9ktk7RtSTH6STkhG', branch: 'riseAndFallTestBranch' },
+  ];
+
+  public static debugAdminEmail = 'debug@admin';
+
   public initAll = async () => {
     this.permissions = await Promise.all(Permissions.map(async id => PermissionModel.create({ id })));
 
@@ -61,50 +67,47 @@ export class SampleDatabase {
     this.division = await DivisionModel.create({ name: 'NotFake Division' });
     if (!this.division) return;
 
-    this.gameKerbel = await this.division.createGameEntry({ contentfulId: 'abc12345', bdsTitleId: 3333 });
-    this.gameCiv = await this.division.createGame({ contentfulId: 'qwerty', bdsTitleId: 1111 }, { isNewRecord: true });
-
     // Games that relate to test data in BDS and real Contentful IDs
     this.gameXcom2 = await this.division.createGame(
-      { contentfulId: '6sAfVxoGuShx9DV38DcFxI', bdsTitleId: 1000000 },
+      { contentfulId: SampleDatabase.contentfulIds[0].game, bdsTitleId: 1000000 },
       { isNewRecord: true }
     );
     this.gameWarOfChosen = await this.division.createGame(
-      { contentfulId: '5Apf8DiUW6dVyqmwjytKzf', bdsTitleId: 1000001 },
+      { contentfulId: SampleDatabase.contentfulIds[1].game, bdsTitleId: 1000001 },
       { isNewRecord: true }
     );
     this.gameCiv6 = await this.division.createGame(
-      { contentfulId: '6MjdXYJ6dk2kxSXh0C0H60', bdsTitleId: 1000003 },
+      { contentfulId: SampleDatabase.contentfulIds[2].game, bdsTitleId: 1000003 },
       { isNewRecord: true }
     );
     this.gameGatheringStorm = await this.division.createGame(
-      { contentfulId: '5r3Loln4BEezgXtidiCxHm', bdsTitleId: 1000066 },
+      { contentfulId: SampleDatabase.contentfulIds[3].game, bdsTitleId: 1000066 },
       { isNewRecord: true }
     );
     this.gameRiseAndFall = await this.division.createGame(
-      { contentfulId: 'tz1zm9ktk7RtSTH6STkhG', bdsTitleId: 1000067 },
+      { contentfulId: SampleDatabase.contentfulIds[4].game, bdsTitleId: 1000067 },
       { isNewRecord: true }
     );
 
     // Branches for "real" games
     this.branchXcom = await this.gameXcom2.createBranch({
-      contentfulId: 'xcom2TestBranch',
+      contentfulId: SampleDatabase.contentfulIds[0].branch,
       bdsBranchId: 4000000,
     });
     this.branchWarOfChosen = await this.gameWarOfChosen.createBranch({
-      contentfulId: 'warOfChosenTestBranch',
+      contentfulId: SampleDatabase.contentfulIds[1].branch,
       bdsBranchId: 4000003,
     });
     this.branchCiv6 = await this.gameCiv6.createBranch({
-      contentfulId: 'civ6TestBranch',
+      contentfulId: SampleDatabase.contentfulIds[2].branch,
       bdsBranchId: 4000001,
     });
     this.branchGatheringStorm = await this.gameGatheringStorm.createBranch({
-      contentfulId: 'gatheringStormTestBranch',
+      contentfulId: SampleDatabase.contentfulIds[3].branch,
       bdsBranchId: 4000047,
     });
     this.branchRiseAndFall = await this.gameRiseAndFall.createBranch({
-      contentfulId: 'riseAndFallTestBranch',
+      contentfulId: SampleDatabase.contentfulIds[4].branch,
       bdsBranchId: 4000048,
     });
 
@@ -166,7 +169,7 @@ export class SampleDatabase {
     // users setup
     [this.userCto, this.userSrDev, this.userJrDev, this.userQA, this.userGuest] = await Promise.all([
       this.division.createUserEntry({
-        externalId: 'debug@admin',
+        externalId: SampleDatabase.debugAdminEmail,
       }),
       this.division.createUserEntry({
         externalId: 'teddanson@thegood.place',
@@ -220,7 +223,7 @@ export class SampleDatabase {
       civEditorRole.addAssignedPermission(await PermissionModel.getModel('update')),
       civEditorRole.addAssignedPermission(await PermissionModel.getModel('delete')),
     ]);
-    civEditorRole.addAssignedGame(this.gameCiv);
+    civEditorRole.addAssignedGame(this.gameCiv6);
 
     const civAdminRole = await this.division.createRoleEntry({
       name: 'civ admin',
@@ -231,7 +234,7 @@ export class SampleDatabase {
       civAdminRole.addAssignedPermission(await PermissionModel.getModel('delete')),
       civAdminRole.addAssignedPermission(await PermissionModel.getModel('update-production')),
     ]);
-    civAdminRole.addAssignedGame(this.gameCiv);
+    civAdminRole.addAssignedGame(this.gameCiv6);
 
     const viewerRole = await this.division.createRoleEntry({
       name: 'viewer-all',

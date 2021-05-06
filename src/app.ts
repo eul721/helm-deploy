@@ -1,29 +1,41 @@
 import express from 'express';
 import cors from 'cors';
-
+import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
+import { fetch as crossfetch } from 'cross-fetch';
 import { downloadApiRouter } from './controllers/download';
 import { webhookRouter } from './controllers/webhooks';
 import { publishApiRouter } from './controllers/publish';
 import { bdsApiRouter } from './controllers/bds';
-import { config } from './config';
+import { envConfig } from './configuration/envconfig';
 import { devTokenGeneratorApiRouter } from './controllers/devtokengenerator';
+import { licensingApiRouter } from './controllers/licensing';
 
-import { info } from './logger';
-
-const { BINARY_DISTRIBUTION_SERVICE_URL = 'http://127.0.0.1:8080' } = process.env;
+import { error, info } from './logger';
 
 export const app = express();
 
-app.use(cors());
-app.use(express.json());
+DNA.initialize({
+  appID: envConfig.DNA_APP_ID,
+  authToken: envConfig.DNA_AUTH_TOKEN,
+  discoveryUrl: envConfig.DNA_DISCOVERY_URL,
+  fetch: crossfetch,
+})
+  .then(() => {
+    app.use(cors());
+    app.use(express.json());
 
-app.use('/api/games', downloadApiRouter);
-app.use('/api/publisher', publishApiRouter);
-app.use('/bds', bdsApiRouter);
-app.use('/webhooks', webhookRouter);
+    app.use('/api/games', downloadApiRouter);
+    app.use('/api/publisher', publishApiRouter);
+    app.use('/api/licensing', licensingApiRouter);
+    app.use('/bds', bdsApiRouter);
+    app.use('/webhooks', webhookRouter);
 
-if (config.isDev()) {
-  app.use('/dev/token', devTokenGeneratorApiRouter);
-}
+    if (envConfig.isDev()) {
+      app.use('/dev/token', devTokenGeneratorApiRouter);
+    }
+  })
+  .catch(initErr => {
+    error('Failed initializing DNA:', initErr);
+  });
 
-info(`Forwarding BDS requests to ${BINARY_DISTRIBUTION_SERVICE_URL}`);
+info(`Forwarding BDS requests to ${envConfig.BINARY_DISTRIBUTION_SERVICE_URL}`);

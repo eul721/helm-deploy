@@ -71,13 +71,13 @@ describe('src/models/database', () => {
       expect(division?.users?.length).toBeGreaterThan(0);
 
       const game1 = await GameModel.findOne({
-        where: { bdsTitleId: testDb.gameCiv?.bdsTitleId },
+        where: { bdsTitleId: testDb.gameCiv6?.bdsTitleId },
         include: GameModel.associations.owner,
       });
       expect(game1).toBeTruthy();
       const parentDiv1 = game1?.owner;
 
-      const game2 = await GameModel.findOne({ where: { contentfulId: testDb.gameKerbel?.contentfulId } });
+      const game2 = await GameModel.findOne({ where: { contentfulId: testDb.gameGatheringStorm?.contentfulId } });
       expect(game2).toBeTruthy();
       const parentDiv2 = await game2?.getOwner();
 

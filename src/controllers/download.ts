@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import { httpConfig } from '../configuration/httpconfig';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
+import { getQueryParamValue } from '../middleware/utils';
 import { HttpCode } from '../models/http/httpcode';
 import { GameService } from '../services/game';
 
@@ -11,11 +13,12 @@ downloadApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware(
 /**
  * @api {GET} /api/games Get games catalogue
  * @apiName GetAllGames
- * @apiGroup Games
+ * @apiGroup Download
  * @apiVersion  0.0.1
  * @apiDescription Get all games
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 downloadApiRouter.get('/', async (_req, res) => {
   const response = await GameService.getAllGames();
@@ -25,11 +28,12 @@ downloadApiRouter.get('/', async (_req, res) => {
 /**
  * @api {GET} /api/games/download Get owned games
  * @apiName GetOwnedGames
- * @apiGroup Games
+ * @apiGroup Download
  * @apiVersion  0.0.1
  * @apiDescription Get game download data for the list of games the user is authorized to view, returns only public-release branches
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 downloadApiRouter.get('/download', async (_req, res) => {
   const response = await GameService.getOwnedGames(res.locals.userContext);
@@ -37,16 +41,17 @@ downloadApiRouter.get('/download', async (_req, res) => {
 });
 
 /**
- * @api {GET} /api/games/branches Get Branches
- * @apiName GetGames
- * @apiGroup Games
+ * @api {GET} /api/games/branches Get branches
+ * @apiName GetAllBranches
+ * @apiGroup Download
  * @apiVersion  0.0.1
  * @apiDescription Get branch list for a specified title (title contentful id passed in as query param, 'title')
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 downloadApiRouter.get('/branches', async (req, res) => {
-  const titleContentfulId = req.query.title?.toString();
+  const titleContentfulId = getQueryParamValue(req, httpConfig.TITLE_PARAM);
   if (titleContentfulId) {
     const response = await GameService.getBranches(titleContentfulId, res.locals.userContext);
     res.status(response.code).json(response.payload);
@@ -56,18 +61,19 @@ downloadApiRouter.get('/branches', async (req, res) => {
 });
 
 /**
- * @api {GET} /games/download/branch Get Game Branch
- * @apiName GetGames
- * @apiGroup Games
+ * @api {GET} /games/download/branch Get specific game branch
+ * @apiName GetSpecificBranch
+ * @apiGroup Download
  * @apiVersion  0.0.1
  * @apiDescription Get game download data of a specific game branch (title, branch contentful id passed in as query param, with optional password)
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 downloadApiRouter.get('/download/branch', async (req, res) => {
-  const titleContentfulId = req.query.title?.toString();
-  const branchContentfulId = req.query.branch?.toString();
-  const password = req.query.password?.toString();
+  const titleContentfulId = getQueryParamValue(req, httpConfig.TITLE_PARAM);
+  const branchContentfulId = getQueryParamValue(req, httpConfig.BRANCH_PARAM);
+  const password = getQueryParamValue(req, httpConfig.PASSWORD_PARAM);
   if (titleContentfulId) {
     const response = await GameService.getGameDownloadModel(
       res.locals.userContext,

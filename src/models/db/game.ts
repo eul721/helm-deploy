@@ -58,9 +58,9 @@ export class GameModel extends Model<GameAttributes, GameCreationAttributes> imp
 
   public getBuilds!: HasManyGetAssociationsMixin<BuildModel>;
 
-  public createBuildEntry = (attributes: BuildCreationAttributes): Promise<BuildModel> => {
+  public createBuildEntry(attributes: BuildCreationAttributes): Promise<BuildModel> {
     return this.createBuild(attributes);
-  };
+  }
   // #endregion
 
   // #region association: branches
@@ -72,9 +72,9 @@ export class GameModel extends Model<GameAttributes, GameCreationAttributes> imp
 
   public getBranches!: HasManyGetAssociationsMixin<BranchModel>;
 
-  public createBranchEntry = (attributes: BranchCreationAttributes): Promise<BranchModel> => {
+  public createBranchEntry(attributes: BranchCreationAttributes): Promise<BranchModel> {
     return this.createBranch(attributes);
-  };
+  }
   // #endregion
 
   // #region association: owner

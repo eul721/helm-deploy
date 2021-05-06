@@ -11,6 +11,17 @@ export default {
     format: 'cjs',
     sourcemap: true,
   },
-  external: ['cors', 'express', 'sequelize', 'uuid', 'jsonwebtoken','async-retry', 'axios', 'fs', '@take-two-t2gp/t2gp-node-toolkit'],
+  external: [
+    'cors',
+    'express',
+    'sequelize',
+    'uuid',
+    'jsonwebtoken',
+    'async-retry',
+    '@take-two-t2gp/t2gp-node-toolkit',
+    'cross-fetch',
+    'fs',
+    'axios'
+  ],
   plugins: [commonjs(), typescript()],
 };

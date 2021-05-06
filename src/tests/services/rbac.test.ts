@@ -31,7 +31,7 @@ describe('src/services/rbacservice', () => {
     }); */
 
     it('should return not found on fictional user', async () => {
-      const result = await RbacService.hasBdsAccess(999999, testDb.gameCiv?.bdsTitleId ?? -1, 'read');
+      const result = await RbacService.hasBdsAccess(999999, testDb.gameCiv6?.bdsTitleId ?? -1, 'read');
       expect(result.code).toBe(HttpCode.NOT_FOUND);
     });
   });

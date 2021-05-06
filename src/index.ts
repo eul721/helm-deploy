@@ -1,5 +1,5 @@
 import { app } from './app';
-import { config } from './config';
+import { envConfig } from './configuration/envconfig';
 import { info, warn } from './logger';
 import { initializeDB } from './models/db/database';
 import { SampleDatabase } from './tests/testutils';
@@ -13,13 +13,13 @@ async function reinitializeDummyData() {
 
 initializeDB()
   .then(() => {
-    app.listen(config.PORT, () => {
-      info(`Server listening on port ${config.PORT}`);
+    app.listen(envConfig.PORT, () => {
+      info(`Server listening on port ${envConfig.PORT}`);
     });
 
-    info(`Env: ${config.NODE_ENVIRONMENT}`);
+    info(`Env: ${envConfig.NODE_ENVIRONMENT}`);
     // Build and nuke the database if develop
-    if (config.DATABASE_DROP === 'true' && config.isDev()) {
+    if (envConfig.DATABASE_DROP === 'true' && envConfig.isDev()) {
       warn('Reinitializing database');
       reinitializeDummyData();
     }

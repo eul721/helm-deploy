@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { httpConfig } from '../configuration/httpconfig';
+import { getQueryParamValue } from '../middleware/utils';
 import { HttpCode } from '../models/http/httpcode';
 import { DevTokenGeneratorService } from '../services/devtokengenerator';
 
@@ -10,15 +12,20 @@ export const devTokenGeneratorApiRouter = Router();
  * @apiGroup DevToken
  * @apiVersion  0.0.1
  * @apiDescription Get simple token for given userid/email (dev only)
+ * @apiParam {String} userId='debug@admin' identifier of the user, must match RBAC external ids
  */
 devTokenGeneratorApiRouter.get('/simple', async (req, res) => {
-  const userId = req.query.userId?.toString();
+  const userId = getQueryParamValue(req, httpConfig.USER_ID_PARAM);
   if (!userId) {
     res.status(HttpCode.BAD_REQUEST).json('missing userId query param');
     return;
   }
-  const response = await DevTokenGeneratorService.createDevJwt(userId);
-  res.status(response.code).json(response.payload);
+  try {
+    const response = await DevTokenGeneratorService.createDevJwt(userId);
+    res.status(response.code).json(response.payload);
+  } catch {
+    res.status(HttpCode.INTERNAL_SERVER_ERROR).json('failed to generate token');
+  }
 });
 
 /**
@@ -27,14 +34,20 @@ devTokenGeneratorApiRouter.get('/simple', async (req, res) => {
  * @apiGroup DevToken
  * @apiVersion  0.0.1
  * @apiDescription Get DNA token for given username+password (dev only)
+ * @apiParam {String} email associated with a 2K account
+ * @apiParam {String} password associated with a 2K account
  */
 devTokenGeneratorApiRouter.get('/dna', async (req, res) => {
-  const email = req.query.email?.toString();
-  const password = req.query.password?.toString();
+  const email = getQueryParamValue(req, httpConfig.EMAIL_PARAM);
+  const password = getQueryParamValue(req, httpConfig.PASSWORD_PARAM);
   if (!email || !password) {
     res.status(HttpCode.BAD_REQUEST).json('missing email and/or password query params');
     return;
   }
-  const response = await DevTokenGeneratorService.createDnaJwt(email, password);
-  res.status(response.code).json(response.payload);
+  try {
+    const response = await DevTokenGeneratorService.createDnaJwt(email, password);
+    res.status(response.code).json(response.payload);
+  } catch {
+    res.status(HttpCode.INTERNAL_SERVER_ERROR).json('failed to log in');
+  }
 });

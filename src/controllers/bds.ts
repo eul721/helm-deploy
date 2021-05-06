@@ -56,7 +56,8 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
  * @apiVersion  0.0.1
  * @apiDescription Get branches from the BDS
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 bdsApiRouter.get('/[0-9]{7}/branches*', async (req, res) => {
   await bdsGet(req, res);
@@ -69,7 +70,8 @@ bdsApiRouter.get('/[0-9]{7}/branches*', async (req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get builds from the BDS
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 bdsApiRouter.get('/[0-9]{7}/builds*', async (req, res) => {
   await bdsGet(req, res);
@@ -82,7 +84,8 @@ bdsApiRouter.get('/[0-9]{7}/builds*', async (req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get depots from the BDS
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 bdsApiRouter.get('/[0-9]{7}/depots*', async (req, res) => {
   await bdsGet(req, res);
@@ -95,7 +98,8 @@ bdsApiRouter.get('/[0-9]{7}/depots*', async (req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get titles from the BDS
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 bdsApiRouter.get('/[0-9]{7}/titles*', async (req, res) => {
   await bdsGet(req, res);
@@ -108,7 +112,8 @@ bdsApiRouter.get('/[0-9]{7}/titles*', async (req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get launch options from the BDS
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 bdsApiRouter.get('/[0-9]{7}/launchOptions*', async (req, res) => {
   await bdsGet(req, res);
@@ -121,7 +126,8 @@ bdsApiRouter.get('/[0-9]{7}/launchOptions*', async (req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get redistributables from the BDS
  *
- * @apiUse T2Auth
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
  */
 bdsApiRouter.get('/redistributables*', async (req, res) => {
   await bdsGet(req, res);

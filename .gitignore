@@ -6,3 +6,4 @@ docs/
 .npmrc
 .vscode/
 .idea/
+coverage/

@@ -12,7 +12,6 @@ import { Catalogue } from '../models/http/catalogue';
 import { CatalogueItem } from '../models/http/catalogueItem';
 import { ContentfulService } from './contentful';
 import { UserContext } from '../models/auth/usercontext';
-import { supplementStudioUserModel } from '../middleware/auth.utils';
 
 export class GameService {
   /**
@@ -34,7 +33,8 @@ export class GameService {
       const game = await GameModel.findOne({ where: { contentfulId } });
       if (!game) return { code: HttpCode.NOT_FOUND };
 
-      if (!userContext.ownedTitles?.some(title => title.id === game.id)) {
+      const response = await userContext.isTitleOwned({ contentfulId: game.contentfulId });
+      if (response.code !== HttpCode.OK || !response.payload) {
         return { code: HttpCode.FORBIDDEN };
       }
 
@@ -67,8 +67,13 @@ export class GameService {
    */
   public static async getOwnedGames(userContext: UserContext): Promise<ServiceResponse<DownloadDataRoot>> {
     try {
+      const response = await userContext.getOwnedTitles();
+      if (response.code !== HttpCode.OK) {
+        return { code: response.code };
+      }
+      const ownedTitles: string[] = response.payload?.map(title => title.contentfulId) ?? [];
       const games = await GameModel.findAll({
-        where: { id: { [Op.any]: userContext.ownedTitles?.map(title => title.id) } },
+        where: { contentfulId: { [Op.in]: ownedTitles } },
       });
       const gameModelsJson: { [key: string]: DownloadData } = {};
 
@@ -85,7 +90,7 @@ export class GameService {
 
       return { code: HttpCode.OK, payload: { model: { downloadData: gameModelsJson } } };
     } catch (err) {
-      warn('Encountered error in getGames, error=%s', err);
+      warn('Encountered error in getOwnedGames, error=%s', err);
       return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
   }
@@ -114,7 +119,7 @@ export class GameService {
 
       const gameBranches = await game.getBranches();
       const branches: Branch[] = [];
-      const studioUser = userContext.studioUserModel ?? (await supplementStudioUserModel(userContext)).studioUserModel;
+      const studioUser = await userContext.getStudioUserModel();
       const allowedPrivateBranches = studioUser && (await studioUser.getOwner()).id === (await game.getOwner()).id;
 
       await Promise.all(

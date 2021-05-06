@@ -1,7 +1,7 @@
-import { config } from './config';
+import { envConfig } from './configuration/envconfig';
 
 export function debug(message: string, ...args: Array<unknown>): void {
-  if (config.isDev()) {
+  if (envConfig.isDev()) {
     // eslint-disable-next-line no-console
     console.debug(`Debug: ${message}`, ...args);
   }

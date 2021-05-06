@@ -6,12 +6,23 @@ import { HttpCode } from '../models/http/httpcode';
 import { ContentfulService, EContentfulResourceType } from './contentful';
 
 export class BuildService {
+  /**
+   * Function for handling BDS webhook input; creating a build
+   *
+   * @param bdsTitleId id of the created build
+   */
   public static async onCreated(bdsBuildId: number): Promise<ServiceResponse> {
     const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Patch);
     await BuildModel.create({ bdsBuildId, contentfulId });
     return { code: HttpCode.OK };
   }
 
+  /**
+   * Function for handling BDS webhook input; removing a build
+   *
+   * @param bdsTitleId id of the owning title
+   * @param bdsBranchId id of the removed build
+   */
   public static async onDeleted(bdsTitleId: number, bdsBuildId: number): Promise<ServiceResponse> {
     const gameModel = await GameModel.findOne({ where: { bdsTitleId }, include: GameModel.associations.branches });
     const buildModel = await BuildModel.findOne({ where: { bdsBuildId } });

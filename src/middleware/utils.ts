@@ -3,10 +3,8 @@ import retry from 'async-retry';
 import * as JWT from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 import { TokenValidationResult } from '../models/auth/tokenvalidationresult';
-import { config } from '../config';
+import { envConfig } from '../configuration/envconfig';
 import { error, info, warn } from '../logger';
-import { UserContext } from '../models/auth/usercontext';
-import { UserModel } from '../models/db/user';
 import { PublisherTokenIssuer } from '../services/devtokengenerator';
 
 const NUM_DNA_VERIFY_ATTEMPTS = 3;
@@ -16,22 +14,20 @@ const NUM_DNA_VERIFY_ATTEMPTS = 3;
  */
 export type Middleware = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
-/**
- * Constant used to identify authentication token
- */
-export const HTTP_AUTH_HEADER_TOKEN = 'Authorization';
-
-/**
- * Constant used to identify webhook secret token
- */
-export const HTTP_WEBHOOK_HEADER_TOKEN = 'x-shared-secret';
-
 export function useDummyAuth(): boolean {
-  return (config.isDev() && config.ALLOW_UNAUTHORIZED === 'true') || config.isTest();
+  return envConfig.isDev() && envConfig.ALLOW_UNAUTHORIZED === 'true';
 }
 
 export const dummyMiddleware: Middleware = async (_req: Request, _res: Response, next: NextFunction) => {
   next();
+};
+
+export const getHeaderParamValue = (req: Request, key: string) => {
+  return req.header(key) ?? req.header(key.toLowerCase()) ?? req.header(key.toUpperCase());
+};
+
+export const getQueryParamValue = (req: Request, key: string) => {
+  return (req.query[key] ?? req.query[key.toLowerCase()] ?? req.query[key.toUpperCase()])?.toString();
 };
 
 export const middlewareExceptionWrapper = (middleware: Middleware): Middleware => {
@@ -40,16 +36,10 @@ export const middlewareExceptionWrapper = (middleware: Middleware): Middleware =
       middleware(req, res, next);
     } catch (err) {
       error('Encountered error in middleware, error=%s', err);
-      res.status(500);
+      res.status(500).json();
     }
   };
 };
-
-export async function supplementStudioUserModel(context: UserContext): Promise<UserContext> {
-  const model = await UserModel.findOne({ where: { externalId: context.userId } });
-  context.studioUserModel = model ?? undefined;
-  return context;
-}
 
 /**
  * Runs validation on a token provided by a user and returns a [[ValidationResult]] object.
@@ -68,7 +58,7 @@ export async function validateToken(token: string): Promise<TokenValidationResul
 
     switch (iss) {
       case PublisherTokenIssuer:
-        payload = JWT.verify(token as string, config.JWT_SECRET_KEY!) as DNATokenPayload;
+        payload = JWT.verify(token as string, envConfig.JWT_SECRET_KEY!) as DNATokenPayload;
         if (!payload || !payload.sub) {
           return {
             valid: false,
@@ -118,7 +108,7 @@ export async function validateToken(token: string): Promise<TokenValidationResul
         };
     }
   } catch (jwtError) {
-    if (config.isDev()) {
+    if (envConfig.isDev()) {
       info('JWT Error:', jwtError.message || jwtError.code || jwtError);
     }
     return {

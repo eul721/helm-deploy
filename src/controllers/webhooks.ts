@@ -7,15 +7,13 @@ import { WebhookTrigger, triggersWebhooks, triggersModifyRedistributable } from 
 import { BranchService } from '../services/branch';
 import { BuildService } from '../services/build';
 import { TitleService } from '../services/titles';
-import { secretKeyAuth } from '../middleware/secretkeyauth';
-import { config } from '../config';
 import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
-import { HTTP_WEBHOOK_HEADER_TOKEN } from '../middleware/auth.utils';
+import { getWebhookSecretKeyAuthMiddleware } from '../middleware/secretkeyauth';
 
 export const webhookRouter = Router();
 
-webhookRouter.use(secretKeyAuth(config.WEBHOOK_SECRET_KEY!, HTTP_WEBHOOK_HEADER_TOKEN));
+webhookRouter.use(getWebhookSecretKeyAuthMiddleware());
 
 /**
  * Automatically parse and validate webhook bodies and assign to local values
@@ -26,7 +24,7 @@ webhookRouter.use((req, res, next) => {
       const payload: WebhookPayload = req.body as WebhookPayload;
       res.locals.payload = payload;
     } catch (jsonException) {
-      res.status(400).json({ message: 'Bad Request' });
+      res.status(HttpCode.BAD_REQUEST).json({ message: 'Bad Request' });
       return;
     }
   }
@@ -34,23 +32,17 @@ webhookRouter.use((req, res, next) => {
 });
 
 /**
- * @api {POST} /webhooks Publisher Webhooks for 'post execution on success'
+ * @api {POST} /webhooks Notifications after successful webhook execution
  * @apiGroup Webhook
  * @apiVersion  0.0.1
  * @apiDescription Server to server webhook interface to enable third party services to inform
  * events in T2GP Publisher Services
  *
- * | Action              | Description                                    |
- * |---------------------|------------------------------------------------|
- * | **version:create**  | A game update should be created                |
- *
- * | Property         | Description                                    |
- * |------------------|------------------------------------------------|
- * | **title**      |  |
+ * @apiUse WebhookSecretMiddleware
  */
 webhookRouter.post('/', async (req, res) => {
   let result: ServiceResponse = {
-    code: 400,
+    code: HttpCode.BAD_REQUEST,
   };
 
   const payload: WebhookPayload = res.locals.payload as WebhookPayload;
@@ -109,17 +101,17 @@ webhookRouter.post('/', async (req, res) => {
 webhookRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
 
 /**
- * @api {POST} /webhooks/verify Publisher Webhooks for user permissions
+ * @api {POST} /webhooks/verify Pre execution user permission permissions check
  * @apiGroup Webhook
  * @apiVersion  0.0.1
  * @apiDescription Server to server webhook interface to verify if an action
  * can be performed by the given user
+ *
+ * @apiUse WebhookSecretMiddleware
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
  */
 webhookRouter.post('/verify', async (req, res) => {
-  const result: ServiceResponse = {
-    code: HttpCode.FORBIDDEN,
-  };
-
   const payload: WebhookPayload = res.locals.payload as WebhookPayload;
   info('Webhook received: %s', req.body);
 
@@ -135,5 +127,5 @@ webhookRouter.post('/verify', async (req, res) => {
     // rbacService.userCanWrite()
   }
 
-  res.status(result.code).json(result.payload);
+  res.status(HttpCode.OK).json();
 });

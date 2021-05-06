@@ -3,6 +3,9 @@ const TestEnv = {
   NODE_ENVIRONMENT: 'test',
   DATABASE_DBG: 'false',
   DATABASE_NAME: 'publisher_test',
+  ALLOW_UNAUTHORIZED: 'false',
+  WEBHOOK_SECRET_KEY: 'webhooks_secret',
+  JWT_SECRET_KEY: 'supersecrejwtkey'
 };
 
 Object.keys(TestEnv).forEach(key => {
