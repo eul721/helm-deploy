@@ -5,7 +5,7 @@ import { HttpCode } from '../models/http/httpcode';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 
-const { BINARY_DISTRIBUTION_SERVICE_URL = 'http://localhost:8080/api/v1.0' } = process.env;
+const { BINARY_DISTRIBUTION_SERVICE_URL = 'https://bds-dev.d2dragon.net/api/v1.0' } = process.env;
 
 export const bdsApiRouter = Router();
 
@@ -19,9 +19,16 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
   res: Response<ResBody, Locals>
 ) {
   try {
+    const headers: { [k: string]: any } = {};
+    Object.keys(req.headers)
+      .filter(key => key !== 'host') // the host header causes issues on the server
+      .forEach(key => {
+        headers.key = req.headers[key];
+      });
     const response = await axios.get(BINARY_DISTRIBUTION_SERVICE_URL + req.url, {
-      headers: req.headers,
+      headers,
     });
+
     res.send(response.data);
   } catch (err) {
     if (err.response) {
@@ -48,6 +55,20 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
     }
   }
 }
+
+/**
+ * @api {GET} /titles/:titleId Get Title from BDS
+ * @apiName GetBdsTitle
+ * @apiGroup BDS
+ * @apiVersion  0.0.1
+ * @apiDescription Get title from the BDS
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
+ */
+bdsApiRouter.get('/titles/[0-9]{7}', async (req, res) => {
+  await bdsGet(req, res);
+});
 
 /**
  * @api {GET} /:titleId/branches Get Branches from BDS
