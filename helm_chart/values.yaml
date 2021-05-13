@@ -1,0 +1,13 @@
+project: publisher-service
+
+replicas: 1
+max_replicas: 5
+
+app:
+  image: 354767525209.dkr.ecr.us-east-1.amazonaws.com/t2gp-publisher-service
+  tag: latest # default
+  port: 5000
+  requests:
+    cpu: 0.2
+  limits:
+    cpu: 0.8

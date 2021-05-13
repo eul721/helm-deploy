@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Values.project }}-{{ required "Must declare branch name." $.Values.branch }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    project: {{ $.Values.project }}
+    branch: {{ required "Must declare branch name." $.Values.branch }}
+spec:
+  replicas: {{ $.Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $.Values.project }}
+      branch: {{ required "Must declare branch name." $.Values.branch }}
+  template:
+    metadata:
+      annotations:
+        # Uncomment these when they're available
+        # prometheus.io/path: /metrics
+        # prometheus.io/port: ""
+        # prometheus.io/scrape: "true"
+      labels:
+        app: {{ $.Values.project }}
+        branch: {{ required "Must declare branch name." $.Values.branch }}
+    spec:
+      containers:
+      - name: {{ $.Values.project }}
+        image: {{ required "No app image provided!" $.Values.app.image }}:{{ required "No app tag provided!" $.Values.app.tag }}
+        imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: {{ $.Values.project }}-{{ $.Values.branch }}
+        env:
+          - name: "NODE_ENVIRONMENT"
+            value: {{ required "Must declare branch name." $.Values.branch }}
+          - name: "NODE_ENV"
+            value: {{ required "Must declare branch name." $.Values.branch }}
+          - name: "DEPLOYED_VERSION"
+            value: {{ required "Must declare branch name." $.Values.app.tag }}
+        ports:
+        - containerPort: {{ $.Values.app.port }}
+          protocol: TCP
+        resources:
+          requests:
+            cpu: {{ $.Values.app.requests.cpu }}
+          limits:
+            cpu: {{ $.Values.app.limits.cpu }}
