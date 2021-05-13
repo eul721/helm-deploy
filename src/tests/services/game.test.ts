@@ -4,33 +4,8 @@ import { getDBInstance } from '../../models/db/database';
 import { HttpCode } from '../../models/http/httpcode';
 import { GameService } from '../../services/game';
 import { SampleDatabase } from '../testutils';
-import { ContentfulGameModel } from '../../models/contentful/contentfulgamemodel';
-import { ContentfulService } from '../../services/contentful';
-import { ContentfulBranchModel } from '../../models/contentful/contentfulbranchmodel';
 
 jest.mock('../../models/auth/usercontext');
-jest.mock('../../services/contentful.ts');
-ContentfulService.getGameModel = jest.fn().mockImplementation(
-  async (contentfulGameModelId: string): Promise<ContentfulGameModel> => {
-    return {
-      agreements: [{ url: '', id: '', isEmbed: false, title: '' }],
-      prerequisites: [{ id: '', title: '', bdsId: 1, commandLine: '', relativePath: '', required: true, version: '' }],
-      childIds: [],
-      name: 'mocked',
-      publicReleaseBranch:
-        SampleDatabase.contentfulIds.find(item => item.game === contentfulGameModelId)?.branch ??
-        SampleDatabase.contentfulIds[0].game,
-      supportedLanguages: [],
-      parentId: null,
-    };
-  }
-);
-const mockContentfulBranchModel: ContentfulBranchModel = {
-  isPublic: true,
-  name: 'mock name',
-  password: 'password',
-};
-ContentfulService.getBranchModel = jest.fn().mockResolvedValue(mockContentfulBranchModel);
 
 describe('src/services/game', () => {
   const sampleDb = new SampleDatabase();
@@ -54,14 +29,13 @@ describe('src/services/game', () => {
         expect(serviceResponse.payload).toBeTruthy();
         expect(serviceResponse.payload?.name).toBeTruthy();
         expect(serviceResponse.payload?.agreements.length).toBeGreaterThan(0);
-        expect(serviceResponse.payload?.prerequisites.length).toBeGreaterThan(0);
       });
 
       it('should return forbidden if a private or invalid branch is requested for an owned game', async () => {
         const serviceResponse = await GameService.getGameDownloadModel(
           userContext,
           SampleDatabase.contentfulIds[0].game,
-          'fake branch id'
+          12345134
         );
         expect(serviceResponse.code).toBe(HttpCode.FORBIDDEN);
       });

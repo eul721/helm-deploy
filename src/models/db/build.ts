@@ -5,44 +5,44 @@ import {
   HasManyCreateAssociationMixin,
   HasManyGetAssociationsMixin,
   HasManyRemoveAssociationMixin,
-  Model,
   ModelAttributes,
   Optional,
 } from 'sequelize';
 import { INTERNAL_ID } from '../defines/definitions';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
+import { Fields, LocalizedFieldModel } from './localizedfield';
+import { LocalizableModel } from './mixins/localizablemodel';
 
 export const BuildDef: ModelAttributes = {
   id: INTERNAL_ID(),
-  contentfulId: {
-    allowNull: false,
-    type: DataTypes.STRING(256),
-    unique: true,
-  },
   bdsBuildId: {
     allowNull: false,
     type: DataTypes.BIGINT,
     unique: true,
   },
+  mandatory: {
+    allowNull: true,
+    type: DataTypes.BOOLEAN,
+  },
 };
 
 export interface BuildAttributes {
   id: number;
-  contentfulId: string;
   bdsBuildId: number;
+  mandatory: boolean;
   readonly branches?: BranchModel[];
   readonly owner?: GameModel;
 }
 
-export type BuildCreationAttributes = Optional<BuildAttributes, 'id'>;
+export type BuildCreationAttributes = Optional<BuildAttributes, 'id' | 'mandatory'>;
 
-export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> implements BuildAttributes {
+export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationAttributes> implements BuildAttributes {
   public id!: number;
 
-  public contentfulId!: string;
-
   public bdsBuildId!: number;
+
+  public mandatory!: boolean;
 
   // #region association: branches
   public readonly branches?: BranchModel[];
@@ -64,7 +64,16 @@ export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> 
   public getOwner!: BelongsToGetAssociationMixin<GameModel>;
   // #endregion
 
+  // #region association: localized fields
+
+  public get notes(): Record<string, string> {
+    return this.reduceFields(Fields.patchnotes);
+  }
+
+  // #endregion
+
   public static associations: {
+    fields: Association<BuildModel, LocalizedFieldModel>;
     owner: Association<BuildModel, GameModel>;
     branches: Association<GameModel, BranchModel>;
   };

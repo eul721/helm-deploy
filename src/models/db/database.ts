@@ -1,5 +1,6 @@
 import { BelongsToOptions, HasManyOptions, Options, Sequelize } from 'sequelize';
 import { debug, error, info, warn } from '../../logger';
+import { AgreementDef, AgreementModel } from './agreement';
 import { BranchDef, BranchModel } from './branch';
 import { BuildDef, BuildModel } from './build';
 import { GameDef, GameModel } from './game';
@@ -9,6 +10,8 @@ import { PermissionDef, PermissionModel } from './permission';
 import { RoleDef, RoleModel } from './role';
 import { TableNames } from '../defines/tablenames';
 import { GroupDef, GroupModel } from './group';
+import { MODEL_ID_DEFAULTS } from '../defines/definitions';
+import { LocalizedFieldDef, LocalizedFieldModel } from './localizedfield';
 import { envConfig } from '../../configuration/envconfig';
 
 function getDBConf(): Options {
@@ -82,14 +85,28 @@ export async function initializeDB() {
 }
 
 function initModels() {
-  BuildModel.init(BuildDef, { sequelize: getDBInstance(), tableName: TableNames.Build });
-  BranchModel.init(BranchDef, { sequelize: getDBInstance(), tableName: TableNames.Branch });
-  GameModel.init(GameDef, { sequelize: getDBInstance(), tableName: TableNames.Game });
+  AgreementModel.init(AgreementDef, { sequelize: getDBInstance(), tableName: TableNames.Agreement });
+  BuildModel.init(BuildDef, {
+    sequelize: getDBInstance(),
+    tableName: TableNames.Build,
+    initialAutoIncrement: MODEL_ID_DEFAULTS.BuildModel,
+  });
+  BranchModel.init(BranchDef, {
+    sequelize: getDBInstance(),
+    tableName: TableNames.Branch,
+    initialAutoIncrement: MODEL_ID_DEFAULTS.BranchModel,
+  });
+  GameModel.init(GameDef, {
+    sequelize: getDBInstance(),
+    tableName: TableNames.Game,
+    initialAutoIncrement: MODEL_ID_DEFAULTS.GameModel,
+  });
   DivisionModel.init(DivisionDef, { sequelize: getDBInstance(), tableName: TableNames.Division });
   UserModel.init(UserDef, { sequelize: getDBInstance(), tableName: TableNames.User });
   PermissionModel.init(PermissionDef, { sequelize: getDBInstance(), tableName: TableNames.Permission });
   RoleModel.init(RoleDef, { sequelize: getDBInstance(), tableName: TableNames.Role });
   GroupModel.init(GroupDef, { sequelize: getDBInstance(), tableName: TableNames.Group });
+  LocalizedFieldModel.init(LocalizedFieldDef, { sequelize: getDBInstance(), tableName: TableNames.LocalizedFields });
 
   const belongsToDefaults: BelongsToOptions = { as: 'owner', targetKey: 'id' };
   const hasManyDefaults = (as: string): HasManyOptions => {
@@ -97,6 +114,8 @@ function initModels() {
   };
 
   // games have builds and branches
+  AgreementModel.belongsTo(GameModel, belongsToDefaults);
+  GameModel.hasMany(AgreementModel, hasManyDefaults('agreements'));
   BuildModel.belongsTo(GameModel, belongsToDefaults);
   GameModel.hasMany(BuildModel, hasManyDefaults('builds'));
   BranchModel.belongsTo(GameModel, belongsToDefaults);
@@ -116,6 +135,34 @@ function initModels() {
   const BranchBuilds = getDBInstance().define('branch_builds', {});
   BranchModel.belongsToMany(BuildModel, { through: BranchBuilds, as: 'builds' });
   BuildModel.belongsToMany(BranchModel, { through: BranchBuilds, as: 'branches' });
+
+  // Assign localized fields to Game
+  const GameFields = getDBInstance().define('fields_game', {});
+  GameModel.belongsToMany(LocalizedFieldModel, { as: 'fields', through: GameFields, foreignKey: 'gameId' });
+  LocalizedFieldModel.belongsToMany(GameModel, { as: 'game', through: GameFields, foreignKey: 'fieldId' });
+
+  // Assign localized fields to Builds
+  const BuildFields = getDBInstance().define('fields_build', {});
+  BuildModel.belongsToMany(LocalizedFieldModel, { as: 'fields', through: BuildFields, foreignKey: 'buildId' });
+  LocalizedFieldModel.belongsToMany(BuildModel, { as: 'build', through: BuildFields, foreignKey: 'fieldId' });
+
+  // Assign localized fields to Agreements
+  const AgreementFields = getDBInstance().define('fields_agreements', {});
+  AgreementModel.belongsToMany(LocalizedFieldModel, {
+    as: 'fields',
+    through: AgreementFields,
+    foreignKey: 'agreementId',
+  });
+  LocalizedFieldModel.belongsToMany(AgreementModel, {
+    as: 'agreement',
+    through: AgreementFields,
+    foreignKey: 'fieldId',
+  });
+
+  // Assign localized fields to Branches
+  const BranchFields = getDBInstance().define('fields_branch', {});
+  BranchModel.belongsToMany(LocalizedFieldModel, { as: 'field', through: BranchFields, foreignKey: 'branchId' });
+  LocalizedFieldModel.belongsToMany(BranchModel, { as: 'branch', through: BranchFields, foreignKey: 'fieldId' });
 
   // groups have users and roles
   const GroupUsers = getDBInstance().define('rbac_group_users', {});

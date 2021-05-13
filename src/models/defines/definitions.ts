@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import { envConfig } from '../../configuration/envconfig';
 
-const INTERNAL_ID_TYPE = () =>
+export const INTERNAL_ID_TYPE = () =>
   DataTypes.BIGINT({
     unsigned: !envConfig.isTest(),
     length: 32,
@@ -30,3 +30,14 @@ export const INTERNAL_ID_REFERENCE = () => {
     unique: false,
   };
 };
+
+/**
+ * Starting AUTO_INCREMENT value for PS model IDs
+ *
+ * Note: these are Strings to support Sequelize
+ */
+export enum MODEL_ID_DEFAULTS {
+  BranchModel = '200000',
+  BuildModel = '400000',
+  GameModel = '100000',
+}

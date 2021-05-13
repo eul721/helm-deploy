@@ -3,15 +3,12 @@
  * manually specify each tablename
  */
 export enum TableNames {
-  Build = 'builds',
-
+  Agreement = 'agreements',
   Branch = 'branches',
-  BranchBuilds = 'branch_builds',
-
-  Game = 'games',
-  GameBranches = 'game_branches',
-
+  Build = 'builds',
   Division = 'divisions',
+  Game = 'games',
+  LocalizedFields = 'localized_fields',
 
   User = 'rbac_users',
   Permission = 'rbac_permissions',

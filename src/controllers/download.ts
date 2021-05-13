@@ -82,7 +82,7 @@ downloadApiRouter.get('/download/branch', async (req, res) => {
     const response = await GameService.getGameDownloadModel(
       res.locals.userContext,
       titleContentfulId,
-      branchContentfulId,
+      Number.parseInt(branchContentfulId || '', 10),
       password
     );
     res.status(response.code).json(response.payload);

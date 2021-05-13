@@ -20,7 +20,6 @@ describe('src/models/build', () => {
       expect(BuildModel.prototype.createBranch).toBeDefined();
       expect(BuildModel.prototype.removeBranch).toBeDefined();
       expect(BuildModel.prototype.getBranches).toBeDefined();
-
       expect(BuildModel.prototype.getOwner).toBeDefined();
     });
 

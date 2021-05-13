@@ -6,20 +6,22 @@ import {
   HasManyCreateAssociationMixin,
   HasManyGetAssociationsMixin,
   HasManyRemoveAssociationMixin,
-  Model,
   ModelAttributes,
   Optional,
 } from 'sequelize';
 import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { AgreementCreationAttributes, AgreementModel } from './agreement';
 import { BuildCreationAttributes, BuildModel } from './build';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { DivisionModel } from './division';
 import { RoleModel } from './role';
+import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
+import { LocalizableModel } from './mixins/localizablemodel';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
   contentfulId: {
-    allowNull: false,
+    allowNull: true,
     type: DataTypes.STRING(256),
     unique: true,
   },
@@ -28,30 +30,49 @@ export const GameDef: ModelAttributes = {
     type: DataTypes.BIGINT,
     unique: true,
   },
+  defaultBranch: INTERNAL_ID_REFERENCE(),
   ownerId: INTERNAL_ID_REFERENCE(),
 };
 
 export interface GameAttributes {
-  id: number;
-  contentfulId: string;
   bdsTitleId: number;
+  contentfulId: string;
+  defaultBranch: number;
+  id: number;
   ownerId: number;
-  readonly builds?: BuildModel[];
   readonly branches?: BranchModel[];
+  readonly builds?: BuildModel[];
   readonly owner?: DivisionModel;
   readonly rolesWithGame?: RoleModel[];
 }
 
-export type GameCreationAttributes = Optional<GameAttributes, 'id' | 'ownerId'>;
+export type GameCreationAttributes = Optional<GameAttributes, 'id' | 'defaultBranch' | 'ownerId' | 'contentfulId'>;
 
-export class GameModel extends Model<GameAttributes, GameCreationAttributes> implements GameAttributes {
+export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttributes> implements GameAttributes {
   public id!: number;
-
-  public contentfulId!: string;
 
   public bdsTitleId!: number;
 
+  public contentfulId!: string;
+
+  public defaultBranch!: number;
+
   ownerId!: number;
+
+  // #region association: agreements
+
+  public readonly agreements?: AgreementModel[];
+
+  public createAgreement!: HasManyCreateAssociationMixin<AgreementModel>;
+
+  public removeAgreement!: HasManyRemoveAssociationMixin<AgreementModel, number>;
+
+  public getAgreements!: HasManyGetAssociationsMixin<AgreementModel>;
+
+  public createAgreementEntry(attributes: AgreementCreationAttributes): Promise<AgreementModel> {
+    return this.createAgreement(attributes);
+  }
+  // #endregion
 
   // #region association: builds
   public readonly builds?: BuildModel[];
@@ -79,6 +100,51 @@ export class GameModel extends Model<GameAttributes, GameCreationAttributes> imp
   public createBranchEntry(attributes: BranchCreationAttributes): Promise<BranchModel> {
     return this.createBranch(attributes);
   }
+
+  public async getDefaultBranchModel(): Promise<BranchModel> {
+    return ((await this.getBranches({
+      where: {
+        id: this.defaultBranch,
+      },
+    })) ?? [])[0];
+  }
+
+  public setDefaultBranch(branchId: number) {
+    this.set('defaultBranch', branchId);
+    return this.save();
+  }
+
+  // #endregion
+
+  // #region association: localizedfields
+
+  public get names(): Record<string, string> {
+    return (
+      this.fields?.reduce<Record<string, string>>((acc, fieldData) => {
+        if (Fields.name === fieldData.field) {
+          acc[fieldData.locale] = fieldData.value;
+        }
+        return acc;
+      }, {}) ?? {}
+    );
+  }
+
+  public async addName(value: string, locale: Locale) {
+    return this.upsertLocalizedField(Fields.name, value, locale);
+  }
+
+  public async getName(locale: Locale): Promise<string | undefined> {
+    return this.getLocalizedField(Fields.name, locale);
+  }
+
+  public async getNames() {
+    return this.getLocalizedFields(Fields.name);
+  }
+
+  public async removeName(locale: Locale) {
+    return this.removeLocalizedField(Fields.name, locale);
+  }
+
   // #endregion
 
   // #region association: roles
@@ -98,9 +164,12 @@ export class GameModel extends Model<GameAttributes, GameCreationAttributes> imp
   // #endregion
 
   public static associations: {
-    builds: Association<GameModel, BuildModel>;
+    agreements: Association<GameModel, AgreementModel>;
     branches: Association<GameModel, BranchModel>;
-    rolesWithGame: Association<GameModel, RoleModel>;
+    builds: Association<GameModel, BuildModel>;
+    fields: Association<GameModel, LocalizedFieldModel>;
     owner: Association<GameModel, DivisionModel>;
+    roles: Association<GameModel, RoleModel>;
+    rolesWithGame: Association<GameModel, RoleModel>;
   };
 }

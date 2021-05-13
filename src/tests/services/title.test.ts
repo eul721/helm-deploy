@@ -3,8 +3,6 @@ import { HttpCode } from '../../models/http/httpcode';
 import { SampleDatabase } from '../testutils';
 import { TitleService } from '../../services/title';
 
-jest.mock('../../services/contentful.ts');
-
 describe('src/services/title', () => {
   const sampleDb = new SampleDatabase();
 

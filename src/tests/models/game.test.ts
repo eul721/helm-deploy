@@ -1,5 +1,6 @@
 import { getDBInstance } from '../../models/db/database';
 import { GameModel } from '../../models/db/game';
+import { Locale } from '../../models/db/localizedfield';
 import { SampleDatabase } from '../testutils';
 
 describe('src/models/game', () => {
@@ -49,6 +50,120 @@ describe('src/models/game', () => {
       expect(modelWithAssociations?.builds?.length).toBeGreaterThan(0);
       expect(modelWithAssociations?.branches?.length).toBeGreaterThan(0);
       expect(modelWithAssociations?.rolesWithGame?.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('when manipulating Name localized fields', () => {
+    let testGame: GameModel | null;
+    let locale: Locale;
+
+    beforeEach(async () => {
+      testGame = await GameModel.create({
+        bdsTitleId: 12345,
+        ownerId: 1,
+      });
+    });
+
+    describe('when no names exist', () => {
+      it('should return a blank name', async () => {
+        expect(await testGame?.getName(Locale.en)).toBeUndefined();
+      });
+
+      it('should return all names as a blank object', async () => {
+        expect(await testGame?.getNames()).toStrictEqual({});
+      });
+    });
+
+    describe('when adding one English name', () => {
+      beforeEach(async () => {
+        locale = Locale.en;
+        await testGame?.addName('Test Name 1', locale);
+      });
+
+      it('should return the new name', async () => {
+        expect(await testGame?.getName(locale)).toEqual('Test Name 1');
+      });
+
+      describe('when adding a second name of the same locale', () => {
+        beforeEach(async () => {
+          await testGame?.addName('Test Name 2', locale);
+        });
+
+        it('should return the newly edited name', async () => {
+          expect(await testGame?.getName(locale)).toEqual('Test Name 2');
+        });
+      });
+
+      describe('when adding a Spanish name', () => {
+        beforeEach(async () => {
+          await testGame?.addName('Test Nombre 3', Locale.es);
+        });
+
+        it('should return the proper localized name', async () => {
+          expect(await testGame?.getName(Locale.en)).toEqual('Test Name 1');
+          expect(await testGame?.getName(Locale.es)).toEqual('Test Nombre 3');
+        });
+
+        it('should return all names properly', async () => {
+          const result = await testGame?.getNames();
+          expect(result).toHaveProperty(Locale.en, 'Test Name 1');
+          expect(result).toHaveProperty(Locale.es, 'Test Nombre 3');
+        });
+      });
+    });
+
+    describe('when removing an existing name', () => {
+      beforeEach(async () => {
+        await testGame?.addName('Remove Me Name 1', Locale.en);
+        await testGame?.addName('Remove Mi Nombre 1', Locale.es);
+      });
+
+      it('should remove only the specified name', async () => {
+        const oldFields = await testGame?.getNames();
+        expect(oldFields).toHaveProperty(Locale.en, 'Remove Me Name 1');
+        expect(oldFields).toHaveProperty(Locale.es, 'Remove Mi Nombre 1');
+
+        await testGame?.removeName(Locale.en);
+
+        expect(await testGame?.getName(Locale.en)).toBeUndefined();
+        expect(await testGame?.getName(Locale.es)).toEqual('Remove Mi Nombre 1');
+      });
+    });
+
+    describe('when two games exist', () => {
+      let testGame2: GameModel | null;
+
+      beforeEach(async () => {
+        testGame2 = await GameModel.create({
+          bdsTitleId: 23456,
+          ownerId: 2,
+        });
+      });
+
+      describe('when game1 has a name', () => {
+        beforeEach(async () => {
+          await testGame?.addName('Test Name 6', Locale.en);
+        });
+
+        it('should remain empty', async () => {
+          expect(await testGame2?.getName(Locale.en)).toBeUndefined();
+        });
+      });
+
+      describe('when setting game2 name', () => {
+        beforeEach(async () => {
+          await testGame?.addName('Test Name 1', Locale.en);
+          await testGame2?.addName('Test Name 8', Locale.en);
+        });
+
+        it('should not match game1', async () => {
+          const game1Name = await testGame?.getName(Locale.en);
+          const game2Name = await testGame2?.getName(Locale.en);
+          expect(game1Name).not.toEqual(game2Name);
+          expect(game1Name).not.toBeUndefined();
+          expect(game2Name).not.toBeUndefined();
+        });
+      });
     });
   });
 });

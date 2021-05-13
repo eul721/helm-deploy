@@ -3,7 +3,6 @@ import { BuildModel } from '../models/db/build';
 import { GameModel } from '../models/db/game';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
-import { ContentfulService, EContentfulResourceType } from './contentful';
 
 export class BuildService {
   /**
@@ -12,8 +11,7 @@ export class BuildService {
    * @param bdsTitleId id of the created build
    */
   public static async onCreated(bdsBuildId: number): Promise<ServiceResponse> {
-    const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Patch);
-    await BuildModel.create({ bdsBuildId, contentfulId });
+    await BuildModel.create({ bdsBuildId });
     return { code: HttpCode.OK };
   }
 
@@ -37,7 +35,6 @@ export class BuildService {
           })
         );
       }
-      ContentfulService.removeContentfulResource(buildModel.contentfulId);
       buildModel.destroy();
     } else {
       warn('Build removal failed to find the build entry, titleId=%j, buildId=%j', bdsTitleId, bdsBuildId);

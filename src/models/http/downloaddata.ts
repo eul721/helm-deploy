@@ -1,5 +1,5 @@
 import { Agreement } from './agreement';
-import { Prerequisite } from './prerequisite';
+// import { Prerequisite } from './prerequisite';
 import { Version } from './versionmodel';
 
 export interface DownloadDataRoot {
@@ -17,6 +17,6 @@ export interface DownloadData {
   branchId: number;
   versions: Version[];
   agreements: Agreement[];
-  prerequisites: Prerequisite[];
+  // prerequisites: Prerequisite[];
   supportedLanguages: string[];
 }

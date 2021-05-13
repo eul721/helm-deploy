@@ -11,7 +11,12 @@ describe('src/models/branch', () => {
   });
 
   it('should initialize correctly', async () => {
+    const numtestDbDefaults = 5;
     const firstResult = await BranchModel.findAll();
+    expect(firstResult).toHaveLength(numtestDbDefaults);
+    await BranchModel.create({ bdsBranchId: 1234 });
+    const secondResult = await BranchModel.findAll();
+    expect(secondResult).toHaveLength(numtestDbDefaults + 1);
     expect(firstResult.length).toBeGreaterThan(0);
   });
 
@@ -20,7 +25,6 @@ describe('src/models/branch', () => {
       expect(BranchModel.prototype.createBuild).toBeDefined();
       expect(BranchModel.prototype.removeBuild).toBeDefined();
       expect(BranchModel.prototype.getBuilds).toBeDefined();
-
       expect(BranchModel.prototype.getOwner).toBeDefined();
     });
 

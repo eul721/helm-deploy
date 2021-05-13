@@ -1,4 +1,3 @@
-import { ContentfulService, EContentfulResourceType } from './contentful';
 import { info, warn } from '../logger';
 import { BuildModel } from '../models/db/build';
 import { BranchModel } from '../models/db/branch';
@@ -19,14 +18,9 @@ export class BranchService {
     bdsBranchId: number,
     bdsBuildId?: number
   ): Promise<ServiceResponse> {
-    const contentfulId = await ContentfulService.createContentfulPage(EContentfulResourceType.Branch);
-
     const game = await GameModel.findOne({ where: { bdsTitleId } });
     if (game) {
-      const branch = await game.createBranchEntry({
-        bdsBranchId,
-        contentfulId,
-      });
+      const branch = await game.createBranchEntry({ bdsBranchId });
 
       if (bdsBuildId) {
         const build = bdsBuildId ? await BuildModel.findOne({ where: { bdsBuildId } }) : null;
@@ -64,7 +58,6 @@ export class BranchService {
     }
 
     if (branch) {
-      await ContentfulService.removeContentfulResource(branch.contentfulId);
       BranchModel.destroy({ where: { bdsBranchId } });
     } else {
       warn('Branch removal failed to do anything, titleId=%j, branchId=%j', bdsTitleId, bdsBranchId);
