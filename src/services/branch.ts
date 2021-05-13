@@ -68,7 +68,7 @@ export class BranchService {
       BranchModel.destroy({ where: { bdsBranchId } });
     } else {
       warn('Branch removal failed to do anything, titleId=%j, branchId=%j', bdsTitleId, bdsBranchId);
-      return { code: HttpCode.BAD_REQUEST };
+      return { code: HttpCode.NOT_FOUND };
     }
 
     return { code: HttpCode.OK };

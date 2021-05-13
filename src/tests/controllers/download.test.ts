@@ -8,10 +8,6 @@ import { DevTokenGeneratorService } from '../../services/devtokengenerator';
 import { downloadApiRouter } from '../../controllers/download';
 
 const urlBase = '/api/download';
-const validUrl = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10&deviceName=testDevice`;
-const urlMissingDeviceName = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10`;
-const urlMissingDeviceId = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceName=testDevice`;
-const urlMissingTitleId = `${urlBase}/branches?deviceId=10&deviceName=testDevice`;
 
 const app = express();
 app.use(express.json());
@@ -40,6 +36,11 @@ describe('src/controllers/webhooks', () => {
     });
 
     describe('when calling get on /branches', () => {
+      const validUrl = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10&deviceName=testDevice`;
+      const urlMissingDeviceName = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10`;
+      const urlMissingDeviceId = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceName=testDevice`;
+      const urlMissingTitleId = `${urlBase}/branches?deviceId=10&deviceName=testDevice`;
+
       it('should reject if malformed bearer token', async () => {
         const result = await request(app).get(validUrl).set('Authorization', realUserToken!);
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
@@ -63,6 +64,15 @@ describe('src/controllers/webhooks', () => {
       it('should accept with valid token and query params', async () => {
         const result = await request(app).get(validUrl).set('Authorization', `Bearer ${realUserToken}`);
         expect(result.status).toBe(HttpCode.OK);
+      });
+    });
+
+    describe('when calling get on /download/branch', () => {
+      const validUrl = `${urlBase}/download/branch?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10&deviceName=testDevice`;
+
+      it('should reject if malformed bearer token', async () => {
+        const result = await request(app).get(validUrl).set('Authorization', realUserToken!);
+        expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
     });
   });

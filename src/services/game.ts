@@ -33,7 +33,7 @@ export class GameService {
       const game = await GameModel.findOne({ where: { contentfulId } });
       if (!game) return { code: HttpCode.NOT_FOUND };
 
-      const response = await userContext.isTitleOwned({ contentfulId: game.contentfulId });
+      const response = await userContext.checkIfTitleIsOwned({ contentfulId: game.contentfulId });
       if (response.code !== HttpCode.OK || !response.payload) {
         return { code: HttpCode.FORBIDDEN };
       }
@@ -67,7 +67,7 @@ export class GameService {
    */
   public static async getOwnedGames(userContext: UserContext): Promise<ServiceResponse<DownloadDataRoot>> {
     try {
-      const response = await userContext.getOwnedTitles();
+      const response = await userContext.fetchOwnedTitles();
       if (response.code !== HttpCode.OK) {
         return { code: response.code };
       }
@@ -119,7 +119,7 @@ export class GameService {
 
       const gameBranches = await game.getBranches();
       const branches: Branch[] = [];
-      const studioUser = await userContext.getStudioUserModel();
+      const studioUser = await userContext.fetchStudioUserModel();
       const allowedPrivateBranches = studioUser && (await studioUser.getOwner()).id === (await game.getOwner()).id;
 
       await Promise.all(

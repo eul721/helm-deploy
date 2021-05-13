@@ -28,6 +28,9 @@ export interface GroupAttributes {
   id: number;
   name: string;
   ownerId: number;
+  readonly assignedRoles?: RoleModel[];
+  readonly assignedUsers?: UserModel[];
+  readonly owner?: DivisionModel;
 }
 
 export type GroupCreationAttributes = Optional<GroupAttributes, 'id' | 'ownerId'>;
@@ -40,7 +43,7 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
   ownerId!: number;
 
   // #region association: roles
-  public readonly roles?: RoleModel[];
+  public readonly assignedRoles?: RoleModel[];
 
   public addAssignedRole!: BelongsToManyAddAssociationMixin<RoleModel, number>;
 
@@ -50,7 +53,7 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
   // #endregion
 
   // #region association: roles
-  public readonly users?: UserModel[];
+  public readonly assignedUsers?: UserModel[];
 
   public addAssignedUser!: BelongsToManyAddAssociationMixin<UserModel, number>;
 
@@ -66,8 +69,8 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
   // #endregion
 
   public static associations: {
-    roles: Association<GroupModel, RoleModel>;
-    users: Association<GroupModel, UserModel>;
+    assignedRoles: Association<GroupModel, RoleModel>;
+    assignedUsers: Association<GroupModel, UserModel>;
     owner: Association<GroupModel, DivisionModel>;
   };
 }

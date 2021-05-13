@@ -41,6 +41,7 @@ export class BuildService {
       buildModel.destroy();
     } else {
       warn('Build removal failed to find the build entry, titleId=%j, buildId=%j', bdsTitleId, bdsBuildId);
+      return { code: HttpCode.NOT_FOUND };
     }
 
     return { code: HttpCode.OK };

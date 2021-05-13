@@ -2,6 +2,7 @@ import {
   Association,
   BelongsToGetAssociationMixin,
   BelongsToManyAddAssociationMixin,
+  BelongsToManyCreateAssociationMixin,
   BelongsToManyGetAssociationsMixin,
   BelongsToManyRemoveAssociationMixin,
   DataTypes,
@@ -31,6 +32,8 @@ export interface BranchAttributes {
   id: number;
   contentfulId: string;
   bdsBranchId: number;
+  readonly builds?: BuildModel[];
+  readonly owner?: GameModel;
 }
 
 export type BranchCreationAttributes = Optional<BranchAttributes, 'id'>;
@@ -44,6 +47,8 @@ export class BranchModel extends Model<BranchAttributes, BranchCreationAttribute
 
   // #region association: builds
   public readonly builds?: BuildModel[];
+
+  public createBuild!: BelongsToManyCreateAssociationMixin<BuildModel>;
 
   public removeBuild!: BelongsToManyRemoveAssociationMixin<BuildModel, number>;
 

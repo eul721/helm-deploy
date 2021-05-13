@@ -43,7 +43,7 @@ describe('src/services/game', () => {
   describe('GameService.getGameDownloadModel', () => {
     describe('when the user owns the game', () => {
       const userContext = mocked(new UserContext(SampleDatabase.debugAdminEmail));
-      userContext.isTitleOwned.mockResolvedValue({ code: HttpCode.OK, payload: true });
+      userContext.checkIfTitleIsOwned.mockResolvedValue({ code: HttpCode.OK, payload: true });
 
       it('should return a valid game download model', async () => {
         const serviceResponse = await GameService.getGameDownloadModel(
@@ -70,7 +70,7 @@ describe('src/services/game', () => {
 
   describe('when the user does not own the game', () => {
     const userContext = mocked(new UserContext(SampleDatabase.debugAdminEmail));
-    userContext.isTitleOwned.mockResolvedValueOnce({ code: HttpCode.OK, payload: false });
+    userContext.checkIfTitleIsOwned.mockResolvedValueOnce({ code: HttpCode.OK, payload: false });
 
     it('should refuse the request', async () => {
       const serviceResponse = await GameService.getGameDownloadModel(userContext, SampleDatabase.contentfulIds[0].game);
@@ -107,7 +107,7 @@ describe('src/services/game', () => {
     const userContext = mocked(new UserContext(SampleDatabase.debugAdminEmail));
 
     it('should return nothing if user owns no games', async () => {
-      userContext.getOwnedTitles.mockResolvedValueOnce({
+      userContext.fetchOwnedTitles.mockResolvedValueOnce({
         code: HttpCode.OK,
         payload: [],
       });
@@ -119,7 +119,7 @@ describe('src/services/game', () => {
     });
 
     it('should return all games the user owns', async () => {
-      userContext.getOwnedTitles.mockResolvedValueOnce({
+      userContext.fetchOwnedTitles.mockResolvedValueOnce({
         code: HttpCode.OK,
         payload: SampleDatabase.contentfulIds.map(item => {
           return {
@@ -146,7 +146,7 @@ describe('src/services/game', () => {
     });
 
     it('should return at least one branch for a game', async () => {
-      userContext.getStudioUserModel.mockResolvedValueOnce(undefined);
+      userContext.fetchStudioUserModel.mockResolvedValueOnce(undefined);
       const serviceResponse = await GameService.getBranches(SampleDatabase.contentfulIds[0].game, userContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();

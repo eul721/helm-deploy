@@ -15,4 +15,8 @@ Object.keys(TestEnv).forEach(key => {
 module.exports = {
   modulePathIgnorePatterns: ['dist', 'docs'],
   preset: 'ts-jest',
+  coveragePathIgnorePatterns : [
+    "<rootDir>/src/services/devtokengenerator.ts" ,
+    "<rootDir>/src/controllers/devtokengenerator.ts"
+  ]
 };

@@ -28,6 +28,9 @@ export interface RoleAttributes {
   id: number;
   name: string;
   ownerId: number;
+  readonly assignedPermissions?: PermissionModel[];
+  readonly assignedGames?: GameModel[];
+  readonly owner?: DivisionModel;
 }
 
 export type RoleCreationAttributes = Optional<RoleAttributes, 'id' | 'ownerId'>;
@@ -40,7 +43,7 @@ export class RoleModel extends Model<RoleAttributes, RoleCreationAttributes> imp
   ownerId!: number;
 
   // #region association: permissions
-  public readonly permissions?: PermissionModel[];
+  public readonly assignedPermissions?: PermissionModel[];
 
   public addAssignedPermission!: BelongsToManyAddAssociationMixin<PermissionModel, number>;
 
@@ -50,7 +53,7 @@ export class RoleModel extends Model<RoleAttributes, RoleCreationAttributes> imp
   // #endregion
 
   // #region association: games
-  public readonly games?: GameModel[];
+  public readonly assignedGames?: GameModel[];
 
   public addAssignedGame!: BelongsToManyAddAssociationMixin<GameModel, number>;
 

@@ -36,6 +36,10 @@ export interface GameAttributes {
   contentfulId: string;
   bdsTitleId: number;
   ownerId: number;
+  readonly builds?: BuildModel[];
+  readonly branches?: BranchModel[];
+  readonly owner?: DivisionModel;
+  readonly rolesWithGame?: RoleModel[];
 }
 
 export type GameCreationAttributes = Optional<GameAttributes, 'id' | 'ownerId'>;
@@ -77,22 +81,26 @@ export class GameModel extends Model<GameAttributes, GameCreationAttributes> imp
   }
   // #endregion
 
+  // #region association: roles
+  public readonly rolesWithGame?: RoleModel[];
+
+  public createRolesWithGame!: HasManyCreateAssociationMixin<RoleModel>;
+
+  public removeRolesWithGame!: HasManyRemoveAssociationMixin<RoleModel, number>;
+
+  public getRolesWithGame!: BelongsToManyGetAssociationsMixin<RoleModel>;
+  // #endregion
+
   // #region association: owner
   public readonly owner?: DivisionModel;
 
   public getOwner!: BelongsToGetAssociationMixin<DivisionModel>;
   // #endregion
 
-  // #region association: roles
-  public readonly roles?: RoleModel[];
-
-  public getRolesWithGame!: BelongsToManyGetAssociationsMixin<RoleModel>;
-  // #endregion
-
   public static associations: {
     builds: Association<GameModel, BuildModel>;
     branches: Association<GameModel, BranchModel>;
+    rolesWithGame: Association<GameModel, RoleModel>;
     owner: Association<GameModel, DivisionModel>;
-    roles: Association<GameModel, RoleModel>;
   };
 }

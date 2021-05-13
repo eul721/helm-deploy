@@ -1,36 +1,38 @@
 import { BranchModel } from '../../models/db/branch';
-import { BuildModel } from '../../models/db/build';
 import { getDBInstance } from '../../models/db/database';
-import { GameModel } from '../../models/db/game';
-
-const Mocks = {
-  Game1: {
-    id: 12345,
-    contentfulId: 'testgame12345',
-    titleId: 54321,
-  },
-  Build1: {
-    id: 23456,
-    contentfulId: 'testbranch23456',
-    buildId: 65432,
-  },
-};
+import { SampleDatabase } from '../testutils';
 
 describe('src/models/branch', () => {
+  const testDb: SampleDatabase = new SampleDatabase();
+
   beforeEach(async () => {
-    await getDBInstance().sync({ force: true });
-    await GameModel.create({ bdsTitleId: Mocks.Game1.titleId, contentfulId: Mocks.Game1.contentfulId });
-    await BuildModel.create({ bdsBuildId: Mocks.Build1.buildId, contentfulId: Mocks.Build1.contentfulId });
+    await getDBInstance().sync({ force: true, match: /_test$/ });
+    await testDb.initAll();
   });
 
   it('should initialize correctly', async () => {
     const firstResult = await BranchModel.findAll();
-    expect(firstResult).toHaveLength(0);
-    await BranchModel.create({
-      contentfulId: 'test1234',
-      bdsBranchId: 1234,
+    expect(firstResult.length).toBeGreaterThan(0);
+  });
+
+  describe('type check', () => {
+    it('should have defined methods', async () => {
+      expect(BranchModel.prototype.createBuild).toBeDefined();
+      expect(BranchModel.prototype.removeBuild).toBeDefined();
+      expect(BranchModel.prototype.getBuilds).toBeDefined();
+
+      expect(BranchModel.prototype.getOwner).toBeDefined();
     });
-    const secondResult = await BranchModel.findAll();
-    expect(secondResult).toHaveLength(1);
+
+    it('should have correctly defined associations', async () => {
+      const modelWithAssociations = await BranchModel.findOne({
+        where: { id: testDb.branchCiv6?.id },
+        include: [BranchModel.associations.owner, BranchModel.associations.builds],
+      });
+
+      expect(modelWithAssociations).toBeTruthy();
+      expect(modelWithAssociations?.owner).toBeTruthy();
+      expect(modelWithAssociations?.builds?.length).toBeGreaterThan(0);
+    });
   });
 });

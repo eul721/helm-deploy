@@ -1,5 +1,13 @@
-import { Model, ModelAttributes } from 'sequelize';
+import {
+  Association,
+  BelongsToManyGetAssociationsMixin,
+  HasManyCreateAssociationMixin,
+  HasManyRemoveAssociationMixin,
+  Model,
+  ModelAttributes,
+} from 'sequelize';
 import { INTERNAL_STRING_ID } from '../defines/definitions';
+import { RoleModel } from './role';
 
 export const PermissionDef: ModelAttributes = {
   id: INTERNAL_STRING_ID(),
@@ -42,4 +50,18 @@ export class PermissionModel
     }
     throw new Error('No permission model corresponding to passed in PermissionType, looks like db is set up wrong');
   }
+
+  // #region association: roles
+  public readonly rolesWithPermission?: RoleModel[];
+
+  public createRolesWithPermission!: HasManyCreateAssociationMixin<RoleModel>;
+
+  public removeRolesWithPermission!: HasManyRemoveAssociationMixin<RoleModel, number>;
+
+  public getRolesWithPermission!: BelongsToManyGetAssociationsMixin<RoleModel>;
+  // #endregion
+
+  public static associations: {
+    rolesWithPermission: Association<PermissionModel, RoleModel>;
+  };
 }

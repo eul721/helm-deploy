@@ -1,0 +1,47 @@
+import { getDBInstance } from '../../models/db/database';
+import { RoleModel } from '../../models/db/role';
+import { SampleDatabase } from '../testutils';
+
+describe('src/models/role', () => {
+  const testDb: SampleDatabase = new SampleDatabase();
+
+  beforeEach(async () => {
+    await getDBInstance().sync({ force: true, match: /_test$/ });
+    await testDb.initAll();
+  });
+
+  it('should initialize correctly', async () => {
+    const firstResult = await RoleModel.findAll();
+    expect(firstResult.length).toBeGreaterThan(0);
+  });
+
+  describe('type check', () => {
+    it('should have defined methods', async () => {
+      expect(RoleModel.prototype.addAssignedGame).toBeDefined();
+      expect(RoleModel.prototype.removeAssignedGame).toBeDefined();
+      expect(RoleModel.prototype.getAssignedGames).toBeDefined();
+
+      expect(RoleModel.prototype.addAssignedPermission).toBeDefined();
+      expect(RoleModel.prototype.removeAssignedPermission).toBeDefined();
+      expect(RoleModel.prototype.getAssignedPermissions).toBeDefined();
+
+      expect(RoleModel.prototype.getOwner).toBeDefined();
+    });
+
+    it('should have correctly defined associations', async () => {
+      const modelWithAssociations = await RoleModel.findOne({
+        where: { id: testDb.civEditorRole?.id },
+        include: [
+          RoleModel.associations.owner,
+          RoleModel.associations.assignedGames,
+          RoleModel.associations.assignedPermissions,
+        ],
+      });
+
+      expect(modelWithAssociations).toBeTruthy();
+      expect(modelWithAssociations?.owner).toBeTruthy();
+      expect(modelWithAssociations?.assignedGames?.length).toBeGreaterThan(0);
+      expect(modelWithAssociations?.assignedPermissions?.length).toBeGreaterThan(0);
+    });
+  });
+});

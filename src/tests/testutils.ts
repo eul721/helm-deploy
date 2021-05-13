@@ -1,8 +1,10 @@
 import { BranchModel } from '../models/db/branch';
+import { BuildModel } from '../models/db/build';
 import { DivisionModel } from '../models/db/division';
 import { GameModel } from '../models/db/game';
 import { GroupModel } from '../models/db/group';
 import { PermissionModel, Permissions } from '../models/db/permission';
+import { RoleModel } from '../models/db/role';
 import { UserModel } from '../models/db/user';
 
 export class SampleDatabase {
@@ -28,6 +30,8 @@ export class SampleDatabase {
 
   public branchRiseAndFall?: BranchModel;
 
+  public civ6Build1?: BuildModel;
+
   public adminGroup?: GroupModel;
 
   public devopsGroup?: GroupModel;
@@ -47,6 +51,8 @@ export class SampleDatabase {
   public userQA?: UserModel;
 
   public userGuest?: UserModel;
+
+  public civEditorRole?: RoleModel;
 
   public permissions: PermissionModel[] = [];
 
@@ -146,11 +152,11 @@ export class SampleDatabase {
     await this.branchWarOfChosen.addBuild(wocBuild3);
 
     // Civ6 builds
-    const civ6Build1 = await this.gameCiv6.createBuild({
+    this.civ6Build1 = await this.gameCiv6.createBuild({
       contentfulId: 'civ6TestBuild001',
       bdsBuildId: 2000001,
     });
-    await this.branchCiv6.addBuild(civ6Build1);
+    await this.branchCiv6.addBuild(this.civ6Build1);
 
     // Gathering Storm builds
     const gatheringStormBuild1 = await this.gameGatheringStorm.createBuild({
@@ -215,15 +221,15 @@ export class SampleDatabase {
       rbacAdmin.addAssignedPermission(await PermissionModel.getModel('rbac-admin')),
     ]);
 
-    const civEditorRole = await this.division.createRoleEntry({
+    this.civEditorRole = await this.division.createRoleEntry({
       name: 'civ editor',
     });
     await Promise.all([
-      civEditorRole.addAssignedPermission(await PermissionModel.getModel('read')),
-      civEditorRole.addAssignedPermission(await PermissionModel.getModel('update')),
-      civEditorRole.addAssignedPermission(await PermissionModel.getModel('delete')),
+      this.civEditorRole.addAssignedPermission(await PermissionModel.getModel('read')),
+      this.civEditorRole.addAssignedPermission(await PermissionModel.getModel('update')),
+      this.civEditorRole.addAssignedPermission(await PermissionModel.getModel('delete')),
     ]);
-    civEditorRole.addAssignedGame(this.gameCiv6);
+    this.civEditorRole.addAssignedGame(this.gameCiv6);
 
     const civAdminRole = await this.division.createRoleEntry({
       name: 'civ admin',
@@ -257,7 +263,7 @@ export class SampleDatabase {
       this.devopsGroup.addAssignedRole(contentAdminRole),
       this.qaGroup.addAssignedRole(viewerRole),
       this.civDevGroup.addAssignedRole(viewerRole),
-      this.civDevGroup.addAssignedRole(civEditorRole),
+      this.civDevGroup.addAssignedRole(this.civEditorRole),
       this.civAdminGroup.addAssignedRole(civAdminRole),
     ]);
 

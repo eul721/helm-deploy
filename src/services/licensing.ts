@@ -1,6 +1,7 @@
 import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
+import fetch from 'cross-fetch';
 import { envConfig } from '../configuration/envconfig';
-import { debug, error, info } from '../logger';
+import { debug, error, info, warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { ServiceResponse } from '../models/http/serviceresponse';
 
@@ -42,7 +43,12 @@ export class LicensingService {
   ): Promise<ServiceResponse<LicenseData>> {
     const deviceRegistrationData: DeviceRegistrationData = { deviceId, name: deviceName, resourceType: 0 };
     const urlBase = DNA.config.getUrl('sso')?.baseUrl;
-    let response = await LicensingService.fetchLicenseRequest(urlBase!, deviceId, userToken);
+    if (!urlBase) {
+      error('DNA toolkit is not initialized properly');
+      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+    }
+
+    let response = await LicensingService.fetchLicenseRequest(urlBase, deviceId, userToken);
     if (response.fetchResponseCode !== HttpCode.OK) {
       debug('License retrieval first attept failed');
       const failureHandlerStatus = await LicensingService.handleFailedLicenseResponse(
@@ -94,7 +100,8 @@ export class LicensingService {
         method: 'get',
       });
       return { fetchResponseCode: response.status, licenseData: await response.json() };
-    } catch {
+    } catch (err) {
+      warn('Encountered error in fetchLicenseRequest, error=%s', err);
       return { fetchResponseCode: HttpCode.INTERNAL_SERVER_ERROR };
     }
   }
@@ -168,7 +175,8 @@ export class LicensingService {
         method: 'get',
       });
       return response.status;
-    } catch {
+    } catch (err) {
+      warn('Encountered error in registerDevice, error=%s', err);
       return HttpCode.INTERNAL_SERVER_ERROR;
     }
   }

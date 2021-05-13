@@ -19,6 +19,6 @@ licensingApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware
  */
 licensingApiRouter.get('/', async (_req, res) => {
   const userContext = res.locals.userContext as UserContext;
-  const response = await userContext.getOwnedTitles();
+  const response = await userContext.fetchOwnedTitles();
   res.status(response.code).json(response.payload);
 });

@@ -6,7 +6,7 @@ import { WebhookPayload } from '../models/http/webhookpayload';
 import { WebhookTrigger, triggersWebhooks, triggersModifyRedistributable } from '../models/http/webhooktrigger';
 import { BranchService } from '../services/branch';
 import { BuildService } from '../services/build';
-import { TitleService } from '../services/titles';
+import { TitleService } from '../services/title';
 import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getWebhookSecretKeyAuthMiddleware } from '../middleware/secretkeyauth';

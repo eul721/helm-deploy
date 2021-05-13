@@ -36,7 +36,7 @@ export class UserContext {
     this.licensingData = { deviceId, deviceName, userToken };
   }
 
-  public async getOwnedTitles(): Promise<ServiceResponse<Title[]>> {
+  public async fetchOwnedTitles(): Promise<ServiceResponse<Title[]>> {
     if (!this.licensingData) {
       return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
@@ -53,19 +53,19 @@ export class UserContext {
     return { code: HttpCode.OK, payload: titles };
   }
 
-  public async isTitleOwned(title: Title): Promise<ServiceResponse<boolean>> {
-    const ownedTitles = await this.getOwnedTitles();
+  public async checkIfTitleIsOwned(title: Title): Promise<ServiceResponse<boolean>> {
+    const ownedTitles = await this.fetchOwnedTitles();
     return {
       code: ownedTitles.code,
       payload:
-        (await this.getOwnedTitles())?.payload?.some(item => {
+        (await this.fetchOwnedTitles())?.payload?.some(item => {
           return item.contentfulId === title.contentfulId;
         }) ?? false,
     };
   }
 
   // publisher specific
-  public async getStudioUserModel() {
+  public async fetchStudioUserModel() {
     // check cached data first
     if (this.studioUserModel) {
       return this.studioUserModel;

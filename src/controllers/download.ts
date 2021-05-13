@@ -67,6 +67,10 @@ downloadApiRouter.get('/branches', async (req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get game download data of a specific game branch (title, branch contentful id passed in as query param, with optional password)
  *
+ * @apiParam {String} Title title id of the game
+ * @apiParam {String} Branch branch id of the requested branch
+ * @apiParam {String} Password password for the branch, if applicable
+ *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */

@@ -31,10 +31,10 @@ async function authorizePlayerMiddleware(req: Request, res: Response, next: Next
 
 async function dummyAuthorizePlayerMiddleware(_req: Request, res: Response, next: NextFunction) {
   const context = new UserContext(SampleDatabase.debugAdminEmail);
-  context.isTitleOwned = async (_title: Title) => {
+  context.checkIfTitleIsOwned = async (_title: Title) => {
     return { code: HttpCode.OK, payload: true };
   };
-  context.getOwnedTitles = async () => {
+  context.fetchOwnedTitles = async () => {
     return {
       code: HttpCode.OK,
       payload: SampleDatabase.contentfulIds.map(item => {

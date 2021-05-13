@@ -1,5 +1,16 @@
-import { Association, BelongsToGetAssociationMixin, DataTypes, Model, ModelAttributes, Optional } from 'sequelize';
+import {
+  Association,
+  BelongsToGetAssociationMixin,
+  DataTypes,
+  HasManyCreateAssociationMixin,
+  HasManyGetAssociationsMixin,
+  HasManyRemoveAssociationMixin,
+  Model,
+  ModelAttributes,
+  Optional,
+} from 'sequelize';
 import { INTERNAL_ID } from '../defines/definitions';
+import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
 
 export const BuildDef: ModelAttributes = {
@@ -20,6 +31,8 @@ export interface BuildAttributes {
   id: number;
   contentfulId: string;
   bdsBuildId: number;
+  readonly branches?: BranchModel[];
+  readonly owner?: GameModel;
 }
 
 export type BuildCreationAttributes = Optional<BuildAttributes, 'id'>;
@@ -31,6 +44,20 @@ export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> 
 
   public bdsBuildId!: number;
 
+  // #region association: branches
+  public readonly branches?: BranchModel[];
+
+  public createBranch!: HasManyCreateAssociationMixin<BranchModel>;
+
+  public removeBranch!: HasManyRemoveAssociationMixin<BranchModel, number>;
+
+  public getBranches!: HasManyGetAssociationsMixin<BranchModel>;
+
+  public createBranchEntry(attributes: BranchCreationAttributes): Promise<BranchModel> {
+    return this.createBranch(attributes);
+  }
+  // #endregion
+
   // #region association: owner
   public readonly owner?: GameModel;
 
@@ -39,5 +66,6 @@ export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> 
 
   public static associations: {
     owner: Association<BuildModel, GameModel>;
+    branches: Association<GameModel, BranchModel>;
   };
 }

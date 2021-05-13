@@ -26,6 +26,10 @@ export const DivisionDef: ModelAttributes = {
 export interface DivisionAttributes {
   id: number;
   name: string;
+  readonly games?: GameModel[];
+  readonly users?: UserModel[];
+  readonly groups?: GroupModel[];
+  readonly roles?: RoleModel[];
 }
 
 export type DivisionCreationAttributes = Optional<DivisionAttributes, 'id'>;
