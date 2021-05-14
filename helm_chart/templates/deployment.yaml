@@ -28,7 +28,9 @@ spec:
         image: {{ required "No app image provided!" $.Values.app.image }}:{{ required "No app tag provided!" $.Values.app.tag }}
         imagePullPolicy: Always
         envFrom:
-        - configMapRef:
+          - configMapRef:
+            name: {{ $.Values.project }}-{{ $.Values.branch }}
+          - secretRef:
             name: {{ $.Values.project }}-{{ $.Values.branch }}
         env:
           - name: "NODE_ENVIRONMENT"
