@@ -31,6 +31,8 @@ function getDBConf(): Options {
       break;
     case 'production':
     case 'development':
+    case 'develop':
+    case 'staging':
       if (
         !envConfig.DATABASE_HOST ||
         !envConfig.DATABASE_NAME ||
