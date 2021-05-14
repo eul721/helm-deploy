@@ -29,9 +29,9 @@ spec:
         imagePullPolicy: Always
         envFrom:
           - configMapRef:
-            name: {{ $.Values.project }}-{{ $.Values.branch }}
+              name: {{ $.Values.project }}-{{ $.Values.branch }}
           - secretRef:
-            name: {{ $.Values.project }}-{{ $.Values.branch }}
+              name: {{ $.Values.project }}-{{ $.Values.branch }}
         env:
           - name: "NODE_ENVIRONMENT"
             value: {{ required "Must declare branch name." $.Values.branch }}
