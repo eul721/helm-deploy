@@ -115,7 +115,7 @@ jobs:
               --set app.tag=${{ env.VER }} \
               --set app.name=publisher
             helm upgrade --install \
-              develop-service-${{ env.BRANCH }} /github/workspace/helm_chart \
+              downloader-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               --kube-token=${{ env.KUBETOKEN }} \
               --create-namespace \
               -n publisher-service \
