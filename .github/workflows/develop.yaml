@@ -96,7 +96,7 @@ jobs:
           echo KUBETOKEN=$(aws eks get-token --cluster-name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.status.token') >> $GITHUB_ENV
           echo CLUSTER_ENDPOINT=$(aws eks describe-cluster --name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.cluster.endpoint') >> $GITHUB_ENV
       
-      - name: Deploy
+      - name: Deploy Helm Chart
         uses: nmasur/alpine-kubectl@master
         with:
           command: |-
@@ -113,6 +113,15 @@ jobs:
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}.yaml \
               --set app.tag=${{ env.VER }}
+              --set app.name=publisher
+            helm upgrade --install \
+              develop-service-${{ env.BRANCH }} /github/workspace/helm_chart \
+              --kube-token=${{ env.KUBETOKEN }} \
+              --create-namespace \
+              -n publisher-service \
+              -f /github/workspace/helm_values/${{ env.BRANCH }}.yaml \
+              --set app.tag=${{ env.VER }}
+              --set app.name=develop
         # Update deployment status
       - name: Update deployment status (success)
         if: success()
