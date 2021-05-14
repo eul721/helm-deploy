@@ -71,7 +71,8 @@ This will run each script defined in parallel in the same terminal window. Note 
 
 ## Deployment
 
-> TODO
+> Note that this repo only contains app deployment (k8s). 
+> Other Infrastructure code is stored separately [here](https://github.com/take-two-t2gp/t2gp-publisher-service-infrastructure/)
 
 ## Lint
 
