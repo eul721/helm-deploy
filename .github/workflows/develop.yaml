@@ -112,14 +112,14 @@ jobs:
               --create-namespace \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
-              --set app.tag=${{ env.VER }} \
+              --set app.tag=${{ env.VER }} 
             helm upgrade --install \
               downloader-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               --kube-token=${{ env.KUBETOKEN }} \
               --create-namespace \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/downloader.yaml \
-              --set app.tag=${{ env.VER }} \
+              --set app.tag=${{ env.VER }} 
         # Update deployment status
       - name: Update deployment status (success)
         if: success()
