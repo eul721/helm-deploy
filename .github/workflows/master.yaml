@@ -1,0 +1,64 @@
+name: master
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux]
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: rokroskar/workflow-run-cleanup-action@v0.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses:  actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: "https://npm.pkg.github.com/"
+          scope: take-two-t2gp
+      - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.T2GP_BUILD_TOKEN }}
+      - run: npm run lint
+      - run: npm run test
+  create-tag:
+    needs: test
+
+    runs-on: [self-hosted, linux]
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+      - uses: rokroskar/workflow-run-cleanup-action@v0.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses:  actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: "https://npm.pkg.github.com"
+          scope: take-two-t2gp
+      - run: npm ci --production
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.T2GP_BUILD_TOKEN }}
+      - uses: cycjimmy/semantic-release-action@v2
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.T2GP_BUILD_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.T2GP_BUILD_TOKEN }}
+          NPM_TOKEN: ${{ secrets.T2GP_BUILD_TOKEN }}
+        with:
+          semantic_version: 17.0.8
+          extra_plugins: |
+            @semantic-release/changelog@5.0.1
+            @semantic-release/git@9.0.0
