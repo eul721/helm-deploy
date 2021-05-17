@@ -1,0 +1,10 @@
+branch: staging
+hpa:
+  minReplicas: 1
+  maxReplicas: 3
+app:
+  name: publisher
+  requests:
+    cpu: 0.3
+  limits:
+    cpu: 0.8
