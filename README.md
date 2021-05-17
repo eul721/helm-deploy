@@ -14,7 +14,26 @@ T2GP Publisher Service is the backend wrapper to glue together BDS, Contentful, 
 |-------------|-----|
 | Publisher Service (develop) | https://publisher-service-develop.d2dragon.net/ |
 | Downloader Service (develop) | https://downloader-service-develop.d2dragon.net/ |
-| MySQL database (develop) | http://t2gp-publisher-service-develop-db.d2dragon.net/ |
+| MySQL database (develop) *see Jumpbox note below* | t2gp-publisher-service-develop-db.d2dragon.net |
+
+### Jumpbox
+
+If a service requires a jumpbox (RDB for example) you must set up a proxy locally. Note: this requires your key to be deployed to the jumpbox. Contact SRE for details (Documentation [here](https://paper.dropbox.com/doc/D2C-Jumpbox-Setup-Instructions--BIZp8JXgVjaEzy0zfKTxvJSkAQ-yRFIDZ66gkmFjfA6V44Kp)).
+
+```shell
+# note: omit -N if you wish to enter shell mode
+$  ssh -i ~/.ssh/YOUR_PRIVATE_KEY -v -N -L 3306:your-db-url.net:3306 ec2-user@hydra.d2dragon.net
+```
+
+Then edit your `/etc/hosts` file to include the following line:
+
+```hosts
+127.0.0.1   your-db-url.net
+```
+
+Append the custom port you specified in the tunnel command when consuming the URL to get it working
+
+You should now have access to the jumpbox-protected resources. When you are finished, kill the `ssh` client with `Ctrl+C` or `Ctrl+D` (if you are in shell).
 
 
 ## Development
