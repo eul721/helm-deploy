@@ -8,6 +8,15 @@ T2GP Publisher Service is the backend wrapper to glue together BDS, Contentful, 
 
 ![](docs/architecture_diagram.jpg)
 
+## Deployments / Environments
+
+| Environment | URL |
+|-------------|-----|
+| Publisher Service (develop) | https://publisher-service-develop.d2dragon.net/ |
+| Downloader Service (develop) | https://downloader-service-develop.d2dragon.net/ |
+| MySQL database (develop) | http://t2gp-publisher-service-develop-db.d2dragon.net/ |
+
+
 ## Development
 
 ### Requirements
