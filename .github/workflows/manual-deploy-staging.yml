@@ -1,0 +1,96 @@
+name: manual deploy to staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tag to Deploy'  
+      deploy_key:
+        description: 'Deploy Key: SECRETS.DEPLOY_KEY' 
+
+jobs:
+  k8s-deploy:
+    name: Deploy to Staging
+    runs-on: [self-hosted, linux]
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REGION: us-east-1
+    steps:
+      # Deploy status
+      - uses: chrnorm/deployment-action@releases/v1
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          environment: staging
+          ref: ${{ github.sha }}
+      - uses: rokroskar/workflow-run-cleanup-action@v0.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Environment Variables
+        run: |
+          echo DEPLOY_KEY=${{ secrets.DEPLOY_KEY }} >> $GITHUB_ENV
+          echo BRANCH=$(echo ${{ github.ref }} | awk -F'/' '{print $3}') >> $GITHUB_ENV
+          echo TARGET_ENV=staging >> $GITHUB_ENV
+          echo CLUSTER=t2gp-flux >> $GITHUB_ENV   
+          echo APP_VERSION=${{ github.event.inputs.version }} >> $GITHUB_ENV
+      - name: Stop if branch is not master
+        if: ${{ env.BRANCH != 'master'}}
+        run: |
+          exit 1
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check git tag exists 
+        id: tag
+        shell: bash
+        run: git show-ref --tags --verify -- "refs/tags/${{ env.APP_VERSION }}" && echo "::set-output name=exists::0" || echo "::set-output name=exists::1"
+      - name: Stop if tag not exists
+        if: steps.tag.outputs.exists == 1
+        run: |
+          exit 1
+      - name: Authenticate to EKS Cluster
+        run: |
+          echo KUBETOKEN=$(aws eks get-token --cluster-name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.status.token') >> $GITHUB_ENV
+          echo CLUSTER_ENDPOINT=$(aws eks describe-cluster --name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.cluster.endpoint') >> $GITHUB_ENV
+      
+      - name: Deploy Helm Chart
+        uses: nmasur/alpine-kubectl@master
+        with:
+          command: |-
+            kubectl config set-cluster cluster \
+              --server=${{ env.CLUSTER_ENDPOINT }} \
+              --insecure-skip-tls-verify && \
+            kubectl config set-context cluster \
+              --cluster=cluster && \
+            kubectl config use-context cluster && \
+            helm upgrade --install \
+              publisher-service-${{ env.TARGET_ENV }} /github/workspace/helm_chart \
+              --kube-token=${{ env.KUBETOKEN }} \
+              --create-namespace \
+              -n publisher-service \
+              -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/publisher.yaml \
+              --set app.tag=${{ env.APP_VERSION }} 
+            helm upgrade --install \
+              downloader-service-${{ env.TARGET_ENV }} /github/workspace/helm_chart \
+              --kube-token=${{ env.KUBETOKEN }} \
+              --create-namespace \
+              -n publisher-service \
+              -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/downloader.yaml \
+              --set app.tag=${{ env.APP_VERSION }} 
+        # Update deployment status
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          state: "success"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: "${{ secrets.GITHUB_TOKEN }}"
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
