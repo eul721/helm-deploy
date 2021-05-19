@@ -102,6 +102,14 @@ This will run each script defined in parallel in the same terminal window. Note 
 > Note that this repo only contains app deployment (k8s). 
 > Other Infrastructure code is stored separately [here](https://github.com/take-two-t2gp/t2gp-publisher-service-infrastructure/)
 
+This repo uses Helm to deploy. The application is packaged into a Helm chart (collection of k8s manifests) then deployed to t2gp-flux cluster. Develop environment is deploy automatically with every new commit to `develop`, while staging/production are manual only.
+
+> Currently, both production and non-production environments reside in the same cluster. Once the non-production flux cluster is setup, non-production envs should move there.
+
+Under `/helm_values/` folder contains configuration for deployments to each environment. Values like min/max replicas or compute resource allocation can be controlled seperately for each service. 
+
+Application specific values are populated by [config management](https://github.com/take-two-t2gp/d2c-config-mgmt/) under flux branch.
+
 ## Lint
 
 Make sure to use the linter at least before submitting a PR:
