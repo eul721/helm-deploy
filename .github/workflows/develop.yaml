@@ -64,6 +64,7 @@ jobs:
         run: docker image prune -a --force --filter "until=48h"
   k8s-deploy:
     name: Deploy to EKS
+    environment: develop
     runs-on: ubuntu-latest
     needs: docker
     env:

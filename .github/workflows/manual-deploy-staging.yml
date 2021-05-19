@@ -11,6 +11,7 @@ on:
 jobs:
   k8s-deploy:
     name: Deploy to Staging
+    environment: staging
     runs-on: [self-hosted, linux]
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
