@@ -33,20 +33,16 @@ export class UserContext {
 
   // player specific
   public initLicensingData(deviceId: number, deviceName: string, userToken: string) {
-    this.licensingData = { deviceId, deviceName, userToken };
+    [this.deviceId, this.deviceName, this.userToken] = [deviceId, deviceName, userToken];
   }
 
   public async fetchOwnedTitles(): Promise<ServiceResponse<Title[]>> {
-    if (!this.licensingData) {
+    if (!this.deviceId || !this.deviceName || !this.userToken) {
       return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
 
     const titles = (
-      await LicensingService.fetchLicense(
-        this.licensingData.deviceId,
-        this.licensingData.deviceName,
-        this.licensingData.userToken
-      )
+      await LicensingService.fetchLicense(this.deviceId, this.deviceName, this.userToken)
     ).payload?.licenses.map(license => {
       return { contentfulId: license.referenceId };
     });
@@ -74,12 +70,19 @@ export class UserContext {
     return this.studioUserModel;
   }
 
+  // passed in headers
+  public targetDivisionId?: number;
+
+  public deviceId?: number;
+
+  public deviceName?: string;
+
+  public userToken?: string;
+
   // params
   private userId: string;
 
   private identity?: DNATokenPayload;
 
   private studioUserModel?: UserModel;
-
-  private licensingData?: { deviceId: number; deviceName: string; userToken: string };
 }

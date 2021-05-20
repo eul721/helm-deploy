@@ -25,12 +25,14 @@ describe('src/models/branch', () => {
       expect(BranchModel.prototype.createBuild).toBeDefined();
       expect(BranchModel.prototype.removeBuild).toBeDefined();
       expect(BranchModel.prototype.getBuilds).toBeDefined();
+      expect(BranchModel.prototype.addBuild).toBeDefined();
+      expect(BranchModel.prototype.addBuilds).toBeDefined();
       expect(BranchModel.prototype.getOwner).toBeDefined();
     });
 
     it('should have correctly defined associations', async () => {
       const modelWithAssociations = await BranchModel.findOne({
-        where: { id: testDb.branchCiv6?.id },
+        where: { id: testDb.branchCiv6.id },
         include: [BranchModel.associations.owner, BranchModel.associations.builds],
       });
 

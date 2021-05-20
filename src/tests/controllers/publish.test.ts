@@ -29,7 +29,7 @@ describe('src/controllers/publish', () => {
       const response = await DevTokenGeneratorService.createDevJwt(SampleDatabase.debugAdminEmail);
       realUserToken = response.payload;
       const responseFake = await DevTokenGeneratorService.createDevJwt('random@fake');
-      fakeUserToken = responseFake.payload!;
+      fakeUserToken = responseFake.payload;
     });
 
     it('should have token values', async () => {
@@ -39,7 +39,7 @@ describe('src/controllers/publish', () => {
 
     describe('when calling get on /branches', () => {
       it('should reject if malformed bearer token', async () => {
-        const result = await request(app).get(validUrl).set('Authorization', realUserToken!);
+        const result = await request(app).get(validUrl).set('Authorization', `${realUserToken}`);
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
 

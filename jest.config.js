@@ -18,5 +18,5 @@ module.exports = {
   coveragePathIgnorePatterns : [
     "<rootDir>/src/services/devtokengenerator.ts" ,
     "<rootDir>/src/controllers/devtokengenerator.ts"
-  ]
+  ],
 };

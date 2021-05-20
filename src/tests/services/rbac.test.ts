@@ -2,37 +2,98 @@ import { HttpCode } from '../../models/http/httpcode';
 import { RbacService } from '../../services/rbac';
 import { SampleDatabase } from '../testutils';
 import { getDBInstance } from '../../models/db/database';
+import { UserContext } from '../../models/auth/usercontext';
+import { error } from '../../logger';
+
+jest.setTimeout(60 * 1000);
 
 describe('src/services/rbacservice', () => {
   const testDb: SampleDatabase = new SampleDatabase();
-  beforeEach(async () => {
-    await getDBInstance().sync({ force: true });
-    await testDb.initAll();
+
+  beforeAll(async () => {
+    try {
+      await getDBInstance().sync({ force: true });
+      await testDb.initAll();
+    } catch (err) {
+      error('Failure initializing test suite, error=%s', err);
+    }
   });
 
-  describe('with valid input', () => {
-    /* todo rbac service is mostly not implemented yet
-    it('should allow access', async () => {
-      const result = await RbacService.hasBdsAccess(
-        testDb.userJrDev?.id ?? -1,
-        testDb.gameCiv?.bdsTitleId ?? -1,
-        'read'
-      );
-      expect(result.code).toBe(HttpCode.OK);
+  describe('RbacService.hasDivisionPermission', () => {
+    describe('for sample database admin with permissions only in his own division', () => {
+      const userContext = new UserContext(SampleDatabase.debugAdminEmail);
+
+      it('should permit within correct division', async () => {
+        const result = await RbacService.hasDivisionPermission(userContext, 'rbac-admin', testDb.division.id);
+        expect(result.payload).toBe(true);
+        expect(result.code).toBe(HttpCode.OK);
+      });
+
+      it('should forbid for wrong division', async () => {
+        const result = await RbacService.hasDivisionPermission(userContext, 'rbac-admin', 12345);
+        expect(result.payload).toBe(false);
+        expect(result.code).toBe(HttpCode.OK);
+      });
+
+      it('should forbid for correct division but missing permission', async () => {
+        const result = await RbacService.hasDivisionPermission(userContext, 't2-admin', testDb.division.id);
+        expect(result.payload).toBe(false);
+        expect(result.code).toBe(HttpCode.OK);
+      });
+    });
+  });
+
+  describe('RbacService.hasResourcePermission', () => {
+    describe('for sample database admin with permissions only in his own division', () => {
+      const userContext = new UserContext(SampleDatabase.debugAdminEmail);
+
+      it('should permit read', async () => {
+        const result = await RbacService.hasResourcePermission(
+          userContext,
+          { contentfulId: testDb.gameCiv6.contentfulId },
+          'read'
+        );
+        expect(result.code).toBe(HttpCode.OK);
+        expect(result.payload).toBe(true);
+      });
+
+      it('should allow editing production resources', async () => {
+        const result = await RbacService.hasRoleWithAllResourcePermission(
+          userContext,
+          { contentfulId: testDb.gameCiv6.contentfulId },
+          ['update', 'change-production']
+        );
+        expect(result.code).toBe(HttpCode.OK);
+        expect(result.payload).toBe(true);
+      });
     });
 
-    it('should forbid access', async () => {
-      const result = await RbacService.hasBdsAccess(
-        testDb.userJrDev?.id ?? -1,
-        testDb.gameCiv?.bdsTitleId ?? -1,
-        'update-production'
-      );
-      expect(result.code).toBe(HttpCode.FORBIDDEN);
-    }); */
+    describe('for civ6 dev with permissions mainly for a single game', () => {
+      let userContext: UserContext;
 
-    it('should return not found on fictional user', async () => {
-      const result = await RbacService.hasBdsAccess(999999, testDb.gameCiv6?.bdsTitleId ?? -1, 'read');
-      expect(result.code).toBe(HttpCode.NOT_FOUND);
+      beforeAll(async () => {
+        userContext = new UserContext(testDb.userJrDev.externalId);
+      });
+
+      it('should permit read', async () => {
+        const result = await RbacService.hasResourcePermission(
+          userContext,
+          { contentfulId: testDb.gameCiv6.contentfulId },
+          'update'
+        );
+        expect(result.code).toBe(HttpCode.OK);
+        expect(result.payload).toBe(true);
+      });
+
+      it('should forbit editing production resources', async () => {
+        const result = await RbacService.hasRoleWithAllResourcePermission(
+          userContext,
+          { contentfulId: testDb.gameCiv6.contentfulId },
+          ['update', 'change-production']
+        );
+        expect(result.code).toBe(HttpCode.OK);
+        expect(result.payload).toBe(false);
+      });
     });
   });
 });

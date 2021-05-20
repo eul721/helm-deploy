@@ -35,7 +35,7 @@ describe('src/models/game', () => {
 
     it('should have correctly defined associations', async () => {
       const modelWithAssociations = await GameModel.findOne({
-        where: { id: testDb.gameCiv6?.id },
+        where: { id: testDb.gameCiv6.id },
         include: [
           GameModel.associations.builds,
           GameModel.associations.branches,

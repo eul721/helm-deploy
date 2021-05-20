@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { httpConfig } from '../configuration/httpconfig';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 import { getQueryParamValue } from '../middleware/utils';
@@ -45,13 +44,15 @@ downloadApiRouter.get('/download', async (_req, res) => {
  * @apiName GetAllBranches
  * @apiGroup Download
  * @apiVersion  0.0.1
- * @apiDescription Get branch list for a specified title (title contentful id passed in as query param, 'title')
+ * @apiDescription Get branch list for a specified title
+ *
+ * @apiParam {String} title Title contentful id query param
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
 downloadApiRouter.get('/branches', async (req, res) => {
-  const titleContentfulId = getQueryParamValue(req, httpConfig.TITLE_PARAM);
+  const titleContentfulId = getQueryParamValue(req, 'title');
   if (titleContentfulId) {
     const response = await GameService.getBranches(titleContentfulId, res.locals.userContext);
     res.status(response.code).json(response.payload);
@@ -65,7 +66,7 @@ downloadApiRouter.get('/branches', async (req, res) => {
  * @apiName GetSpecificBranch
  * @apiGroup Download
  * @apiVersion  0.0.1
- * @apiDescription Get game download data of a specific game branch (title, branch contentful id passed in as query param, with optional password)
+ * @apiDescription Get game download data of a specific game branch
  *
  * @apiParam {String} Title title id of the game
  * @apiParam {String} Branch branch id of the requested branch
@@ -75,9 +76,9 @@ downloadApiRouter.get('/branches', async (req, res) => {
  * @apiUse AuthorizePlayerMiddleware
  */
 downloadApiRouter.get('/download/branch', async (req, res) => {
-  const titleContentfulId = getQueryParamValue(req, httpConfig.TITLE_PARAM);
-  const branchContentfulId = getQueryParamValue(req, httpConfig.BRANCH_PARAM);
-  const password = getQueryParamValue(req, httpConfig.PASSWORD_PARAM);
+  const titleContentfulId = getQueryParamValue(req, 'title');
+  const branchContentfulId = getQueryParamValue(req, 'branch');
+  const password = getQueryParamValue(req, 'password');
   if (titleContentfulId) {
     const response = await GameService.getGameDownloadModel(
       res.locals.userContext,

@@ -2,6 +2,7 @@ import {
   Association,
   BelongsToGetAssociationMixin,
   BelongsToManyAddAssociationMixin,
+  BelongsToManyAddAssociationsMixin,
   BelongsToManyCreateAssociationMixin,
   BelongsToManyGetAssociationsMixin,
   BelongsToManyRemoveAssociationMixin,
@@ -74,6 +75,8 @@ export class BranchModel
   public getBuilds!: BelongsToManyGetAssociationsMixin<BuildModel>;
 
   public addBuild!: BelongsToManyAddAssociationMixin<BuildModel, number>;
+
+  public addBuilds!: BelongsToManyAddAssociationsMixin<BuildModel, number>;
   // #endregion
 
   // #region association: localizedfields

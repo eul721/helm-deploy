@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { httpConfig } from '../configuration/httpconfig';
+import { authBearerPrefix } from '../configuration/httpconfig';
 import { warn } from '../logger';
 import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
@@ -14,17 +14,18 @@ import {
 
 /**
  * @apiDefine AuthenticateMiddleware
+ * @apiDescription Handles token based authentication
  * @apiVersion 0.0.1
  * @apiHeader {String} Authorization='Bearer token' JWT of the user
  */
 async function authenticateMiddleware(req: Request, res: Response, next: NextFunction) {
-  const bearerToken = getHeaderParamValue(req, httpConfig.AUTH_HEADER_TOKEN);
-  if (!bearerToken || !bearerToken.startsWith(httpConfig.AUTH_BEARER_PREFIX)) {
+  const bearerToken = getHeaderParamValue(req, 'authorization');
+  if (!bearerToken || !bearerToken.startsWith(authBearerPrefix)) {
     res.status(HttpCode.UNAUTHORIZED).send({ message: 'missing or malformed token' });
     return;
   }
 
-  const token = bearerToken.substr(httpConfig.AUTH_BEARER_PREFIX.length);
+  const token = bearerToken.substr(authBearerPrefix.length);
   const validateResult = await validateToken(token);
 
   if (!validateResult.valid || !validateResult.userID) {

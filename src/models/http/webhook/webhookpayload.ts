@@ -1,11 +1,15 @@
-import { WebhookTrigger } from './webhooktrigger';
+import { WebhookAction } from './webhookaction';
+import { WebhookTarget } from './webhooktarget';
 
 /**
  * Inbound webhook request from clients
  */
 export interface WebhookPayload {
-  /** Which action this request is executing */
-  trigger: WebhookTrigger;
+  /** API which the original request is/was targetting */
+  target: WebhookTarget;
+
+  /** Action executed on the target API */
+  action: WebhookAction;
 
   /** Title id of the affected game, should be present in all requests except pre-execute title create */
   titleId?: number;

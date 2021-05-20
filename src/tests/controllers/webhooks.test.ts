@@ -2,14 +2,15 @@ import express from 'express';
 import request from 'supertest';
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { getDBInstance } from '../../models/db/database';
-import { WebhookPayload } from '../../models/http/webhookpayload';
-import { WebhookTrigger } from '../../models/http/webhooktrigger';
+import { WebhookPayload } from '../../models/http/webhook/webhookpayload';
 import { webhookRouter } from '../../controllers/webhooks';
 import { envConfig } from '../../configuration/envconfig';
-import { httpConfig } from '../../configuration/httpconfig';
 import { HttpCode } from '../../models/http/httpcode';
 import { DevTokenGeneratorService } from '../../services/devtokengenerator';
 import { SampleDatabase } from '../testutils';
+import { headerParamLookup } from '../../configuration/httpconfig';
+import { WebhookTarget } from '../../models/http/webhook/webhooktarget';
+import { WebhookAction } from '../../models/http/webhook/webhookaction';
 
 const urlBase = '/webhooks';
 const urlVerify = '/webhooks/verify';
@@ -25,7 +26,7 @@ describe('src/controllers/webhooks', () => {
     });
 
     describe('post execution webhooks', () => {
-      const payload: WebhookPayload = { trigger: WebhookTrigger.TITLE_CREATE, titleId: 111111 };
+      const payload: WebhookPayload = { target: WebhookTarget.TITLE, action: WebhookAction.CREATE, titleId: 111111 };
 
       describe('with an invalid webhook payload', () => {
         it('should reject invalid JSON', async () => {
@@ -48,7 +49,7 @@ describe('src/controllers/webhooks', () => {
             .post(urlBase)
             .send(payload)
             .set('Content-Type', 'application/json')
-            .set(httpConfig.WEBHOOK_HEADER_TOKEN, 'random invalid value');
+            .set(headerParamLookup.webhookToken, 'random invalid value');
           expect(result.status).toBe(HttpCode.UNAUTHORIZED);
         });
 
@@ -57,7 +58,7 @@ describe('src/controllers/webhooks', () => {
             .post(urlBase)
             .send(payload)
             .set('Content-Type', 'application/json')
-            .set(httpConfig.WEBHOOK_HEADER_TOKEN, envConfig.WEBHOOK_SECRET_KEY!);
+            .set(headerParamLookup.webhookToken, envConfig.WEBHOOK_SECRET_KEY ?? '');
           expect(result.status).toBe(HttpCode.OK);
         });
       });
@@ -70,14 +71,14 @@ describe('src/controllers/webhooks', () => {
 
       const sampleDb = new SampleDatabase();
 
-      const payload: WebhookPayload = { trigger: WebhookTrigger.TITLE_CREATE, titleId: 222222 };
+      const payload: WebhookPayload = { target: WebhookTarget.TITLE, action: WebhookAction.CREATE, titleId: 222222 };
 
       beforeAll(async () => {
         await sampleDb.initAll();
         const response = await DevTokenGeneratorService.createDevJwt(SampleDatabase.debugAdminEmail);
         realUserToken = response.payload;
         const responseFake = await DevTokenGeneratorService.createDevJwt('random@fake');
-        fakeUserToken = responseFake.payload!;
+        fakeUserToken = responseFake.payload;
       });
 
       it('should have token values', async () => {
@@ -95,7 +96,7 @@ describe('src/controllers/webhooks', () => {
           .post(urlBase)
           .send(payload)
           .set('Content-Type', 'application/json')
-          .set(httpConfig.WEBHOOK_HEADER_TOKEN, 'random invalid value');
+          .set(headerParamLookup.webhookToken, 'random invalid value');
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
 
@@ -104,8 +105,8 @@ describe('src/controllers/webhooks', () => {
           .post(urlVerify)
           .send(payload)
           .set('Content-Type', 'application/json')
-          .set(httpConfig.WEBHOOK_HEADER_TOKEN, envConfig.WEBHOOK_SECRET_KEY!)
-          .set('Authorization', realUserToken!);
+          .set(headerParamLookup.webhookToken, envConfig.WEBHOOK_SECRET_KEY ?? '')
+          .set('Authorization', `${realUserToken}`);
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
 
@@ -114,7 +115,7 @@ describe('src/controllers/webhooks', () => {
           .post(urlVerify)
           .send(payload)
           .set('Content-Type', 'application/json')
-          .set(httpConfig.WEBHOOK_HEADER_TOKEN, envConfig.WEBHOOK_SECRET_KEY!)
+          .set(headerParamLookup.webhookToken, envConfig.WEBHOOK_SECRET_KEY ?? '')
           .set('Authorization', `Bearer ${fakeUserToken}`);
         expect(result.status).toBe(HttpCode.NOT_FOUND);
       });
@@ -124,7 +125,7 @@ describe('src/controllers/webhooks', () => {
           .post(urlVerify)
           .send(payload)
           .set('Content-Type', 'application/json')
-          .set(httpConfig.WEBHOOK_HEADER_TOKEN, envConfig.WEBHOOK_SECRET_KEY!)
+          .set(headerParamLookup.webhookToken, envConfig.WEBHOOK_SECRET_KEY ?? '')
           .set('Authorization', `Bearer ${realUserToken}`);
         expect(result.status).toBe(HttpCode.OK);
       });

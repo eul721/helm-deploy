@@ -6,6 +6,7 @@ import { HttpCode } from '../../models/http/httpcode';
 import { SampleDatabase } from '../testutils';
 import { DevTokenGeneratorService } from '../../services/devtokengenerator';
 import { downloadApiRouter } from '../../controllers/download';
+import { headerParamLookup } from '../../configuration/httpconfig';
 
 const urlBase = '/api/download';
 
@@ -37,32 +38,48 @@ describe('src/controllers/webhooks', () => {
 
     describe('when calling get on /branches', () => {
       const validUrl = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10&deviceName=testDevice`;
-      const urlMissingDeviceName = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10`;
-      const urlMissingDeviceId = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceName=testDevice`;
-      const urlMissingTitleId = `${urlBase}/branches?deviceId=10&deviceName=testDevice`;
+      const urlMissingTitleId = `${urlBase}/branches`;
 
       it('should reject if malformed bearer token', async () => {
-        const result = await request(app).get(validUrl).set('Authorization', realUserToken!);
+        const result = await request(app)
+          .get(validUrl)
+          .set('Authorization', `${realUserToken}`)
+          .set(headerParamLookup.deviceId, '10')
+          .set(headerParamLookup.deviceName, 'testDevice');
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
 
       it('should reject if missing device name', async () => {
-        const result = await request(app).get(urlMissingDeviceName).set('Authorization', `Bearer ${realUserToken}`);
+        const result = await request(app)
+          .get(validUrl)
+          .set('Authorization', `Bearer ${realUserToken}`)
+          .set(headerParamLookup.deviceId, '10');
         expect(result.status).toBe(HttpCode.BAD_REQUEST);
       });
 
       it('should reject if missing device id', async () => {
-        const result = await request(app).get(urlMissingDeviceId).set('Authorization', `Bearer ${realUserToken}`);
+        const result = await request(app)
+          .get(validUrl)
+          .set('Authorization', `Bearer ${realUserToken}`)
+          .set(headerParamLookup.deviceName, 'testDevice');
         expect(result.status).toBe(HttpCode.BAD_REQUEST);
       });
 
       it('should reject if missing title id', async () => {
-        const result = await request(app).get(urlMissingTitleId).set('Authorization', `Bearer ${realUserToken}`);
+        const result = await request(app)
+          .get(urlMissingTitleId)
+          .set('Authorization', `Bearer ${realUserToken}`)
+          .set(headerParamLookup.deviceId, '10')
+          .set(headerParamLookup.deviceName, 'testDevice');
         expect(result.status).toBe(HttpCode.BAD_REQUEST);
       });
 
       it('should accept with valid token and query params', async () => {
-        const result = await request(app).get(validUrl).set('Authorization', `Bearer ${realUserToken}`);
+        const result = await request(app)
+          .get(validUrl)
+          .set('Authorization', `Bearer ${realUserToken}`)
+          .set(headerParamLookup.deviceId, '10')
+          .set(headerParamLookup.deviceName, 'testDevice');
         expect(result.status).toBe(HttpCode.OK);
       });
     });
@@ -71,7 +88,7 @@ describe('src/controllers/webhooks', () => {
       const validUrl = `${urlBase}/download/branch?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10&deviceName=testDevice`;
 
       it('should reject if malformed bearer token', async () => {
-        const result = await request(app).get(validUrl).set('Authorization', realUserToken!);
+        const result = await request(app).get(validUrl).set('Authorization', `${realUserToken}`);
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
     });

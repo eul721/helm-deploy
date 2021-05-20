@@ -36,7 +36,7 @@ describe('src/models/division', () => {
 
     it('should have correctly defined associations', async () => {
       const modelWithAssociations = await DivisionModel.findOne({
-        where: { id: testDb.division?.id },
+        where: { id: testDb.division.id },
         include: [
           DivisionModel.associations.games,
           DivisionModel.associations.users,

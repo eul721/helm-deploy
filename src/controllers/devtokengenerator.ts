@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { httpConfig } from '../configuration/httpconfig';
 import { getQueryParamValue } from '../middleware/utils';
 import { HttpCode } from '../models/http/httpcode';
 import { DevTokenGeneratorService } from '../services/devtokengenerator';
@@ -15,7 +14,7 @@ export const devTokenGeneratorApiRouter = Router();
  * @apiParam {String} userId='debug@admin' identifier of the user, must match RBAC external ids
  */
 devTokenGeneratorApiRouter.get('/simple', async (req, res) => {
-  const userId = getQueryParamValue(req, httpConfig.USER_ID_PARAM);
+  const userId = getQueryParamValue(req, 'userId');
   if (!userId) {
     res.status(HttpCode.BAD_REQUEST).json('missing userId query param');
     return;
@@ -38,8 +37,8 @@ devTokenGeneratorApiRouter.get('/simple', async (req, res) => {
  * @apiParam {String} password associated with a 2K account
  */
 devTokenGeneratorApiRouter.get('/dna', async (req, res) => {
-  const email = getQueryParamValue(req, httpConfig.EMAIL_PARAM);
-  const password = getQueryParamValue(req, httpConfig.PASSWORD_PARAM);
+  const email = getQueryParamValue(req, 'email');
+  const password = getQueryParamValue(req, 'password');
   if (!email || !password) {
     res.status(HttpCode.BAD_REQUEST).json('missing email and/or password query params');
     return;

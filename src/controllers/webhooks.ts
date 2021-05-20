@@ -1,15 +1,19 @@
 import { Router } from 'express';
-import { info, warn } from '../logger';
+import { error, info, warn } from '../logger';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
-import { WebhookPayload } from '../models/http/webhookpayload';
-import { WebhookTrigger, triggersWebhooks, triggersModifyRedistributable } from '../models/http/webhooktrigger';
+import { WebhookPayload } from '../models/http/webhook/webhookpayload';
 import { BranchService } from '../services/branch';
 import { BuildService } from '../services/build';
 import { TitleService } from '../services/title';
 import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getWebhookSecretKeyAuthMiddleware } from '../middleware/secretkeyauth';
+import { UserContext } from '../models/auth/usercontext';
+import { RbacService } from '../services/rbac';
+import { ResourcePermissionType } from '../models/db/permission';
+import { WebhookTarget } from '../models/http/webhook/webhooktarget';
+import { WebhookAction } from '../models/http/webhook/webhookaction';
 
 export const webhookRouter = Router();
 
@@ -32,7 +36,7 @@ webhookRouter.use((req, res, next) => {
 });
 
 /**
- * @api {POST} /webhooks Notifications after successful webhook execution
+ * @api {POST} /webhooks Notifications after success
  * @apiGroup Webhook
  * @apiVersion  0.0.1
  * @apiDescription Server to server webhook interface to enable third party services to inform
@@ -49,50 +53,45 @@ webhookRouter.post('/', async (req, res) => {
 
   info('Webhook received: %s', req.body);
   try {
-    switch (payload.trigger) {
-      case WebhookTrigger.TITLE_CREATE:
-        if (payload.titleId) {
+    switch (payload.target) {
+      case WebhookTarget.TITLE: {
+        if (payload.action === WebhookAction.CREATE && payload.titleId) {
           result = await TitleService.onCreated(payload.titleId);
-        }
-        break;
-      case WebhookTrigger.TITLE_DELETE:
-        if (payload.titleId) {
+        } else if (payload.action === WebhookAction.DELETE && payload.titleId) {
           result = await TitleService.onDeleted(payload.titleId);
         }
         break;
-      case WebhookTrigger.BRANCH_CREATE:
-        if (payload.titleId && payload.branchId) {
+      }
+      case WebhookTarget.BRANCH: {
+        if (payload.action === WebhookAction.CREATE && payload.titleId && payload.branchId && payload.buildId) {
           result = await BranchService.onCreated(payload.titleId, payload.branchId, payload.buildId);
-        }
-        break;
-      case WebhookTrigger.BRANCH_DELETE:
-        if (payload.branchId && payload.titleId) {
+        } else if (payload.action === WebhookAction.DELETE && payload.titleId && payload.branchId) {
           result = await BranchService.onDeleted(payload.titleId, payload.branchId);
-        }
-        break;
-      case WebhookTrigger.BRANCH_MODIFY:
-        if (payload.titleId && payload.branchId && payload.buildId) {
+        } else if (payload.action === WebhookAction.MODIFY && payload.titleId && payload.branchId && payload.buildId) {
           result = await BranchService.onModified(payload.titleId, payload.branchId, payload.buildId);
         }
         break;
-      case WebhookTrigger.BUILD_CREATE:
-        if (payload.buildId) {
+      }
+      case WebhookTarget.BUILD: {
+        if (payload.action === WebhookAction.CREATE && payload.buildId) {
           result = await BuildService.onCreated(payload.buildId);
-        }
-        break;
-      case WebhookTrigger.BUILD_DELETE:
-        if (payload.titleId && payload.buildId) {
+        } else if (payload.action === WebhookAction.DELETE && payload.titleId && payload.buildId) {
           result = await BuildService.onDeleted(payload.titleId, payload.buildId);
         }
         break;
-      default:
-        warn('Payload missing action', req.body);
-        result.code = HttpCode.BAD_REQUEST;
+      }
+      default: {
+        warn('Received unexpected webhook target, payload=%s', payload);
         break;
+      }
     }
   } catch (err) {
-    warn('Encountered error processing webhook, error=%s', err);
+    warn('Encountered error processing webhook, payload=%s, error=%s', payload, err);
     result.code = HttpCode.INTERNAL_SERVER_ERROR;
+  }
+
+  if (result.code === HttpCode.BAD_REQUEST) {
+    warn(`Received unexpected post execution webhook, payload: ${payload}`);
   }
 
   res.status(result.code).json(result.payload);
@@ -101,7 +100,7 @@ webhookRouter.post('/', async (req, res) => {
 webhookRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
 
 /**
- * @api {POST} /webhooks/verify Pre execution user permission permissions check
+ * @api {POST} /webhooks/verify Pre-execution permissions check
  * @apiGroup Webhook
  * @apiVersion  0.0.1
  * @apiDescription Server to server webhook interface to verify if an action
@@ -115,17 +114,46 @@ webhookRouter.post('/verify', async (req, res) => {
   const payload: WebhookPayload = res.locals.payload as WebhookPayload;
   info('Webhook received: %s', req.body);
 
-  if (payload.trigger === WebhookTrigger.READ) {
-    // payload.titleId to get game obj
-    // read request rbacService.userCanRead()
-  } else if (triggersModifyRedistributable.some(item => item === payload.trigger)) {
-    // webhooks are t2admin only
-  } else if (triggersWebhooks.some(item => item === payload.trigger)) {
-    // redistributable modification is _probably_ for t2admin only
+  const context = res.locals.userContext as UserContext;
+  let response: ServiceResponse<boolean> = { code: HttpCode.BAD_REQUEST, payload: false };
+
+  if (
+    payload.target === WebhookTarget.LAUNCH_OPTIONS ||
+    payload.target === WebhookTarget.REDISTRIBUTABLE ||
+    payload.target === WebhookTarget.WEBHOOKS
+  ) {
+    response = await RbacService.hasDivisionPermission(
+      context,
+      't2-admin',
+      (await context.fetchStudioUserModel())?.ownerId ?? 0
+    );
+  } else if (payload.action === WebhookAction.READ) {
+    response = await RbacService.hasResourcePermission(context, { bdsTitleId: payload.titleId }, 'read');
   } else if (payload.titleId) {
-    // payload.titleId to get game obj
-    // rbacService.userCanWrite()
+    const affectsLiveRelease = RbacService.affectsLiveRelease({
+      gameDesc: { bdsTitleId: payload.titleId },
+      branchDesc: { bdsBranchId: payload.branchId },
+      buildDesc: { bdsBuildId: payload.buildId },
+    });
+
+    let permission: ResourcePermissionType;
+    if (payload.action === WebhookAction.CREATE) {
+      permission = 'create';
+    } else if (payload.action === WebhookAction.DELETE) {
+      permission = 'delete';
+    } else {
+      permission = 'update';
+    }
+    response = await RbacService.hasRoleWithAllResourcePermission(
+      context,
+      { bdsTitleId: payload.titleId },
+      affectsLiveRelease ? [permission, 'change-production'] : [permission]
+    );
+  } else {
+    error(
+      `Failed to classify a webhook check in any category, this is unexpected and could be a code issue, payload: ${payload}`
+    );
   }
 
-  res.status(HttpCode.OK).json();
+  res.status(response.code).json(response.payload);
 });

@@ -10,6 +10,7 @@ import {
   Optional,
 } from 'sequelize';
 import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { UserDescription } from '../http/rbac/userdescription';
 import { DivisionModel } from './division';
 import { GroupModel } from './group';
 
@@ -61,4 +62,11 @@ export class UserModel extends Model<UserAttributes, UserCreationAttributes> imp
     groupsWithUser: Association<UserModel, GroupModel>;
     owner: Association<UserModel, DivisionModel>;
   };
+
+  public toHttpModel(): UserDescription {
+    return {
+      name: this.externalId,
+      groups: this.groupsWithUser?.map(group => group.toHttpModel()),
+    };
+  }
 }

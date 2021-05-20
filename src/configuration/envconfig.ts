@@ -36,7 +36,7 @@ export const envConfig: EnvVars = {
   DNA_AUTH_TOKEN: 'this-needs-to-be-generated-somewhare',
   DNA_DISCOVERY_URL: 'this-needs-to-be-found-somewhare',
   CLIENT_VERSION: '0.0.1',
-  BINARY_DISTRIBUTION_SERVICE_URL: 'http://127.0.0.1:8080',
+  BINARY_DISTRIBUTION_SERVICE_URL: 'https://bds-dev.d2dragon.net/api/v1.0',
 
   isDev: () => {
     return envConfig.NODE_ENVIRONMENT === 'development';
@@ -44,6 +44,7 @@ export const envConfig: EnvVars = {
   isTest: () => {
     return envConfig.NODE_ENVIRONMENT === 'test';
   },
+
   ...process.env,
 };
 
@@ -52,22 +53,20 @@ if (envConfig.isDev()) {
   envConfig.JWT_SECRET_KEY = 'supersecrejwtkey';
 }
 
-if (!envConfig.DATABASE_HOST && !envConfig.isTest()) {
-  throw new Error('Missing DATABASE_HOST environment configuration');
-}
+if (!envConfig.isTest()) {
+  if (!envConfig.DATABASE_HOST) {
+    throw new Error('Missing DATABASE_HOST environment configuration');
+  }
 
-if (!envConfig.DATABASE_PASS && !envConfig.isTest()) {
-  throw new Error('Missing DATABASE_PASS environment configuration');
-}
+  if (!envConfig.DATABASE_PASS) {
+    throw new Error('Missing DATABASE_PASS environment configuration');
+  }
 
-if (!envConfig.DATABASE_USER && !envConfig.isTest()) {
-  throw new Error('Missing DATABASE_USER environment configuration');
-}
+  if (!envConfig.DATABASE_USER) {
+    throw new Error('Missing DATABASE_USER environment configuration');
+  }
 
-if (!envConfig.WEBHOOK_SECRET_KEY && !envConfig.isTest()) {
-  throw new Error('Missing WEBHOOK_SECRET_KEY environment configuration');
-}
-
-if (!envConfig.JWT_SECRET_KEY && !envConfig.isTest()) {
-  throw new Error('Missing JWT_SECRET_KEY environment configuration');
+  if (!envConfig.WEBHOOK_SECRET_KEY) {
+    throw new Error('Missing WEBHOOK_SECRET_KEY environment configuration');
+  }
 }

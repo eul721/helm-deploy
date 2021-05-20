@@ -6,6 +6,7 @@ import { TokenValidationResult } from '../models/auth/tokenvalidationresult';
 import { envConfig } from '../configuration/envconfig';
 import { error, info, warn } from '../logger';
 import { PublisherTokenIssuer } from '../services/devtokengenerator';
+import { QueryParam, HeaderParam, headerParamLookup } from '../configuration/httpconfig';
 
 const NUM_DNA_VERIFY_ATTEMPTS = 3;
 
@@ -22,11 +23,12 @@ export const dummyMiddleware: Middleware = async (_req: Request, _res: Response,
   next();
 };
 
-export const getHeaderParamValue = (req: Request, key: string) => {
-  return req.header(key) ?? req.header(key.toLowerCase()) ?? req.header(key.toUpperCase());
+export const getHeaderParamValue = (req: Request, key: HeaderParam) => {
+  const headerKey = headerParamLookup[key];
+  return req.header(headerKey);
 };
 
-export const getQueryParamValue = (req: Request, key: string) => {
+export const getQueryParamValue = (req: Request, key: QueryParam) => {
   return (req.query[key] ?? req.query[key.toLowerCase()] ?? req.query[key.toUpperCase()])?.toString();
 };
 
@@ -47,6 +49,13 @@ export const middlewareExceptionWrapper = (middleware: Middleware): Middleware =
  * @param token token representing authorization provided by the user. Currently only supports JWT
  */
 export async function validateToken(token: string): Promise<TokenValidationResult> {
+  if (!envConfig.JWT_SECRET_KEY) {
+    error('Env not configured correctly, missing JWT_SECRET_KEY');
+    return {
+      valid: false,
+    };
+  }
+
   try {
     let payload: DNATokenPayload = {};
     const { iss, sub } = JWT.decode(token as string) as Record<string, string | undefined>;
@@ -58,7 +67,7 @@ export async function validateToken(token: string): Promise<TokenValidationResul
 
     switch (iss) {
       case PublisherTokenIssuer:
-        payload = JWT.verify(token as string, envConfig.JWT_SECRET_KEY!) as DNATokenPayload;
+        payload = JWT.verify(token as string, envConfig.JWT_SECRET_KEY) as DNATokenPayload;
         if (!payload || !payload.sub) {
           return {
             valid: false,

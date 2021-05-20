@@ -4,8 +4,7 @@ import { error, info } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
-
-const { BINARY_DISTRIBUTION_SERVICE_URL = 'https://bds-dev.d2dragon.net/api/v1.0' } = process.env;
+import { envConfig } from '../configuration/envconfig';
 
 export const bdsApiRouter = Router();
 
@@ -19,13 +18,13 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
   res: Response<ResBody, Locals>
 ) {
   try {
-    const headers: { [k: string]: any } = {};
+    const headers: { [k: string]: string | string[] | undefined } = {};
     Object.keys(req.headers)
       .filter(key => key !== 'host') // the host header causes issues on the server
       .forEach(key => {
         headers.key = req.headers[key];
       });
-    const response = await axios.get(BINARY_DISTRIBUTION_SERVICE_URL + req.url, {
+    const response = await axios.get(envConfig.BINARY_DISTRIBUTION_SERVICE_URL + req.url, {
       headers,
     });
 
@@ -49,7 +48,7 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
       info(err.response.headers);
     } else if (err.request) {
       res.sendStatus(HttpCode.NOT_FOUND);
-      error(`Error occurred on request to BDS - check connection to ${BINARY_DISTRIBUTION_SERVICE_URL}`);
+      error(`Error occurred on request to BDS - check connection to ${envConfig.BINARY_DISTRIBUTION_SERVICE_URL}`);
     } else {
       error(`Unexpected error occurred ${err}`);
     }
@@ -57,7 +56,7 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
 }
 
 /**
- * @api {GET} /titles/:titleId Get Title from BDS
+ * @api {GET} /titles/:titleId Get title
  * @apiName GetBdsTitle
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -71,7 +70,7 @@ bdsApiRouter.get('/titles/[0-9]{7}', async (req, res) => {
 });
 
 /**
- * @api {GET} /:titleId/branches Get Branches from BDS
+ * @api {GET} /:titleId/branches Get branches
  * @apiName GetBdsBranches
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -85,7 +84,7 @@ bdsApiRouter.get('/[0-9]{7}/branches*', async (req, res) => {
 });
 
 /**
- * @api {GET} /:titleId/builds Get Branches from BDS
+ * @api {GET} /:titleId/builds Get branches
  * @apiName GetBdsBuilds
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -99,7 +98,7 @@ bdsApiRouter.get('/[0-9]{7}/builds*', async (req, res) => {
 });
 
 /**
- * @api {GET} /:titleId/depots* Get Depots from BDS
+ * @api {GET} /:titleId/depots* Get depots
  * @apiName GetBdsDepots
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -113,7 +112,7 @@ bdsApiRouter.get('/[0-9]{7}/depots*', async (req, res) => {
 });
 
 /**
- * @api {GET} /:titleId/depots* Get Titles from BDS
+ * @api {GET} /:titleId/depots* Get titles
  * @apiName GetBdsTitles
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -127,7 +126,7 @@ bdsApiRouter.get('/[0-9]{7}/titles*', async (req, res) => {
 });
 
 /**
- * @api {GET} /:titleId/launchOptions* Get Launch Options from BDS
+ * @api {GET} /:titleId/launchOptions* Get launch options
  * @apiName GetBdsLaunchOptions
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -141,7 +140,7 @@ bdsApiRouter.get('/[0-9]{7}/launchOptions*', async (req, res) => {
 });
 
 /**
- * @api {GET} /redistributables* Get redistributables from BDS
+ * @api {GET} /redistributables* Get redistributables
  * @apiName GetBdsRedistributables
  * @apiGroup BDS
  * @apiVersion  0.0.1

@@ -2,6 +2,7 @@ import {
   Association,
   BelongsToGetAssociationMixin,
   BelongsToManyAddAssociationMixin,
+  BelongsToManyAddAssociationsMixin,
   BelongsToManyGetAssociationsMixin,
   BelongsToManyRemoveAssociationMixin,
   DataTypes,
@@ -13,6 +14,7 @@ import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
 import { UserModel } from './user';
 import { RoleModel } from './role';
 import { DivisionModel } from './division';
+import { GroupDescription } from '../http/rbac/groupdescription';
 
 export const GroupDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -47,6 +49,8 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
 
   public addAssignedRole!: BelongsToManyAddAssociationMixin<RoleModel, number>;
 
+  public addAssignedRoles!: BelongsToManyAddAssociationsMixin<RoleModel, number>;
+
   public removeAssignedRole!: BelongsToManyRemoveAssociationMixin<RoleModel, number>;
 
   public getAssignedRoles!: BelongsToManyGetAssociationsMixin<RoleModel>;
@@ -56,6 +60,8 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
   public readonly assignedUsers?: UserModel[];
 
   public addAssignedUser!: BelongsToManyAddAssociationMixin<UserModel, number>;
+
+  public addAssignedUsers!: BelongsToManyAddAssociationsMixin<UserModel, number>;
 
   public removeAssignedUser!: BelongsToManyRemoveAssociationMixin<UserModel, number>;
 
@@ -73,4 +79,13 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
     assignedUsers: Association<GroupModel, UserModel>;
     owner: Association<GroupModel, DivisionModel>;
   };
+
+  public toHttpModel(): GroupDescription {
+    return {
+      name: this.name,
+      divisionId: this.ownerId,
+      users: this.assignedUsers?.map(user => user.toHttpModel()),
+      roles: this.assignedRoles?.map(role => role.toHttpModel()),
+    };
+  }
 }

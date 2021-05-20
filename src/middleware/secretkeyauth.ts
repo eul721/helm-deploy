@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { envConfig } from '../configuration/envconfig';
-import { httpConfig } from '../configuration/httpconfig';
-import { warn } from '../logger';
+import { HeaderParam, QueryParam } from '../configuration/httpconfig';
+import { error, warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import {
   dummyMiddleware,
@@ -17,8 +17,8 @@ function secretKeyAuth(
   res: Response,
   next: NextFunction,
   secretKey: string,
-  headerParam: string,
-  queryParam?: string
+  headerParam: HeaderParam,
+  queryParam?: QueryParam
 ) {
   const token = getHeaderParamValue(req, headerParam) ?? (queryParam ? getQueryParamValue(req, queryParam) : undefined);
   if (!token) {
@@ -37,10 +37,15 @@ function secretKeyAuth(
 /**
  * @apiDefine WebhookSecretMiddleware
  * @apiVersion 0.0.1
- * @apiHeader {String} x-shared-secret secret shared between BDS and publisher
+ * @apiHeader {String} x-t2-shared-secret secret shared between BDS and publisher
  */
 async function webhookSecretKeyAuthMiddleware(req: Request, res: Response, next: NextFunction) {
-  secretKeyAuth(req, res, next, envConfig.WEBHOOK_SECRET_KEY!, httpConfig.WEBHOOK_HEADER_TOKEN);
+  if (!envConfig.WEBHOOK_SECRET_KEY) {
+    error('Missing WEBHOOK_SECRET_KEY');
+    res.status(HttpCode.INTERNAL_SERVER_ERROR).json();
+    return;
+  }
+  secretKeyAuth(req, res, next, envConfig.WEBHOOK_SECRET_KEY, 'webhookToken');
 }
 
 export function getWebhookSecretKeyAuthMiddleware(): Middleware {

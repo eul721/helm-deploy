@@ -25,7 +25,7 @@ describe('src/models/build', () => {
 
     it('should have correctly defined associations', async () => {
       const modelWithAssociations = await BuildModel.findOne({
-        where: { id: testDb.civ6Build1?.id },
+        where: { id: testDb.civ6Build1.id },
         include: [BuildModel.associations.owner, BuildModel.associations.branches],
       });
 

@@ -1,48 +1,39 @@
 import { NextFunction, Request, Response } from 'express';
-import { httpConfig } from '../configuration/httpconfig';
 import { warn } from '../logger';
-import { Title, UserContext } from '../models/auth/usercontext';
+import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
-import { SampleDatabase } from '../tests/testutils';
-import { getHeaderParamValue, getQueryParamValue, Middleware, middlewareExceptionWrapper, useDummyAuth } from './utils';
+import { getHeaderParamValue, Middleware, middlewareExceptionWrapper, useDummyAuth } from './utils';
+import { dummyAuthorizePlayerMiddleware } from './dummymiddleware';
+import { headerParamLookup } from '../configuration/httpconfig';
 
 /**
  * @apiDefine AuthorizePlayerMiddleware
+ * @apiDescription Handles player authorization via licensing service
  * @apiVersion 0.0.1
- * @apiParam {String} deviceName device name of the user, for licensing checks
- * @apiParam {Number} deviceId device id of the user, for licensing checks
+ * @apiHeader {String} x-t2-device-name device name of the user, for licensing checks
+ * @apiHeader {Number} x-t2-device-id device id of the user, for licensing checks
  * @apiHeader {String} Authorization='Bearer token' JWT of the user
  */
 async function authorizePlayerMiddleware(req: Request, res: Response, next: NextFunction) {
   const userContext = res.locals.userContext as UserContext;
-  const deviceIdString = getQueryParamValue(req, httpConfig.DEVICE_ID_PARAM);
-  const deviceName = getQueryParamValue(req, httpConfig.DEVICE_NAME_PARAM);
-  const token = getHeaderParamValue(req, httpConfig.AUTH_HEADER_TOKEN);
+  const deviceIdString = getHeaderParamValue(req, 'deviceId');
+  const deviceName = getHeaderParamValue(req, 'deviceName');
+  const token = getHeaderParamValue(req, 'authorization');
   if (!deviceIdString || !deviceName || !token) {
-    res.status(HttpCode.BAD_REQUEST).json();
+    res
+      .status(HttpCode.BAD_REQUEST)
+      .json(
+        `Missing required headers: ${headerParamLookup.deviceId}, ${headerParamLookup.deviceName}, ${headerParamLookup.authorization}`
+      );
     return;
   }
 
   const deviceId = parseInt(deviceIdString, 10);
-
+  if (Number.isNaN(deviceId)) {
+    res.status(HttpCode.BAD_REQUEST).json('Device id in wrong format');
+    return;
+  }
   userContext.initLicensingData(deviceId, deviceName, token);
-  next();
-}
-
-async function dummyAuthorizePlayerMiddleware(_req: Request, res: Response, next: NextFunction) {
-  const context = new UserContext(SampleDatabase.debugAdminEmail);
-  context.checkIfTitleIsOwned = async (_title: Title) => {
-    return { code: HttpCode.OK, payload: true };
-  };
-  context.fetchOwnedTitles = async () => {
-    return {
-      code: HttpCode.OK,
-      payload: SampleDatabase.contentfulIds.map(item => {
-        return { contentfulId: item.game };
-      }),
-    };
-  };
-  res.locals.userContext = context;
   next();
 }
 

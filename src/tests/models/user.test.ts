@@ -26,7 +26,7 @@ describe('src/models/user', () => {
 
     it('should have correctly defined associations', async () => {
       const modelWithAssociations = await UserModel.findOne({
-        where: { id: testDb.userCto?.id },
+        where: { id: testDb.userCto.id },
         include: [UserModel.associations.owner, UserModel.associations.groupsWithUser],
       });
 

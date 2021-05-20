@@ -62,16 +62,18 @@ export class LicensingService {
       }
 
       // retry if it looks like we could recover by registering the device
-      response = await LicensingService.fetchLicenseRequest(urlBase!, deviceId, userToken);
+      response = await LicensingService.fetchLicenseRequest(urlBase, deviceId, userToken);
       if (response.fetchResponseCode !== HttpCode.OK) {
         // if registering device succeeded but we still failed to get licenses then its not obvious what went wrong
-        error('License fetch failed after successfuly registering device');
+        error(`License fetch failed after successfuly registering device, name: ${deviceName}, id ${deviceId}`);
         return { code: HttpCode.CONFLICT };
       }
     }
 
     if (!response.licenseData) {
-      error('License fetch appears to have succeeded but no license data was returned');
+      error(
+        `License fetch appears to have succeeded but no license data was returned, name: ${deviceName}, id ${deviceId}`
+      );
       return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
 

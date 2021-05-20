@@ -29,11 +29,13 @@ export class BuildService {
       if (gameModel) {
         await gameModel.removeBuild(buildModel);
 
-        await Promise.all(
-          gameModel.branches!.map(async branch => {
-            await branch.removeBuild(buildModel);
-          })
-        );
+        if (gameModel.branches) {
+          await Promise.all(
+            gameModel.branches.map(async branch => {
+              await branch.removeBuild(buildModel);
+            })
+          );
+        }
       }
       buildModel.destroy();
     } else {

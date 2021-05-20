@@ -28,7 +28,12 @@ export class DevTokenGeneratorService {
       jwtid: uuid(),
       subject: userID,
     };
-    return { code: HttpCode.OK, payload: JWT.sign(body, envConfig.JWT_SECRET_KEY!, jwtOpts) };
+
+    if (!envConfig.JWT_SECRET_KEY) {
+      throw new Error('Env not configured correctly');
+    }
+
+    return { code: HttpCode.OK, payload: JWT.sign(body, envConfig.JWT_SECRET_KEY, jwtOpts) };
   }
 
   /**

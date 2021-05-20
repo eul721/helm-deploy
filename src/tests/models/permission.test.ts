@@ -1,5 +1,5 @@
 import { getDBInstance } from '../../models/db/database';
-import { PermissionModel, Permissions } from '../../models/db/permission';
+import { PermissionModel, ResourcePermissions } from '../../models/db/permission';
 import { SampleDatabase } from '../testutils';
 
 describe('src/models/permission', () => {
@@ -24,7 +24,7 @@ describe('src/models/permission', () => {
 
     it('should have correctly defined associations', async () => {
       const modelWithAssociations = await PermissionModel.findOne({
-        where: { id: Permissions[0] },
+        where: { id: ResourcePermissions[0] },
         include: [PermissionModel.associations.rolesWithPermission],
       });
 
