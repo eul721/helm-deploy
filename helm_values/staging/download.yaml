@@ -3,7 +3,7 @@ hpa:
   minReplicas: 1
   maxReplicas: 3
 app:
-  name: downloader
+  name: download
   requests:
     cpu: 0.5
   limits:

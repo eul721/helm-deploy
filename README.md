@@ -13,7 +13,7 @@ T2GP Publisher Service is the backend wrapper to glue together BDS, Contentful, 
 | Environment | URL |
 |-------------|-----|
 | Publisher Service (develop) | https://publisher-service-develop.d2dragon.net/ |
-| Downloader Service (develop) | https://downloader-service-develop.d2dragon.net/ |
+| Download Service (develop) | https://download-service-develop.d2dragon.net/ |
 | MySQL database (develop) *see Jumpbox note below* | t2gp-publisher-service-develop-db.d2dragon.net |
 
 ### Jumpbox

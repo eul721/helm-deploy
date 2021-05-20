@@ -74,11 +74,11 @@ jobs:
               -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/publisher.yaml \
               --set app.tag=${{ env.APP_VERSION }} 
             helm upgrade --install \
-              downloader-service-${{ env.TARGET_ENV }} /github/workspace/helm_chart \
+              download-service-${{ env.TARGET_ENV }} /github/workspace/helm_chart \
               --kube-token=${{ env.KUBETOKEN }} \
               --create-namespace \
               -n publisher-service \
-              -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/downloader.yaml \
+              -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/download.yaml \
               --set app.tag=${{ env.APP_VERSION }} 
         # Update deployment status
       - name: Update deployment status (success)
