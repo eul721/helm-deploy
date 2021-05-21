@@ -27,5 +27,6 @@ ingresses:
       - cloudflare
       - ghost-inspector
       - corp
+      - eip # allow all access from our d2c vpc. Should be removed once BDS is migrated to flux
     external_to_vpc_sgs:
       - mpg_2k_bds
