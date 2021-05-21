@@ -7,7 +7,7 @@
     "noImplicitReturns": true,
     "outDir": "dist",
     "resolveJsonModule": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "sourceMap": true,
     "target": "ES6"
   },

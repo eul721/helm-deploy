@@ -10,6 +10,7 @@ import { Catalogue } from '../models/http/catalogue';
 import { CatalogueItem } from '../models/http/catalogueItem';
 import { UserContext } from '../models/auth/usercontext';
 import { Locale } from '../models/db/localizedfield';
+import { AgreementModel } from '../models/db/agreement';
 
 export class GameService {
   /**
@@ -83,7 +84,7 @@ export class GameService {
       }
       const ownedTitles: string[] = response.payload?.map(title => title.contentfulId) ?? [];
       const playerOwnedGames = await GameModel.findAll({
-        include: { all: true },
+        include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
         where: { contentfulId: { [Op.in]: ownedTitles } },
       });
       const gameModelsJson: { [key: string]: DownloadData } = {};
@@ -184,10 +185,12 @@ export class GameService {
   ): DownloadData {
     return {
       name: game.names[locale],
+      names: game.names,
       agreements:
         game.agreements?.map(agreementData => ({
           id: agreementData.id.toString(),
           title: agreementData.names[locale],
+          titles: agreementData.names,
           url: agreementData.url,
         })) ?? [],
       branchId: branch.bdsBranchId,

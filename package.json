@@ -29,6 +29,7 @@
   "homepage": "https://github.com/take-two-t2gp/t2gp-publisher-service#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.2.0",
     "@rollup/plugin-typescript": "^8.2.0",
     "@take-two-t2gp/eslint-config-t2gp": "^6.0.1",
@@ -51,6 +52,7 @@
     "nodemon": "^2.0.7",
     "prettier": "^2.2.1",
     "rollup": "^2.39.0",
+    "rollup-plugin-copy": "^3.4.0",
     "sqlite3": "^5.0.2",
     "stylelint": "^13.8.0",
     "supertest": "^6.1.3",

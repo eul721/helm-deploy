@@ -13,6 +13,7 @@ export interface Model {
 
 export interface DownloadData {
   name: string;
+  names?: Record<string, string>;
   titleId: number;
   branchId: number;
   versions: Version[];

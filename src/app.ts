@@ -1,18 +1,21 @@
-import express from 'express';
 import cors from 'cors';
+import express from 'express';
+import path from 'path';
 import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
 import { fetch } from 'cross-fetch';
 import { downloadApiRouter } from './controllers/download';
 import { webhookRouter } from './controllers/webhooks';
 import { publishApiRouter } from './controllers/publish';
 import { bdsApiRouter } from './controllers/bds';
+import { debugApiRouter } from './controllers/debug';
 import { envConfig } from './configuration/envconfig';
 import { devTokenGeneratorApiRouter } from './controllers/devtokengenerator';
 import { licensingApiRouter } from './controllers/licensing';
-
-import { error, info } from './logger';
+import { debug, error, info } from './logger';
 import { rbacApiRouter } from './controllers/rbac';
 import { rbacUserAdminApiRouter } from './controllers/rbacuseradmin';
+
+import { name, version } from '../package.json';
 
 export const app = express();
 
@@ -26,6 +29,10 @@ DNA.initialize({
     app.use(cors());
     app.use(express.json());
 
+    app.get('/version', (_req, res) => {
+      res.json({ name, version });
+    });
+
     app.use('/api/games', downloadApiRouter);
     app.use('/api/publisher', publishApiRouter);
     app.use('/api/rbac', rbacApiRouter);
@@ -36,6 +43,10 @@ DNA.initialize({
 
     if (envConfig.isDev()) {
       app.use('/dev/token', devTokenGeneratorApiRouter);
+
+      debug('Debugger Gateway loaded');
+      app.use('/public', express.static(path.join(__dirname, 'static')));
+      app.use('/api/debugger', debugApiRouter);
     }
   })
   .catch(initErr => {

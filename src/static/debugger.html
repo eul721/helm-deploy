@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>🪐 Publisher Service Debugger Console 🚀</title>
+  <meta charset="UTF-8">
+  <link rel="shortcut icon"
+    href=" data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAEDklEQVR42u2azUsyXxTHjw9PWdqY2OsiCIXathCCalEQ/QEFikYQGOEiIqI2QbkoaBEtoo27UAo3ES6KXonaBCWFLooIy/AFzIwSzVooc56VP+r3pM6dppynmS9cZvDec6/n45l775yrBBERBKxfIHCJAEQAIgARgAhABCACEAGIAISq39kqLBYLnJ6eAk3TQNM0IOJf148KW21sbIBKpXr3WSKRgEgkArFYDGKxGLy+voJSqYTS0lKoqKiAmpoakMlknyOAWTQ0NIQA8G3l4eEBEREfHx9xa2sLzWYzI7vh4WHc3t7GWCyGbMQbAD6fD202GyoUClb25eXluLKygs/Pz/8mAI1Gw0k/XV1d6PV6GQPgzSTo8/k46Wdvbw+0Wi243W7hrgLxeByMRiP4/X7hLoNXV1cwPT0N6XRauPuApaUlcLlcwt4I2Wy2nPWSbEnRzc1NeHp6ymrocrlgcXGR8RdxOByAiCCRSKC/vx9SqRQjO6vVCp2dnUBRFMTjcVhfX4fx8XEiCPf391BVVUW2EcqntbU1ouUpI7/fz9jm4ODgw7HtdjvR2GdnZ/xZBs/Pzxm1s1gs0NHR8WGdXq+H+vp6xmOGw2H+zAH5JqWMdDpd1rqSkhLo6+tjPGYymeQegEQiYWW3urqat41UKoWGhoacbSiKInnfIX8b/CqdnJxAOByGQCAAXq8Xjo+PwW63v2tjMplAKpXm7Of6+prxmHK5nHwVyCen0wk9PT2c/AovLy9wd3cHwWAQbm5uABFhYGAga/toNArV1dWMx/Z4PNDU1MRtBLB9BD6STCYDjUYDGo0G2tvbGeUOSKRWq3/ORujy8hJMJhPj9jMzM6BQKH4GgFAoBIODg0Q2er3+Z2yFQ6EQ9Pb2wtHREWObhYUFaGxsZJcSyyen08lqJ8hGFxcXqNVqicbT6XSYSCTYZ4T4AICmadzZ2SHOCrW2tmIwGPxcSqzQABKJBM7OzhI739bWxth53gLw+XzY3d1N7Pzo6Oh/2eV/EgBN07i7u4tyuZzYeYfDgalUiru0ONcAaJrOG/Jzc3PEjre0tKDb7WY9wfICwO3tLRqNRmLnR0ZGMBqNfmqFKTiA/f19VKlUxM4vLy+zCnneAEgmkzg/P0/seHNzM3o8HuRKBQEQCATQYDAQOz82NkY8y+fTt+cDDg8PwWAwQCQSIbKrq6sDiqLAarVCOp3+64T67Sv3/69qtRrMZnNht8KZCPjO88ZMmZqa4v/Z4Fcq1+mQIADkyh4JAoBSqRQ2gFwJVkEAKCoq4s+5QCFUXFws7AgoKyvj/mCksrISJicn30VEJioy929LRhMTE18aPW/7ztzX1tZyfzDyUyT+VVYEIAIQAYgARAAiABGACEAEIFD9ASSTuWy6/FMIAAAAAElFTkSuQmCC"
+    type="image/x-icon">
+
+  <style>
+    colors {
+      /* blue */
+      background-color: #203655;
+      /* gray */
+      background-color: #3B4554;
+      /* lgray */
+      background-color: #475973;
+      /* green */
+      background-color: #5B6951;
+      /* red */
+      background-color: #733F55;
+    }
+
+    * {
+      margin: 0;
+      box-sizing: border-box;
+      padding: 0;
+    }
+
+    html {
+      background-color: #3B4554;
+      color: #F0F0F0;
+      font-family: Arial, Helvetica, sans-serif;
+      height: calc(100%);
+      width: calc(100%);
+    }
+
+    body {
+      height: calc(100%);
+      width: calc(100%);
+    }
+
+    #root {
+      display: grid;
+      grid-template-areas: "header" "config" "console""input""footer";
+      grid-template-rows: 32px 20px auto 24px 20px;
+      height: calc(100%);
+      width: calc(100%);
+    }
+
+    #header {
+      padding-left: 5px;
+      font-size: 32px;
+      grid-area: header;
+    }
+
+    #config {
+      grid-area: config;
+    }
+
+    #footer {
+      font-size: 12px;
+      grid-area: footer;
+      padding-right: 5px;
+      text-align: right;
+    }
+
+    #console {
+      background-color: #101010;
+      border-bottom: none !important;
+      border-radius: 10px 10px 0px 0px;
+      border: 1px solid #F0F0F0;
+      grid-area: console;
+      height: calc(100%);
+      overflow: hidden;
+      padding-left: 4px;
+      padding-right: 4px;
+      width: calc(100%);
+    }
+
+    #console-lines {
+      font-family: 'Courier New', Courier, monospace;
+      height: calc(100%);
+      overflow-y: scroll;
+      width: calc(100%);
+      padding-right: 20px;
+      box-sizing: content-box;
+    }
+
+    #input {
+      appearance: none;
+      background-color: #101010;
+      border-radius: 10px;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border: 1px solid #F0F0F0;
+      color: white;
+      font-family: 'Courier New', Courier, monospace;
+      height: calc(100%);
+      padding-left: 5px;
+      width: calc(100%);
+    }
+
+    #input:focus {
+      background-color: #202020;
+      outline: none;
+    }
+
+    .error {
+      text-shadow: red 0px 0 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <main id="root">
+    <header id="header">Publisher Service Console</header>
+    <div id="config">
+      <input id="input-host" style="width:350px" value="http://localhost:3000"/>
+      <button id="btn-reinit">Re-Init</button>
+    </div>
+    <div id="console">
+      <div id="console-lines" class="code"></div>
+    </div>
+    <div id="input-container">
+      <input id="input" type="text">
+    </div>
+    <footer id="footer">If you are seeing this, the getStatus request did not load</footer>
+  </main>
+</body>
+
+<script>
+
+  const commandInput = document.getElementById('input');
+
+  // history[0] is the latest, history[n] is always before history[n-1]
+  const _history = [];
+  let _historyMarker = 0;
+  const _lines = [];
+
+  const KEYCODES = {
+    TAB: 9,
+    ENTER: 13,
+    ARROW_UP: 38,
+    ARROW_DOWN: 40,
+    L: 76,
+  };
+
+  const getHost = () => document.getElementById('input-host').value.trim();
+
+  async function getStatus() {
+    try {
+      const result = await (await fetch(new URL('/version', getHost()).href)).json();
+      if (result.version && result.name) {
+        writeLines(`+${'='.repeat(80)}+`);
+        writeLines(`Connected to ${result.name} version ${result.version} on host ${getHost()}`, 1);
+        writeLines(`+${'='.repeat(80)}+`);
+      }
+      return result;
+    } catch (err) {
+      document.getElementById('footer').classList.add('error');
+    }
+  }
+
+  function setStatus({ name, version }) {
+    document.getElementById('footer').innerText = `${name}@${version}`;
+  }
+
+  function _pushLine(line, indents = 0) {
+    const tabs = '&nbsp;';
+    console.log('Printing line=[%s]', line);
+    _lines.push(line);
+    const row = document.createElement('div');
+    row.classList.add('console-line');
+    const codeRow = document.createElement('code');
+    codeRow.innerHTML = `${tabs.repeat(indents)}${line.replace('\t', tabs)}`;
+    row.appendChild(codeRow);
+    const consoleElement = document.getElementById('console-lines');
+    consoleElement.appendChild(row);
+    row.scrollIntoView(false);
+  }
+
+  function writeLines(lines, indents = 0) {
+    if (Array.isArray(lines)) {
+      lines.forEach((line) => _pushLine(line, indents));
+    } else {
+      _pushLine(lines, indents);
+    }
+  }
+
+  async function sendCommand(command) {
+    console.log('Sending command=[%s]', command);
+    // Avoid dupes in history just to make it easy
+    if (_history[0] !== command) {
+      _history.unshift(command);
+    }
+    writeLines(`$ ${command}`);
+    try {
+      const result = await fetch(
+        new URL('/api/debugger', getHost()),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'post',
+          body: JSON.stringify({
+            command,
+          }),
+        }
+      );
+      const jsonResult = await result.json();
+      console.log('command result:', jsonResult);
+      let lines;
+      if (Array.isArray(jsonResult.message)) {
+        lines = jsonResult.message;
+      } else if (typeof jsonResult.message === 'string') {
+        lines = (jsonResult.message || '').split('\n');
+      }
+      writeLines(lines.map(item => `< ${item}`));
+    } catch (cmdErr) {
+      console.warn('Encountered error sending command. Error:', cmdErr);
+    }
+  }
+
+  function clearScreen() {
+    document.getElementById('console-lines').innerHTML = '';
+  }
+
+  function showHistory(direction) {
+    if (!_history.length) {
+      return;
+    }
+    if (_historyMarker + direction <= 0) {
+      // at the front 'out of history' now
+      document.getElementById('input').value = '';
+      _historyMarker = 0;
+      return;
+    }
+    _historyMarker = Math.max(0, Math.min(_historyMarker + direction, _history.length));
+    document.getElementById('input').value = _history[_historyMarker - 1];
+  }
+
+  async function setupPage() {
+    const status = await getStatus();
+    setStatus(status);
+
+    while (_history.length) {
+      _history.pop();
+    }
+
+    _historyMarker = 0;
+
+    commandInput.onkeypress = async (keyEvent) => {
+      if (keyEvent.keyCode === KEYCODES.ENTER) {
+        const cmd = keyEvent.target.value.trim();
+        if (!cmd.length) {
+          return;
+        }
+        const sendResult = await sendCommand(cmd);
+        keyEvent.target.value = '';
+        _historyMarker = 0;
+      }
+    };
+
+    commandInput.onkeydown = (keyEvent) => {
+      if (keyEvent.keyCode === KEYCODES.TAB) {
+        keyEvent.preventDefault();
+      }
+      if (keyEvent.keyCode === KEYCODES.ARROW_UP) {
+        showHistory(1);
+        keyEvent.preventDefault();
+      }
+      if (keyEvent.keyCode === KEYCODES.ARROW_DOWN) {
+        showHistory(-1);
+        keyEvent.preventDefault();
+      }
+      if (keyEvent.keyCode === KEYCODES.L && keyEvent.ctrlKey) {
+        // Clear the screen
+        clearScreen();
+      }
+      // console.log(keyEvent);
+    }
+
+    document.getElementById('btn-reinit').onclick = setupPage;
+    commandInput.focus();
+  }
+
+  setupPage().then(() => {
+    console.log('Success setting up page');
+  }).catch((err) => {
+    console.warn('Encountered error setting up page');
+    console.warn(err);
+  });
+
+</script>
+
+</html>
