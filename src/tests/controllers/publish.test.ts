@@ -7,10 +7,7 @@ import { publishApiRouter } from '../../controllers/publish';
 import { SampleDatabase } from '../testutils';
 import { DevTokenGeneratorService } from '../../services/devtokengenerator';
 
-const urlBase = '/api/publish';
-const validUrl = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}`;
-const badUrl = `${urlBase}/branches`;
-
+const urlBase = '/api/publisher';
 const app = express();
 app.use(express.json());
 app.use(urlBase, publishApiRouter);
@@ -23,6 +20,9 @@ describe('src/controllers/publish', () => {
 
     let fakeUserToken: Maybe<string>;
 
+    let validUrl: Maybe<string>;
+    let badUrl: Maybe<string>;
+
     beforeAll(async () => {
       await getDBInstance().sync({ force: true });
       await sampleDb.initAll();
@@ -30,6 +30,9 @@ describe('src/controllers/publish', () => {
       realUserToken = response.payload;
       const responseFake = await DevTokenGeneratorService.createDevJwt('random@fake');
       fakeUserToken = responseFake.payload;
+
+      validUrl = `${urlBase}/games/${sampleDb.gameCiv6.id}/branches`;
+      badUrl = `${urlBase}/games/fakeId/branches`;
     });
 
     it('should have token values', async () => {
@@ -39,22 +42,30 @@ describe('src/controllers/publish', () => {
 
     describe('when calling get on /branches', () => {
       it('should reject if malformed bearer token', async () => {
-        const result = await request(app).get(validUrl).set('Authorization', `${realUserToken}`);
+        const result = await request(app)
+          .get(validUrl ?? '')
+          .set('Authorization', `${realUserToken}`);
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
 
       it('should reject if token has no matchin rbac user', async () => {
-        const result = await request(app).get(validUrl).set('Authorization', `Bearer ${fakeUserToken}`);
+        const result = await request(app)
+          .get(validUrl ?? '')
+          .set('Authorization', `Bearer ${fakeUserToken}`);
         expect(result.status).toBe(HttpCode.NOT_FOUND);
       });
 
-      it('should reject if valid bearer but missing query param', async () => {
-        const result = await request(app).get(badUrl).set('Authorization', `Bearer ${realUserToken}`);
+      it('should reject if valid bearer but wrong path param', async () => {
+        const result = await request(app)
+          .get(badUrl ?? '')
+          .set('Authorization', `Bearer ${realUserToken}`);
         expect(result.status).toBe(HttpCode.BAD_REQUEST);
       });
 
       it('should accept if valid bearer token and url', async () => {
-        const result = await request(app).get(validUrl).set('Authorization', `Bearer ${realUserToken}`);
+        const result = await request(app)
+          .get(validUrl ?? '')
+          .set('Authorization', `Bearer ${realUserToken}`);
         expect(result.status).toBe(HttpCode.OK);
         expect(result.body).toBeTruthy();
       });

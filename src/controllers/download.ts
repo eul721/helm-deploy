@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { PathParam } from '../configuration/httpconfig';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 import { getQueryParamValue } from '../middleware/utils';
@@ -40,7 +41,7 @@ downloadApiRouter.get('/download', async (_req, res) => {
 });
 
 /**
- * @api {GET} /api/games/branches Get branches
+ * @api {GET} /api/games/:gameId/branches Get branches
  * @apiName GetAllBranches
  * @apiGroup Download
  * @apiVersion  0.0.1
@@ -51,10 +52,10 @@ downloadApiRouter.get('/download', async (_req, res) => {
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-downloadApiRouter.get('/branches', async (req, res) => {
-  const titleContentfulId = getQueryParamValue(req, 'title');
-  if (titleContentfulId) {
-    const response = await GameService.getBranches(titleContentfulId, res.locals.userContext);
+downloadApiRouter.get(`/:${PathParam.gameId}/branches`, async (req, res) => {
+  const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
+  if (!Number.isNaN(gameId)) {
+    const response = await GameService.getBranches({ id: gameId }, res.locals.userContext);
     res.status(response.code).json(response.payload);
   } else {
     res.status(HttpCode.BAD_REQUEST).json();
@@ -62,7 +63,7 @@ downloadApiRouter.get('/branches', async (req, res) => {
 });
 
 /**
- * @api {GET} /games/download/branch Get specific game branch
+ * @api {GET} /games/:gameId/branches/:branchId Get specific game branch
  * @apiName GetSpecificBranch
  * @apiGroup Download
  * @apiVersion  0.0.1
@@ -75,17 +76,12 @@ downloadApiRouter.get('/branches', async (req, res) => {
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-downloadApiRouter.get('/download/branch', async (req, res) => {
-  const titleContentfulId = getQueryParamValue(req, 'title');
-  const branchContentfulId = getQueryParamValue(req, 'branch');
+downloadApiRouter.get(`/:${PathParam.gameId}/:${PathParam.branchId}`, async (req, res) => {
+  const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
+  const branchId = Number.parseInt(req.params[PathParam.branchId], 10);
   const password = getQueryParamValue(req, 'password');
-  if (titleContentfulId) {
-    const response = await GameService.getGameDownloadModel(
-      res.locals.userContext,
-      titleContentfulId,
-      Number.parseInt(branchContentfulId || '', 10),
-      password
-    );
+  if (!Number.isNaN(gameId) && !Number.isNaN(branchId)) {
+    const response = await GameService.getGameDownloadModel(res.locals.userContext, { id: gameId }, branchId, password);
     res.status(response.code).json(response.payload);
   } else {
     res.status(HttpCode.BAD_REQUEST).json();

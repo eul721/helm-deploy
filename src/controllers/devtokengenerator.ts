@@ -11,10 +11,10 @@ export const devTokenGeneratorApiRouter = Router();
  * @apiGroup DevToken
  * @apiVersion  0.0.1
  * @apiDescription Get simple token for given userid/email (dev only)
- * @apiParam {String} userId='debug@admin' identifier of the user, must match RBAC external ids
+ * @apiParam {String} userName='debug@admin' identifier of the user, must match RBAC external ids
  */
 devTokenGeneratorApiRouter.get('/simple', async (req, res) => {
-  const userId = getQueryParamValue(req, 'userId');
+  const userId = getQueryParamValue(req, 'userName');
   if (!userId) {
     res.status(HttpCode.BAD_REQUEST).json('missing userId query param');
     return;

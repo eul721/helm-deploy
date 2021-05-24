@@ -5,6 +5,8 @@ import { HttpCode } from '../models/http/httpcode';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 import { envConfig } from '../configuration/envconfig';
+import { PathParam } from '../configuration/httpconfig';
+import { getAuthorizeBdsReadMiddleware } from '../middleware/authorizebdsread';
 
 export const bdsApiRouter = Router();
 
@@ -56,7 +58,7 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
 }
 
 /**
- * @api {GET} /titles/:titleId Get title
+ * @api {GET} bds/titles/:titleId Get title
  * @apiName GetBdsTitle
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -64,13 +66,14 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ * @apiUse AuthorizeBdsReadMiddleware
  */
-bdsApiRouter.get('/titles/[0-9]{7}', async (req, res) => {
+bdsApiRouter.get(`/titles/:${PathParam.title}`, getAuthorizeBdsReadMiddleware(), async (req, res) => {
   await bdsGet(req, res);
 });
 
 /**
- * @api {GET} /:titleId/branches Get branches
+ * @api {GET} bds/:titleId/branches Get branches
  * @apiName GetBdsBranches
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -78,13 +81,14 @@ bdsApiRouter.get('/titles/[0-9]{7}', async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ * @apiUse AuthorizeBdsReadMiddleware
  */
-bdsApiRouter.get('/[0-9]{7}/branches*', async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.title}/branches*`, getAuthorizeBdsReadMiddleware(), async (req, res) => {
   await bdsGet(req, res);
 });
 
 /**
- * @api {GET} /:titleId/builds Get branches
+ * @api {GET} bds/:titleId/builds Get branches
  * @apiName GetBdsBuilds
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -92,13 +96,14 @@ bdsApiRouter.get('/[0-9]{7}/branches*', async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ * @apiUse AuthorizeBdsReadMiddleware
  */
-bdsApiRouter.get('/[0-9]{7}/builds*', async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.title}/builds*`, getAuthorizeBdsReadMiddleware(), async (req, res) => {
   await bdsGet(req, res);
 });
 
 /**
- * @api {GET} /:titleId/depots* Get depots
+ * @api {GET} bds/:titleId/depots* Get depots
  * @apiName GetBdsDepots
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -106,27 +111,14 @@ bdsApiRouter.get('/[0-9]{7}/builds*', async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ * @apiUse AuthorizeBdsReadMiddleware
  */
-bdsApiRouter.get('/[0-9]{7}/depots*', async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.title}/depots*`, getAuthorizeBdsReadMiddleware(), async (req, res) => {
   await bdsGet(req, res);
 });
 
 /**
- * @api {GET} /:titleId/depots* Get titles
- * @apiName GetBdsTitles
- * @apiGroup BDS
- * @apiVersion  0.0.1
- * @apiDescription Get titles from the BDS
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePlayerMiddleware
- */
-bdsApiRouter.get('/[0-9]{7}/titles*', async (req, res) => {
-  await bdsGet(req, res);
-});
-
-/**
- * @api {GET} /:titleId/launchOptions* Get launch options
+ * @api {GET} bds/:titleId/launchOptions* Get launch options
  * @apiName GetBdsLaunchOptions
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -134,13 +126,15 @@ bdsApiRouter.get('/[0-9]{7}/titles*', async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ * @apiUse AuthorizeBdsReadMiddleware
  */
-bdsApiRouter.get('/[0-9]{7}/launchOptions*', async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.title}/launchOptions*`, getAuthorizeBdsReadMiddleware(), async (req, res) => {
+  // TODO we might be removing this enpoint entirely as a matchmaker remnant
   await bdsGet(req, res);
 });
 
 /**
- * @api {GET} /redistributables* Get redistributables
+ * @api {GET} bds/redistributables* Get redistributables
  * @apiName GetBdsRedistributables
  * @apiGroup BDS
  * @apiVersion  0.0.1
@@ -148,7 +142,9 @@ bdsApiRouter.get('/[0-9]{7}/launchOptions*', async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ * @apiUse AuthorizeBdsReadMiddleware
  */
 bdsApiRouter.get('/redistributables*', async (req, res) => {
+  // TODO we might be removing this enpoint entirely, if not will have to decide on what permission is needs - t2-admin?
   await bdsGet(req, res);
 });

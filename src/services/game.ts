@@ -1,6 +1,6 @@
 import { Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
-import { GameModel } from '../models/db/game';
+import { GameAttributes, GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import { Branch } from '../models/http/branch';
 import { ServiceResponse } from '../models/http/serviceresponse';
@@ -23,12 +23,12 @@ export class GameService {
    */
   public static async getGameDownloadModel(
     userContext: UserContext,
-    contentfulId: string,
+    gameDesc: Partial<GameAttributes>,
     branchIdOverride?: number,
     branchOverridePassword?: string
   ): Promise<ServiceResponse<DownloadData>> {
     try {
-      const game = await GameModel.findOne({ where: { contentfulId }, include: { all: true } });
+      const game = await GameModel.findOne({ where: gameDesc, include: { all: true } });
       if (!game) {
         return { code: HttpCode.NOT_FOUND };
       }
@@ -116,19 +116,18 @@ export class GameService {
    * @param userContext information about the requester
    */
   public static async getBranches(
-    titleContentfulId: string,
+    gameDesc: Partial<GameAttributes>,
     userContext: UserContext
   ): Promise<ServiceResponse<Branch[]>> {
     try {
       const game = await GameModel.findOne({
         include: { all: true },
-        where: { contentfulId: titleContentfulId },
+        where: gameDesc,
       });
       if (!game) {
         return { code: HttpCode.NOT_FOUND };
       }
 
-      // const gameBranches = await game.getBranches({ include: { all: true } });
       const branches: Branch[] = [];
       const studioUser = await userContext.fetchStudioUserModel();
       const allowedPrivateBranches = studioUser && (await studioUser.getOwner()).id === (await game.getOwner()).id;

@@ -18,14 +18,14 @@ rbacUserAdminApiRouter.use(getAuthenticateMiddleware());
  * @apiVersion  0.0.1
  * @apiDescription Create a user, requires create-account permission
  *
- * @apiParam {String} userId Identifier (normally email) of the user to create
+ * @apiParam {String} userName Identifier (normally email) of the user to create
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  */
 rbacUserAdminApiRouter.post('/user/', getAuthorizeForRbacMiddleware('create-account'), async (req, res) => {
   const context = res.locals.userContext as UserContext;
-  const id = getQueryParamValue(req, 'userId');
+  const id = getQueryParamValue(req, 'userName');
   if (!id) {
     res.status(HttpCode.BAD_REQUEST).json('Missing userId param');
     return;
@@ -50,14 +50,14 @@ rbacUserAdminApiRouter.post('/user/', getAuthorizeForRbacMiddleware('create-acco
  * @apiVersion  0.0.1
  * @apiDescription Delete a user, requires remove-account permission
  *
- * @apiParam {String} userId Identifier (normally email) of the user to remove
+ * @apiParam {String} userName Identifier (normally email) of the user to remove
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  */
 rbacUserAdminApiRouter.delete('/user/', getAuthorizeForRbacMiddleware('remove-account'), async (req, res) => {
   const context = res.locals.userContext as UserContext;
-  const id = getQueryParamValue(req, 'userId');
+  const id = getQueryParamValue(req, 'userName');
   if (!id) {
     res.status(HttpCode.BAD_REQUEST).json('Missing userId param');
     return;

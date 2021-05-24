@@ -79,6 +79,8 @@ export class UserContext {
 
   public userToken?: string;
 
+  public bdsTitle?: string;
+
   // params
   private userId: string;
 

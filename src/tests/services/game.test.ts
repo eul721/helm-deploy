@@ -21,10 +21,9 @@ describe('src/services/game', () => {
       userContext.checkIfTitleIsOwned.mockResolvedValue({ code: HttpCode.OK, payload: true });
 
       it('should return a valid game download model', async () => {
-        const serviceResponse = await GameService.getGameDownloadModel(
-          userContext,
-          SampleDatabase.contentfulIds[0].game
-        );
+        const serviceResponse = await GameService.getGameDownloadModel(userContext, {
+          contentfulId: SampleDatabase.contentfulIds[0].game,
+        });
         expect(serviceResponse.code).toBe(HttpCode.OK);
         expect(serviceResponse.payload).toBeTruthy();
         expect(serviceResponse.payload?.name).toBeTruthy();
@@ -34,7 +33,7 @@ describe('src/services/game', () => {
       it('should return forbidden if a private or invalid branch is requested for an owned game', async () => {
         const serviceResponse = await GameService.getGameDownloadModel(
           userContext,
-          SampleDatabase.contentfulIds[0].game,
+          { contentfulId: SampleDatabase.contentfulIds[0].game },
           12345134
         );
         expect(serviceResponse.code).toBe(HttpCode.FORBIDDEN);
@@ -47,7 +46,9 @@ describe('src/services/game', () => {
     userContext.checkIfTitleIsOwned.mockResolvedValueOnce({ code: HttpCode.OK, payload: false });
 
     it('should refuse the request', async () => {
-      const serviceResponse = await GameService.getGameDownloadModel(userContext, SampleDatabase.contentfulIds[0].game);
+      const serviceResponse = await GameService.getGameDownloadModel(userContext, {
+        contentfulId: SampleDatabase.contentfulIds[0].game,
+      });
       expect(serviceResponse.code).toBe(HttpCode.FORBIDDEN);
     });
   });
@@ -56,7 +57,9 @@ describe('src/services/game', () => {
     const userContext = mocked(new UserContext(SampleDatabase.debugAdminEmail));
 
     it('should return not found for invalid contentful id', async () => {
-      const serviceResponse = await GameService.getGameDownloadModel(userContext, 'random invalid value');
+      const serviceResponse = await GameService.getGameDownloadModel(userContext, {
+        contentfulId: 'random invalid value',
+      });
       expect(serviceResponse.code).toBe(HttpCode.NOT_FOUND);
     });
   });
@@ -115,13 +118,16 @@ describe('src/services/game', () => {
     const userContext = mocked(new UserContext(SampleDatabase.debugAdminEmail));
 
     it('should return not found for invalid id', async () => {
-      const serviceResponse = await GameService.getBranches('random bad id', userContext);
+      const serviceResponse = await GameService.getBranches({ contentfulId: 'random bad id' }, userContext);
       expect(serviceResponse.code).toBe(HttpCode.NOT_FOUND);
     });
 
     it('should return at least one branch for a game', async () => {
       userContext.fetchStudioUserModel.mockResolvedValueOnce(undefined);
-      const serviceResponse = await GameService.getBranches(SampleDatabase.contentfulIds[0].game, userContext);
+      const serviceResponse = await GameService.getBranches(
+        { contentfulId: SampleDatabase.contentfulIds[0].game },
+        userContext
+      );
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
       expect(serviceResponse.payload?.length).toBeGreaterThan(0);

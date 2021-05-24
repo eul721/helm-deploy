@@ -8,7 +8,7 @@ import { DevTokenGeneratorService } from '../../services/devtokengenerator';
 import { downloadApiRouter } from '../../controllers/download';
 import { headerParamLookup } from '../../configuration/httpconfig';
 
-const urlBase = '/api/download';
+const urlBase = '/api/games';
 
 const app = express();
 app.use(express.json());
@@ -37,10 +37,8 @@ describe('src/controllers/webhooks', () => {
     });
 
     describe('when calling get on /branches', () => {
-      const validUrl = `${urlBase}/branches?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10&deviceName=testDevice`;
-      const urlMissingTitleId = `${urlBase}/branches`;
-
       it('should reject if malformed bearer token', async () => {
+        const validUrl = `${urlBase}/${sampleDb.gameCiv6.id}/branches`;
         const result = await request(app)
           .get(validUrl)
           .set('Authorization', `${realUserToken}`)
@@ -50,6 +48,7 @@ describe('src/controllers/webhooks', () => {
       });
 
       it('should reject if missing device name', async () => {
+        const validUrl = `${urlBase}/${sampleDb.gameCiv6.id}/branches`;
         const result = await request(app)
           .get(validUrl)
           .set('Authorization', `Bearer ${realUserToken}`)
@@ -58,6 +57,7 @@ describe('src/controllers/webhooks', () => {
       });
 
       it('should reject if missing device id', async () => {
+        const validUrl = `${urlBase}/${sampleDb.gameCiv6.id}/branches`;
         const result = await request(app)
           .get(validUrl)
           .set('Authorization', `Bearer ${realUserToken}`)
@@ -65,16 +65,8 @@ describe('src/controllers/webhooks', () => {
         expect(result.status).toBe(HttpCode.BAD_REQUEST);
       });
 
-      it('should reject if missing title id', async () => {
-        const result = await request(app)
-          .get(urlMissingTitleId)
-          .set('Authorization', `Bearer ${realUserToken}`)
-          .set(headerParamLookup.deviceId, '10')
-          .set(headerParamLookup.deviceName, 'testDevice');
-        expect(result.status).toBe(HttpCode.BAD_REQUEST);
-      });
-
       it('should accept with valid token and query params', async () => {
+        const validUrl = `${urlBase}/${sampleDb.gameCiv6.id}/branches`;
         const result = await request(app)
           .get(validUrl)
           .set('Authorization', `Bearer ${realUserToken}`)

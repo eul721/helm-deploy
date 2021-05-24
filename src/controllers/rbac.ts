@@ -20,13 +20,13 @@ rbacApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware()
  * @apiVersion  0.0.1
  * @apiDescription Get all rbac information about current or another (admin only) user
  *
- * @apiParam {String} userId Optional param to see information of another user, requires rbac-admin permission
+ * @apiParam {String} userName Optional param to see information of another user, requires rbac-admin permission
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  */
 rbacApiRouter.get('/about', async (req, res) => {
-  const id = getQueryParamValue(req, 'userId');
+  const id = getQueryParamValue(req, 'userName');
   const context = res.locals.userContext as UserContext;
   let response: ServiceResponse<UserDescription>;
   if (id) {
