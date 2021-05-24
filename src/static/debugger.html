@@ -157,6 +157,7 @@
         writeLines(`Connected to ${result.name} version ${result.version} on host ${getHost()}`, 1);
         writeLines(`+${'='.repeat(80)}+`);
       }
+      document.getElementById('footer').classList.remove('error');
       return result;
     } catch (err) {
       document.getElementById('footer').classList.add('error');
@@ -242,15 +243,6 @@
   }
 
   async function setupPage() {
-    const status = await getStatus();
-    setStatus(status);
-
-    while (_history.length) {
-      _history.pop();
-    }
-
-    _historyMarker = 0;
-
     commandInput.onkeypress = async (keyEvent) => {
       if (keyEvent.keyCode === KEYCODES.ENTER) {
         const cmd = keyEvent.target.value.trim();
@@ -284,6 +276,15 @@
 
     document.getElementById('btn-reinit').onclick = setupPage;
     commandInput.focus();
+
+    const status = await getStatus();
+    setStatus(status);
+
+    while (_history.length) {
+      _history.pop();
+    }
+
+    _historyMarker = 0;
   }
 
   setupPage().then(() => {
