@@ -30,7 +30,7 @@ DNA.initialize({
     app.use(express.json());
 
     app.get('/version', (_req, res) => {
-      res.json({ name, version });
+      res.json({ deployedVersion: envConfig.DEPLOYED_VERSION, name, version });
     });
 
     app.use('/api/games', downloadApiRouter);

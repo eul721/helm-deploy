@@ -18,6 +18,8 @@ interface EnvVars {
   DATABASE_HOST?: string;
   DATABASE_PASS?: string;
   DATABASE_USER?: string;
+  /* SHA from CI indicating latest git commit */
+  DEPLOYED_VERSION?: string;
   WEBHOOK_SECRET_KEY?: string;
   JWT_SECRET_KEY?: string;
   isDev(): boolean;
@@ -32,6 +34,7 @@ export const envConfig: EnvVars = {
   DATABASE_PORT: '3306',
   DATABASE_NAME: 'publisher_services_dev',
   DATABASE_DBG: 'false',
+  DEPLOYED_VERSION: 'n/a',
   DNA_APP_ID: 'this-needs-to-be-generated-somewhare',
   DNA_AUTH_TOKEN: 'this-needs-to-be-generated-somewhare',
   DNA_DISCOVERY_URL: 'this-needs-to-be-found-somewhare',
@@ -39,7 +42,7 @@ export const envConfig: EnvVars = {
   BINARY_DISTRIBUTION_SERVICE_URL: 'https://bds-dev.d2dragon.net/api/v1.0',
 
   isDev: () => {
-    return envConfig.NODE_ENVIRONMENT === 'development';
+    return envConfig.NODE_ENVIRONMENT === 'development' || envConfig.NODE_ENVIRONMENT === 'develop';
   },
   isTest: () => {
     return envConfig.NODE_ENVIRONMENT === 'test';
