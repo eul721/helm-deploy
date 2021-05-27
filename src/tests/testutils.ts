@@ -128,7 +128,6 @@ export class SampleDatabase {
       name: 'hr admin',
     });
     await Promise.all([
-      hrAdmin.addAssignedPermission(await PermissionModel.getModel('manage-access')),
       hrAdmin.addAssignedPermission(await PermissionModel.getModel('remove-account')),
       hrAdmin.addAssignedPermission(await PermissionModel.getModel('create-account')),
     ]);
@@ -136,10 +135,7 @@ export class SampleDatabase {
     const rbacAdmin = await this.division.createRoleEntry({
       name: 'rbac admin',
     });
-    await Promise.all([
-      rbacAdmin.addAssignedPermission(await PermissionModel.getModel('manage-access')),
-      rbacAdmin.addAssignedPermission(await PermissionModel.getModel('rbac-admin')),
-    ]);
+    await Promise.all([rbacAdmin.addAssignedPermission(await PermissionModel.getModel('rbac-admin'))]);
 
     this.civEditorRole = await this.division.createRoleEntry({
       name: 'civ editor',

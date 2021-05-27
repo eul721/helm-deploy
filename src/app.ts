@@ -12,9 +12,7 @@ import { envConfig } from './configuration/envconfig';
 import { devTokenGeneratorApiRouter } from './controllers/devtokengenerator';
 import { licensingApiRouter } from './controllers/licensing';
 import { debug, error, info } from './logger';
-import { rbacApiRouter } from './controllers/rbac';
-import { rbacUserAdminApiRouter } from './controllers/rbacuseradmin';
-
+import { rbacApiRouter } from './controllers/rbac/basic';
 import { name, version } from '../package.json';
 
 export const app = express();
@@ -36,7 +34,6 @@ DNA.initialize({
     app.use('/api/games', downloadApiRouter);
     app.use('/api/publisher', publishApiRouter);
     app.use('/api/rbac', rbacApiRouter);
-    app.use('/api/rbac', rbacUserAdminApiRouter);
     app.use('/api/licensing', licensingApiRouter);
     app.use('/bds', bdsApiRouter);
     app.use('/webhooks', webhookRouter);

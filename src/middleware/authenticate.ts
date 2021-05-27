@@ -3,14 +3,10 @@ import { authBearerPrefix } from '../configuration/httpconfig';
 import { warn } from '../logger';
 import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
-import {
-  dummyMiddleware,
-  getHeaderParamValue,
-  Middleware,
-  middlewareExceptionWrapper,
-  useDummyAuth,
-  validateToken,
-} from './utils';
+import { validateToken } from '../utils/auth';
+import { getHeaderParamValue, sendMessageResponse } from '../utils/http';
+import { Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
+import { dummyAuthenticateMiddleware } from './dummymiddleware';
 
 /**
  * @apiDefine AuthenticateMiddleware
@@ -21,7 +17,7 @@ import {
 async function authenticateMiddleware(req: Request, res: Response, next: NextFunction) {
   const bearerToken = getHeaderParamValue(req, 'authorization');
   if (!bearerToken || !bearerToken.startsWith(authBearerPrefix)) {
-    res.status(HttpCode.UNAUTHORIZED).send({ message: 'missing or malformed token' });
+    sendMessageResponse(res, HttpCode.UNAUTHORIZED, 'Missing or malformed token');
     return;
   }
 
@@ -29,7 +25,7 @@ async function authenticateMiddleware(req: Request, res: Response, next: NextFun
   const validateResult = await validateToken(token);
 
   if (!validateResult.valid || !validateResult.userID) {
-    res.status(HttpCode.FORBIDDEN).json({ message: 'invalid token' });
+    sendMessageResponse(res, HttpCode.FORBIDDEN, 'Invalid token');
     return;
   }
 
@@ -40,7 +36,7 @@ async function authenticateMiddleware(req: Request, res: Response, next: NextFun
 export function getAuthenticateMiddleware(): Middleware {
   if (useDummyAuth()) {
     warn('Running without authenticate');
-    return dummyMiddleware;
+    return middlewareExceptionWrapper(dummyAuthenticateMiddleware);
   }
   return middlewareExceptionWrapper(authenticateMiddleware);
 }

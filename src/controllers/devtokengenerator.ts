@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { getQueryParamValue } from '../middleware/utils';
 import { HttpCode } from '../models/http/httpcode';
 import { DevTokenGeneratorService } from '../services/devtokengenerator';
+import { getQueryParamValue, sendMessageResponse, sendServiceResponse } from '../utils/http';
 
 export const devTokenGeneratorApiRouter = Router();
 
@@ -11,19 +11,19 @@ export const devTokenGeneratorApiRouter = Router();
  * @apiGroup DevToken
  * @apiVersion  0.0.1
  * @apiDescription Get simple token for given userid/email (dev only)
- * @apiParam {String} userName='debug@admin' identifier of the user, must match RBAC external ids
+ * @apiParam (Query) {String} userName='debug@admin' identifier of the user, must match RBAC external ids
  */
 devTokenGeneratorApiRouter.get('/simple', async (req, res) => {
   const userId = getQueryParamValue(req, 'userName');
   if (!userId) {
-    res.status(HttpCode.BAD_REQUEST).json('missing userId query param');
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'missing userId query param');
     return;
   }
   try {
     const response = await DevTokenGeneratorService.createDevJwt(userId);
-    res.status(response.code).json(response.payload);
+    sendServiceResponse(response, res);
   } catch {
-    res.status(HttpCode.INTERNAL_SERVER_ERROR).json('failed to generate token');
+    sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'failed to generate token');
   }
 });
 
@@ -33,20 +33,21 @@ devTokenGeneratorApiRouter.get('/simple', async (req, res) => {
  * @apiGroup DevToken
  * @apiVersion  0.0.1
  * @apiDescription Get DNA token for given username+password (dev only)
- * @apiParam {String} email associated with a 2K account
- * @apiParam {String} password associated with a 2K account
+ *
+ * @apiParam (Query) {String} email associated with a 2K account
+ * @apiParam (Query) {String} password associated with a 2K account
  */
 devTokenGeneratorApiRouter.get('/dna', async (req, res) => {
   const email = getQueryParamValue(req, 'email');
   const password = getQueryParamValue(req, 'password');
   if (!email || !password) {
-    res.status(HttpCode.BAD_REQUEST).json('missing email and/or password query params');
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing email and/or password query params');
     return;
   }
   try {
     const response = await DevTokenGeneratorService.createDnaJwt(email, password);
-    res.status(response.code).json(response.payload);
+    sendServiceResponse(response, res);
   } catch {
-    res.status(HttpCode.INTERNAL_SERVER_ERROR).json('failed to log in');
+    sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'failed to log in');
   }
 });

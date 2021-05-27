@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { PathParam } from '../configuration/httpconfig';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
-import { getQueryParamValue } from '../middleware/utils';
+import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
 import { GameService } from '../services/game';
+import { getQueryParamValue, sendMessageResponse, sendServiceResponse } from '../utils/http';
 
 export const downloadApiRouter = Router();
 
@@ -22,7 +23,7 @@ downloadApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware(
  */
 downloadApiRouter.get('/', async (_req, res) => {
   const response = await GameService.getAllGames();
-  res.status(response.code).json(response.payload);
+  sendServiceResponse(response, res);
 });
 
 /**
@@ -36,8 +37,8 @@ downloadApiRouter.get('/', async (_req, res) => {
  * @apiUse AuthorizePlayerMiddleware
  */
 downloadApiRouter.get('/download', async (_req, res) => {
-  const response = await GameService.getOwnedGames(res.locals.userContext);
-  res.status(response.code).json(response.payload);
+  const response = await GameService.getOwnedGames(UserContext.get(res));
+  sendServiceResponse(response, res);
 });
 
 /**
@@ -47,7 +48,7 @@ downloadApiRouter.get('/download', async (_req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get branch list for a specified title
  *
- * @apiParam {String} title Title contentful id query param
+ * @apiParam (Query) {String} title Title contentful id
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
@@ -55,10 +56,10 @@ downloadApiRouter.get('/download', async (_req, res) => {
 downloadApiRouter.get(`/:${PathParam.gameId}/branches`, async (req, res) => {
   const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
   if (!Number.isNaN(gameId)) {
-    const response = await GameService.getBranches({ id: gameId }, res.locals.userContext);
-    res.status(response.code).json(response.payload);
+    const response = await GameService.getBranches({ id: gameId }, UserContext.get(res));
+    sendServiceResponse(response, res);
   } else {
-    res.status(HttpCode.BAD_REQUEST).json();
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing title query param');
   }
 });
 
@@ -69,9 +70,9 @@ downloadApiRouter.get(`/:${PathParam.gameId}/branches`, async (req, res) => {
  * @apiVersion  0.0.1
  * @apiDescription Get game download data of a specific game branch
  *
- * @apiParam {String} Title title id of the game
- * @apiParam {String} Branch branch id of the requested branch
- * @apiParam {String} Password password for the branch, if applicable
+ * @apiParam (Query) Title title id of the game
+ * @apiParam (Query) {String} Branch branch id of the requested branch
+ * @apiParam (Query) Password password for the branch, if applicable
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
@@ -81,9 +82,9 @@ downloadApiRouter.get(`/:${PathParam.gameId}/:${PathParam.branchId}`, async (req
   const branchId = Number.parseInt(req.params[PathParam.branchId], 10);
   const password = getQueryParamValue(req, 'password');
   if (!Number.isNaN(gameId) && !Number.isNaN(branchId)) {
-    const response = await GameService.getGameDownloadModel(res.locals.userContext, { id: gameId }, branchId, password);
-    res.status(response.code).json(response.payload);
+    const response = await GameService.getGameDownloadModel(UserContext.get(res), { id: gameId }, branchId, password);
+    sendServiceResponse(response, res);
   } else {
-    res.status(HttpCode.BAD_REQUEST).json();
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing title or branch query param');
   }
 });

@@ -5,6 +5,9 @@ import { UserDescription } from './userdescription';
  * Describes an RBAC group
  */
 export interface GroupDescription {
+  /** Internal PS id */
+  id: number;
+
   /** Name of the group */
   name: string;
 

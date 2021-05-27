@@ -2,9 +2,10 @@ import { NextFunction, Request, Response } from 'express';
 import { warn } from '../logger';
 import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
-import { getHeaderParamValue, Middleware, middlewareExceptionWrapper, useDummyAuth } from './utils';
 import { dummyAuthorizePlayerMiddleware } from './dummymiddleware';
 import { headerParamLookup } from '../configuration/httpconfig';
+import { getHeaderParamValue, sendMessageResponse } from '../utils/http';
+import { Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
 
 /**
  * @apiDefine AuthorizePlayerMiddleware
@@ -15,22 +16,22 @@ import { headerParamLookup } from '../configuration/httpconfig';
  * @apiHeader {String} Authorization='Bearer token' JWT of the user
  */
 async function authorizePlayerMiddleware(req: Request, res: Response, next: NextFunction) {
-  const userContext = res.locals.userContext as UserContext;
+  const userContext = UserContext.get(res);
   const deviceIdString = getHeaderParamValue(req, 'deviceId');
   const deviceName = getHeaderParamValue(req, 'deviceName');
   const token = getHeaderParamValue(req, 'authorization');
   if (!deviceIdString || !deviceName || !token) {
-    res
-      .status(HttpCode.BAD_REQUEST)
-      .json(
-        `Missing required headers: ${headerParamLookup.deviceId}, ${headerParamLookup.deviceName}, ${headerParamLookup.authorization}`
-      );
+    sendMessageResponse(
+      res,
+      HttpCode.BAD_REQUEST,
+      `Missing required headers: ${headerParamLookup.deviceId}, ${headerParamLookup.deviceName}, ${headerParamLookup.authorization}`
+    );
     return;
   }
 
   const deviceId = parseInt(deviceIdString, 10);
   if (Number.isNaN(deviceId)) {
-    res.status(HttpCode.BAD_REQUEST).json('Device id in wrong format');
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Device id in wrong format');
     return;
   }
   userContext.initLicensingData(deviceId, deviceName, token);

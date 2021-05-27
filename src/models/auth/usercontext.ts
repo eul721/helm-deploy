@@ -1,4 +1,5 @@
 import { DNATokenPayload } from '@take-two-t2gp/t2gp-node-toolkit';
+import { Response } from 'express';
 import { LicensingService } from '../../services/licensing';
 import { UserModel } from '../db/user';
 import { HttpCode } from '../http/httpcode';
@@ -21,6 +22,13 @@ export class UserContext {
   constructor(userId: string, payload?: DNATokenPayload) {
     this.userId = userId;
     this.identity = payload;
+  }
+
+  public static get(res: Response): UserContext {
+    if (Object.prototype.hasOwnProperty.call(res.locals, 'userContext')) {
+      return res.locals.userContext as UserContext;
+    }
+    throw new Error('Missing user context on the request, authenticate middleware must have malfuntioned');
   }
 
   public getUserId() {
@@ -71,8 +79,6 @@ export class UserContext {
   }
 
   // passed in headers
-  public targetDivisionId?: number;
-
   public deviceId?: number;
 
   public deviceName?: string;

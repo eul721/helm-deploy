@@ -7,6 +7,7 @@ import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 import { envConfig } from '../configuration/envconfig';
 import { PathParam } from '../configuration/httpconfig';
 import { getAuthorizeBdsReadMiddleware } from '../middleware/authorizebdsread';
+import { sendMessageResponse } from '../utils/http';
 
 export const bdsApiRouter = Router();
 
@@ -49,7 +50,11 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
       info(err.response.status);
       info(err.response.headers);
     } else if (err.request) {
-      res.sendStatus(HttpCode.NOT_FOUND);
+      sendMessageResponse(
+        res,
+        HttpCode.NOT_FOUND,
+        `Error occurred on request to BDS - check connection to ${envConfig.BINARY_DISTRIBUTION_SERVICE_URL}`
+      );
       error(`Error occurred on request to BDS - check connection to ${envConfig.BINARY_DISTRIBUTION_SERVICE_URL}`);
     } else {
       error(`Unexpected error occurred ${err}`);

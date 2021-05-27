@@ -14,6 +14,7 @@ import { RbacService } from '../services/rbac';
 import { ResourcePermissionType } from '../models/db/permission';
 import { WebhookTarget } from '../models/http/webhook/webhooktarget';
 import { WebhookAction } from '../models/http/webhook/webhookaction';
+import { sendMessageResponse, sendServiceResponse } from '../utils/http';
 
 export const webhookRouter = Router();
 
@@ -28,7 +29,7 @@ webhookRouter.use((req, res, next) => {
       const payload: WebhookPayload = req.body as WebhookPayload;
       res.locals.payload = payload;
     } catch (jsonException) {
-      res.status(HttpCode.BAD_REQUEST).json({ message: 'Bad Request' });
+      sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Bad Request');
       return;
     }
   }
@@ -54,15 +55,14 @@ webhookRouter.post('/', async (req, res) => {
   info('Webhook received: %s', req.body);
   try {
     switch (payload.target) {
-      case WebhookTarget.TITLE: {
+      case WebhookTarget.TITLE:
         if (payload.action === WebhookAction.CREATE && payload.titleId) {
           result = await TitleService.onCreated(payload.titleId);
         } else if (payload.action === WebhookAction.DELETE && payload.titleId) {
           result = await TitleService.onDeleted(payload.titleId);
         }
         break;
-      }
-      case WebhookTarget.BRANCH: {
+      case WebhookTarget.BRANCH:
         if (payload.action === WebhookAction.CREATE && payload.titleId && payload.branchId && payload.buildId) {
           result = await BranchService.onCreated(payload.titleId, payload.branchId, payload.buildId);
         } else if (payload.action === WebhookAction.DELETE && payload.titleId && payload.branchId) {
@@ -71,19 +71,16 @@ webhookRouter.post('/', async (req, res) => {
           result = await BranchService.onModified(payload.titleId, payload.branchId, payload.buildId);
         }
         break;
-      }
-      case WebhookTarget.BUILD: {
+      case WebhookTarget.BUILD:
         if (payload.action === WebhookAction.CREATE && payload.buildId) {
           result = await BuildService.onCreated(payload.buildId);
         } else if (payload.action === WebhookAction.DELETE && payload.titleId && payload.buildId) {
           result = await BuildService.onDeleted(payload.titleId, payload.buildId);
         }
         break;
-      }
-      default: {
+      default:
         warn('Received unexpected webhook target, payload=%s', payload);
         break;
-      }
     }
   } catch (err) {
     warn('Encountered error processing webhook, payload=%s, error=%s', payload, err);
@@ -94,7 +91,7 @@ webhookRouter.post('/', async (req, res) => {
     warn(`Received unexpected post execution webhook, payload: ${payload}`);
   }
 
-  res.status(result.code).json(result.payload);
+  sendServiceResponse(result, res);
 });
 
 webhookRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
@@ -114,7 +111,7 @@ webhookRouter.post('/verify', async (req, res) => {
   const payload: WebhookPayload = res.locals.payload as WebhookPayload;
   info('Webhook received: %s', req.body);
 
-  const context = res.locals.userContext as UserContext;
+  const context = UserContext.get(res);
   let response: ServiceResponse<boolean> = { code: HttpCode.BAD_REQUEST, payload: false };
 
   if (
@@ -155,5 +152,5 @@ webhookRouter.post('/verify', async (req, res) => {
     );
   }
 
-  res.status(response.code).json(response.payload);
+  sendServiceResponse(response, res);
 });

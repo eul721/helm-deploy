@@ -1,47 +1,12 @@
 import { DNA, DNATokenPayload } from '@take-two-t2gp/t2gp-node-toolkit';
 import retry from 'async-retry';
 import * as JWT from 'jsonwebtoken';
-import { NextFunction, Request, Response } from 'express';
 import { TokenValidationResult } from '../models/auth/tokenvalidationresult';
 import { envConfig } from '../configuration/envconfig';
 import { error, info, warn } from '../logger';
 import { PublisherTokenIssuer } from '../services/devtokengenerator';
-import { QueryParam, HeaderParam, headerParamLookup } from '../configuration/httpconfig';
 
 const NUM_DNA_VERIFY_ATTEMPTS = 3;
-
-/**
- * Type defining middleware
- */
-export type Middleware = (req: Request, res: Response, next: NextFunction) => Promise<void>;
-
-export function useDummyAuth(): boolean {
-  return envConfig.isDev() && envConfig.ALLOW_UNAUTHORIZED === 'true';
-}
-
-export const dummyMiddleware: Middleware = async (_req: Request, _res: Response, next: NextFunction) => {
-  next();
-};
-
-export const getHeaderParamValue = (req: Request, key: HeaderParam) => {
-  const headerKey = headerParamLookup[key];
-  return req.header(headerKey);
-};
-
-export const getQueryParamValue = (req: Request, key: QueryParam) => {
-  return (req.query[key] ?? req.query[key.toLowerCase()] ?? req.query[key.toUpperCase()])?.toString();
-};
-
-export const middlewareExceptionWrapper = (middleware: Middleware): Middleware => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      middleware(req, res, next);
-    } catch (err) {
-      error('Encountered error in middleware, error=%s', err);
-      res.status(500).json();
-    }
-  };
-};
 
 /**
  * Runs validation on a token provided by a user and returns a [[ValidationResult]] object.

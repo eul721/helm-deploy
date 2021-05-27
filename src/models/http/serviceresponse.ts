@@ -6,4 +6,5 @@ import { HttpCode } from './httpcode';
 export interface ServiceResponse<T = void> {
   code: HttpCode;
   payload?: T;
+  message?: string;
 }

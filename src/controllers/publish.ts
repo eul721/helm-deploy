@@ -2,8 +2,10 @@ import { Router } from 'express';
 import { PathParam, Segment } from '../configuration/httpconfig';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
+import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
 import { GameService } from '../services/game';
+import { sendMessageResponse, sendServiceResponse } from '../utils/http';
 
 export const publishApiRouter = Router();
 
@@ -16,7 +18,7 @@ publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddlewar
  * @apiVersion  0.0.1
  * @apiDescription Get branch list for a specified title, includes private branches
  *
- * @apiParam {String} title game contentful id passed in as query param
+ * @apiParam (Query) {String} title game contentful id
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
@@ -24,9 +26,9 @@ publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddlewar
 publishApiRouter.get(`/${Segment.games}/branches`, async (req, res) => {
   const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
   if (!Number.isNaN(gameId)) {
-    const response = await GameService.getBranches({ id: gameId }, res.locals.userContext);
-    res.status(response.code).json(response.payload);
+    const response = await GameService.getBranches({ id: gameId }, UserContext.get(res));
+    sendServiceResponse(response, res);
   } else {
-    res.status(HttpCode.BAD_REQUEST).json();
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Passed in id is not a number');
   }
 });

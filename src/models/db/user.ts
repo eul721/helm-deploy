@@ -65,6 +65,7 @@ export class UserModel extends Model<UserAttributes, UserCreationAttributes> imp
 
   public toHttpModel(): UserDescription {
     return {
+      id: this.id,
       name: this.externalId,
       groups: this.groupsWithUser?.map(group => group.toHttpModel()),
     };

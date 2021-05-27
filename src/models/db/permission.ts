@@ -7,6 +7,7 @@ import {
   ModelAttributes,
 } from 'sequelize';
 import { INTERNAL_STRING_ID } from '../defines/definitions';
+import { PermissionDescription } from '../http/rbac/permissiondescription';
 import { RoleModel } from './role';
 
 export const PermissionDef: ModelAttributes = {
@@ -24,10 +25,9 @@ export const ResourcePermissions = [
 
 // user permissions relate to managing users and rbac itself, they apply only to the division that owns owns the groups/roles that have them
 export const DivisionPermissions = [
+  'rbac-admin', // allows modifying rbac resources and assigning users
   'create-account', // account creation within division
   'remove-account', // account deletion within division
-  'manage-access', // allows assigning/removing users from groups
-  'rbac-admin', // allows changing/creation/removing RBAC groups and roles themselves
   'all-games-access', // for ease of permission-setting, roles with this should be granted access to all new / current on creation (logic should be part of RBAC rather than querying)
 
   't2-admin', // special permission, will need to figure out how to handle
@@ -69,4 +69,8 @@ export class PermissionModel
   public static associations: {
     rolesWithPermission: Association<PermissionModel, RoleModel>;
   };
+
+  public toHttpModel(): PermissionDescription {
+    return { id: this.id };
+  }
 }

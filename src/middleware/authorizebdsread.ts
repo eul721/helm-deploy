@@ -2,10 +2,11 @@ import { NextFunction, Request, Response } from 'express';
 import { warn } from '../logger';
 import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
-import { Middleware, middlewareExceptionWrapper, useDummyAuth } from './utils';
 import { dummyAuthorizePlayerMiddleware } from './dummymiddleware';
 import { PathParam } from '../configuration/httpconfig';
 import { GameModel } from '../models/db/game';
+import { sendMessageResponse } from '../utils/http';
+import { Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
 
 /**
  * @apiDefine AuthorizeBdsReadMiddleware
@@ -14,14 +15,16 @@ import { GameModel } from '../models/db/game';
  * @apiParam {String} title BDS Title id expected to be passed in path
  */
 async function authorizeBdsReadMiddleware(req: Request, res: Response, next: NextFunction) {
-  const userContext = res.locals.userContext as UserContext;
+  const userContext = UserContext.get(res);
   userContext.bdsTitle = req.params[PathParam.title];
   const game = await GameModel.findOne({ where: { bdsTitleId: userContext.bdsTitle } });
   const titles = await userContext.fetchOwnedTitles();
   if (!titles.payload?.some(ownedTitle => game?.contentfulId === ownedTitle.contentfulId)) {
-    res
-      .status(HttpCode.FORBIDDEN)
-      .json({ message: 'Access to the requested title is not permitted, it needs to be owned' });
+    sendMessageResponse(
+      res,
+      HttpCode.FORBIDDEN,
+      'Access to the requested title is not permitted, it needs to be owned'
+    );
     return;
   }
 

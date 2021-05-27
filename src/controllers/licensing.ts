@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 import { UserContext } from '../models/auth/usercontext';
+import { sendServiceResponse } from '../utils/http';
 
 export const licensingApiRouter = Router();
 
@@ -18,7 +19,7 @@ licensingApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
 licensingApiRouter.get('/', async (_req, res) => {
-  const userContext = res.locals.userContext as UserContext;
+  const userContext = UserContext.get(res);
   const response = await userContext.fetchOwnedTitles();
-  res.status(response.code).json(response.payload);
+  sendServiceResponse(response, res);
 });

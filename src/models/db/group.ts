@@ -82,6 +82,7 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
 
   public toHttpModel(): GroupDescription {
     return {
+      id: this.id,
       name: this.name,
       divisionId: this.ownerId,
       users: this.assignedUsers?.map(user => user.toHttpModel()),

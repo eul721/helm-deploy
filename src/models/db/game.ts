@@ -17,6 +17,7 @@ import { DivisionModel } from './division';
 import { RoleModel } from './role';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
+import { GameDescription } from '../http/rbac/gamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -172,4 +173,12 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
     roles: Association<GameModel, RoleModel>;
     rolesWithGame: Association<GameModel, RoleModel>;
   };
+
+  public toHttpModel(): GameDescription {
+    return {
+      id: this.id,
+      contentfulId: this.contentfulId,
+      divisionId: this.ownerId,
+    };
+  }
 }

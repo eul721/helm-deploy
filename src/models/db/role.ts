@@ -101,9 +101,10 @@ export class RoleModel extends Model<RoleAttributes, RoleCreationAttributes> imp
 
   public toHttpModel(): RoleDescription {
     return {
+      id: this.id,
       name: this.name,
       assignedPermissions: this.assignedPermissions?.map(role => role.id),
-      assignedGames: this.assignedGames?.map(game => game.contentfulId),
+      assignedGames: this.assignedGames?.map(game => game.toHttpModel()),
     };
   }
 }
