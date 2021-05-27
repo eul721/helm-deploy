@@ -18,7 +18,7 @@ function getDBConf(): Options {
   const opts: Options = {
     database: envConfig.DATABASE_NAME,
     host: envConfig.DATABASE_HOST,
-    logging: envConfig.DATABASE_DBG === 'true' ? debug : false,
+    logging: envConfig.DATABASE_DBG ? debug : false,
     password: envConfig.DATABASE_PASS,
     username: envConfig.DATABASE_USER,
   };
@@ -72,7 +72,7 @@ export function getDBInstance() {
 
 export async function initializeDB() {
   try {
-    const dropDb = envConfig.DATABASE_DROP === 'true' && envConfig.isDev();
+    const dropDb = envConfig.DATABASE_DROP && envConfig.isDev();
     if (dropDb) {
       warn('Dropping old database');
     }

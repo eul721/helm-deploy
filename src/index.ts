@@ -19,7 +19,7 @@ initializeDB()
 
     info(`Env: ${envConfig.NODE_ENVIRONMENT}`);
     // Build and nuke the database if develop
-    if (envConfig.DATABASE_DROP === 'true' && envConfig.isDev()) {
+    if (envConfig.DATABASE_DROP && envConfig.isDev()) {
       warn('Reinitializing database');
       reinitializeDummyData();
     }

@@ -13,7 +13,7 @@ import { sendMessageResponse } from './http';
 export type Middleware = (req: Request, res: Response, next: NextFunction) => Promise<void>;
 
 export function useDummyAuth(): boolean {
-  return envConfig.isDev() && envConfig.ALLOW_UNAUTHORIZED === 'true';
+  return envConfig.isDev() && envConfig.ALLOW_UNAUTHORIZED;
 }
 
 export const middlewareExceptionWrapper = (middleware: Middleware): Middleware => {

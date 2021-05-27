@@ -1,45 +1,72 @@
+import { version } from '../../package.json';
+
+const {
+  ALLOW_UNAUTHORIZED = 'false',
+  BINARY_DISTRIBUTION_SERVICE_URL = 'https://bds-dev.d2dragon.net/api/v1.0',
+  DATABASE_DBG = 'false',
+  DATABASE_DROP = 'false',
+  DATABASE_HOST = '',
+  DATABASE_NAME = 'publisher_services_dev',
+  DATABASE_PASS = '',
+  DATABASE_PORT = '3306',
+  DATABASE_USER = '',
+  DEPLOYED_VERSION = 'n/a',
+  DNA_APP_ID = 'this-needs-to-be-generated-somewhare',
+  DNA_APP_SECRET = 'this-needs-to-be-generated-somewhare',
+  DNA_DISCOVERY_URL = 'this-needs-to-be-found-somewhare',
+  JWT_SECRET_KEY = '',
+  NODE_ENVIRONMENT = 'development',
+  PORT = '5000',
+  WEBHOOK_SECRET_KEY = '',
+} = process.env;
+
 /*
   Wrapper interface for all the env variables from .env or in case of tests from TestEnv in jest.config.js
   Note that all vars on it need to be string based otherwise reading from the file will malfunction
 */
 interface EnvVars {
-  NODE_ENVIRONMENT: string;
-  ALLOW_UNAUTHORIZED: 'true' | 'false';
+  ALLOW_UNAUTHORIZED: boolean;
   BINARY_DISTRIBUTION_SERVICE_URL: string;
-  DNA_AUTH_TOKEN: string;
-  DNA_APP_ID: string;
-  DNA_DISCOVERY_URL: string;
   CLIENT_VERSION: string;
-  PORT: string;
-  DATABASE_NAME: string;
-  DATABASE_PORT: string;
-  DATABASE_DROP: 'true' | 'false';
-  DATABASE_DBG: 'true' | 'false';
+  DATABASE_DBG: boolean;
+  DATABASE_DROP: boolean;
   DATABASE_HOST?: string;
+  DATABASE_NAME: string;
   DATABASE_PASS?: string;
+  DATABASE_PORT: string;
   DATABASE_USER?: string;
   /* SHA from CI indicating latest git commit */
   DEPLOYED_VERSION?: string;
-  WEBHOOK_SECRET_KEY?: string;
+  DNA_APP_ID: string;
+  DNA_APP_SECRET: string;
+  DNA_DISCOVERY_URL: string;
   JWT_SECRET_KEY?: string;
+  NODE_ENVIRONMENT: string;
+  PORT: string;
+  WEBHOOK_SECRET_KEY?: string;
   isDev(): boolean;
   isTest(): boolean;
 }
 
 export const envConfig: EnvVars = {
-  NODE_ENVIRONMENT: 'development',
-  ALLOW_UNAUTHORIZED: 'false',
-  PORT: '5000',
-  DATABASE_DROP: 'false',
-  DATABASE_PORT: '3306',
-  DATABASE_NAME: 'publisher_services_dev',
-  DATABASE_DBG: 'false',
-  DEPLOYED_VERSION: 'n/a',
-  DNA_APP_ID: 'this-needs-to-be-generated-somewhare',
-  DNA_AUTH_TOKEN: 'this-needs-to-be-generated-somewhare',
-  DNA_DISCOVERY_URL: 'this-needs-to-be-found-somewhare',
-  CLIENT_VERSION: '0.0.1',
-  BINARY_DISTRIBUTION_SERVICE_URL: 'https://bds-dev.d2dragon.net/api/v1.0',
+  ALLOW_UNAUTHORIZED: ALLOW_UNAUTHORIZED === 'true',
+  BINARY_DISTRIBUTION_SERVICE_URL,
+  CLIENT_VERSION: version,
+  DATABASE_DBG: DATABASE_DBG === 'true',
+  DATABASE_DROP: DATABASE_DROP === 'true',
+  DATABASE_HOST,
+  DATABASE_NAME,
+  DATABASE_PASS,
+  DATABASE_PORT,
+  DATABASE_USER,
+  DEPLOYED_VERSION,
+  DNA_APP_ID,
+  DNA_APP_SECRET,
+  DNA_DISCOVERY_URL,
+  JWT_SECRET_KEY,
+  NODE_ENVIRONMENT,
+  PORT,
+  WEBHOOK_SECRET_KEY,
 
   isDev: () => {
     return envConfig.NODE_ENVIRONMENT === 'development' || envConfig.NODE_ENVIRONMENT === 'develop';
@@ -47,8 +74,6 @@ export const envConfig: EnvVars = {
   isTest: () => {
     return envConfig.NODE_ENVIRONMENT === 'test';
   },
-
-  ...process.env,
 };
 
 if (envConfig.isDev()) {

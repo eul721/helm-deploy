@@ -52,16 +52,21 @@ Before starting, populate a `.env` file in the root of the project (this project
 
 | Name                            | Description                                                                 | Example                  |
 | --------------------------------| --------------------------------------------------------------------------- | ------------------------ |
-| DATABASE_HOST                   | Database server host                                                        | http://localhost         |
-| DATABASE_PORT                   | Database server port                                                        | 3306                     |
-| DATABASE_NAME                   | Database name                                                               | `publisher_services_dev` |
-| DATABASE_USER                   | Database login name                                                         | `dbuser_1`               |
-| DATABASE_PASS                   | Database password                                                           | `hunter2`                |
-| DATABASE_DBG (optional)         | Debug SQL queries (verbose)                                                 | `true`, `false`          |
-| DATABASE_DROP (optional)        | Dev only, allow db drop                                                     | `true`, `false`          |
+| ALLOW_UNAUTHORIZED (optional)   | For **development only**, disables auth | `true`, `false` |
+| BINARY_DISTRIBUTION_SERVICE_URL | URL of the BDS            |  https://dev.bds.api.2kcoretech.online/api/v1.0 |
+| DATABASE_DBG (optional)         | Debug SQL queries (verbose)  | `true`, `false` |
+| DATABASE_DROP (optional)        | Dev only, allow db drop | `true`, `false`          |
+| DATABASE_HOST                   | Database server host | http://localhost         |
+| DATABASE_NAME                   | Database name | `publisher_services_dev` |
+| DATABASE_PASS                   | Database password | `hunter2`                |
+| DATABASE_PORT                   | Database server port | 3306                     |
+| DATABASE_USER                   | Database login name | `dbuser_1`               |
+| DNA_APP_ID                      | DNA Application ID | (in 1Password) |
+| DNA_APP_SECRET                  | DNA Application Secret | (in 1Password) |
+| DNA_DISCOVERY_URL               | DNA Service Discovery URL | `https://discovery.api.2kcoretech.online` |
+| JWT_SECRET_KEY                  | Secret key for self-signed JWT (only required for dev ) | |
+| NODE_ENVIRONMENT                | Environment selector | `development`, `staging`, `production`, `test` |
 | NPM_TOKEN (if building)         | NPM Token to access protected `@take-two-t2gp` modules in Github repository | `abcd1234`               |
-| ALLOW_UNAUTHORIZED (optional)   | For development NODE_ENVIRONMENT, disables auth                             | `true`, `false`          |
-| BINARY_DISTRIBUTION_SERVICE_URL | URL of the BDS              |  https://dev.bds.api.2kcoretech.online/api/v1.0 |
 
 ### Getting Started
 

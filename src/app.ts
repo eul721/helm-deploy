@@ -19,7 +19,7 @@ export const app = express();
 
 DNA.initialize({
   appID: envConfig.DNA_APP_ID,
-  authToken: envConfig.DNA_AUTH_TOKEN,
+  authToken: envConfig.DNA_APP_SECRET,
   discoveryUrl: envConfig.DNA_DISCOVERY_URL,
   fetch,
 })
