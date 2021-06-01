@@ -26,7 +26,7 @@ describe('src/services/game', () => {
         });
         expect(serviceResponse.code).toBe(HttpCode.OK);
         expect(serviceResponse.payload).toBeTruthy();
-        expect(serviceResponse.payload?.name).toBeTruthy();
+        expect(serviceResponse.payload?.names).toBeTruthy();
         expect(serviceResponse.payload?.agreements.length).toBeGreaterThan(0);
       });
 

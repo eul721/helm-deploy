@@ -183,12 +183,10 @@ export class GameService {
     locale = Locale.en
   ): DownloadData {
     return {
-      name: game.names[locale],
       names: game.names,
       agreements:
         game.agreements?.map(agreementData => ({
           id: agreementData.id.toString(),
-          title: agreementData.names[locale],
           titles: agreementData.names,
           url: agreementData.url,
         })) ?? [],

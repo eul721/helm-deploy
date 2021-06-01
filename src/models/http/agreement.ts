@@ -6,9 +6,6 @@ export interface Agreement {
   // uid for agreement
   id: string;
 
-  // human-readable agreement title
-  title: string;
-
   // All titles of all locales in a hashmap
   titles?: Record<string, string>;
 
