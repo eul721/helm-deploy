@@ -56,7 +56,7 @@ downloadApiRouter.get('/download', async (_req, res) => {
 downloadApiRouter.get(`/:${PathParam.gameId}/branches`, async (req, res) => {
   const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
   if (!Number.isNaN(gameId)) {
-    const response = await GameService.getBranches({ id: gameId }, UserContext.get(res));
+    const response = await GameService.getBranches(UserContext.get(res), { id: gameId });
     sendServiceResponse(response, res);
   } else {
     sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing title query param');

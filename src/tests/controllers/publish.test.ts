@@ -4,8 +4,8 @@ import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { getDBInstance } from '../../models/db/database';
 import { HttpCode } from '../../models/http/httpcode';
 import { publishApiRouter } from '../../controllers/publish';
-import { SampleDatabase } from '../testutils';
-import { DevTokenGeneratorService } from '../../services/devtokengenerator';
+import { SampleDatabase } from '../../utils/sampledatabase';
+import { DevToolsService } from '../../services/devtools';
 
 const urlBase = '/api/publisher';
 const app = express();
@@ -26,9 +26,9 @@ describe('src/controllers/publish', () => {
     beforeAll(async () => {
       await getDBInstance().sync({ force: true });
       await sampleDb.initAll();
-      const response = await DevTokenGeneratorService.createDevJwt(SampleDatabase.debugAdminEmail);
+      const response = await DevToolsService.createDevJwt(SampleDatabase.creationData.debugAdminEmail);
       realUserToken = response.payload;
-      const responseFake = await DevTokenGeneratorService.createDevJwt('random@fake');
+      const responseFake = await DevToolsService.createDevJwt('random@fake');
       fakeUserToken = responseFake.payload;
 
       validUrl = `${urlBase}/games/${sampleDb.gameCiv6.id}/branches`;

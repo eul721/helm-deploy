@@ -3,7 +3,7 @@ import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
 import { mocked } from 'ts-jest/utils';
 import { HttpCode } from '../../models/http/httpcode';
 import { LicenseData, LicensingService } from '../../services/licensing';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 
 jest.mock('@take-two-t2gp/t2gp-node-toolkit');
 
@@ -19,9 +19,9 @@ describe('src/services/licensing', () => {
     const licensesResponseValidPayload: LicenseData = {
       licenseBinary: 'licenseBinary',
       licenses: [
-        { expireAt: 1, referenceId: SampleDatabase.contentfulIds[0].game },
-        { expireAt: 2, referenceId: SampleDatabase.contentfulIds[1].game },
-        { expireAt: 3, referenceId: SampleDatabase.contentfulIds[2].game },
+        { expireAt: 1, referenceId: SampleDatabase.creationData.gameContentfulIds[0] },
+        { expireAt: 2, referenceId: SampleDatabase.creationData.gameContentfulIds[1] },
+        { expireAt: 3, referenceId: SampleDatabase.creationData.gameContentfulIds[2] },
       ],
     };
 

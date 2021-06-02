@@ -1,6 +1,6 @@
 import { HttpCode } from '../../models/http/httpcode';
 import { RbacService } from '../../services/rbac';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 import { getDBInstance } from '../../models/db/database';
 import { UserContext } from '../../models/auth/usercontext';
 import { error } from '../../logger';
@@ -21,7 +21,7 @@ describe('src/services/rbacservice', () => {
 
   describe('RbacService.hasDivisionPermission', () => {
     describe('for sample database admin with permissions only in his own division', () => {
-      const userContext = new UserContext(SampleDatabase.debugAdminEmail);
+      const userContext = new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login');
 
       it('should permit within correct division', async () => {
         const result = await RbacService.hasDivisionPermission(userContext, 'rbac-admin', testDb.division.id);
@@ -45,7 +45,7 @@ describe('src/services/rbacservice', () => {
 
   describe('RbacService.hasResourcePermission', () => {
     describe('for sample database admin with permissions only in his own division', () => {
-      const userContext = new UserContext(SampleDatabase.debugAdminEmail);
+      const userContext = new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login');
 
       it('should permit read', async () => {
         const result = await RbacService.hasResourcePermission(
@@ -72,7 +72,7 @@ describe('src/services/rbacservice', () => {
       let userContext: UserContext;
 
       beforeAll(async () => {
-        userContext = new UserContext(testDb.userJrDev.externalId);
+        userContext = new UserContext(testDb.userJrDev.externalId, 'dev-login');
       });
 
       it('should permit read', async () => {

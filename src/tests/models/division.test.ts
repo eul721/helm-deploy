@@ -1,6 +1,6 @@
 import { getDBInstance } from '../../models/db/database';
 import { DivisionModel } from '../../models/db/division';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 
 describe('src/models/division', () => {
   const testDb: SampleDatabase = new SampleDatabase();

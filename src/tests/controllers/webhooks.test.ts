@@ -6,8 +6,8 @@ import { WebhookPayload } from '../../models/http/webhook/webhookpayload';
 import { webhookRouter } from '../../controllers/webhooks';
 import { envConfig } from '../../configuration/envconfig';
 import { HttpCode } from '../../models/http/httpcode';
-import { DevTokenGeneratorService } from '../../services/devtokengenerator';
-import { SampleDatabase } from '../testutils';
+import { DevToolsService } from '../../services/devtools';
+import { SampleDatabase } from '../../utils/sampledatabase';
 import { headerParamLookup } from '../../configuration/httpconfig';
 import { WebhookTarget } from '../../models/http/webhook/webhooktarget';
 import { WebhookAction } from '../../models/http/webhook/webhookaction';
@@ -75,9 +75,9 @@ describe('src/controllers/webhooks', () => {
 
       beforeAll(async () => {
         await sampleDb.initAll();
-        const response = await DevTokenGeneratorService.createDevJwt(SampleDatabase.debugAdminEmail);
+        const response = await DevToolsService.createDevJwt(SampleDatabase.creationData.debugAdminEmail);
         realUserToken = response.payload;
-        const responseFake = await DevTokenGeneratorService.createDevJwt('random@fake');
+        const responseFake = await DevToolsService.createDevJwt('random@fake');
         fakeUserToken = responseFake.payload;
       });
 

@@ -1,5 +1,6 @@
-import { Association, DataTypes, ModelAttributes, Optional } from 'sequelize';
+import { Association, BelongsToGetAssociationMixin, DataTypes, ModelAttributes, Optional } from 'sequelize';
 import { INTERNAL_ID } from '../defines/definitions';
+import { AgreementDescription } from '../http/rbac/agreementdescription';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
@@ -16,9 +17,11 @@ export const AgreementDef: ModelAttributes = {
 export interface AgreementAttributes {
   id: number;
   url: string;
+  ownerId: number;
+  games?: GameModel[];
 }
 
-export type AgreementCreationAttributes = Optional<AgreementAttributes, 'id'>;
+export type AgreementCreationAttributes = Optional<AgreementAttributes, 'id' | 'ownerId'>;
 
 export class AgreementModel
   extends LocalizableModel<ModelAttributes, AgreementCreationAttributes>
@@ -26,6 +29,16 @@ export class AgreementModel
   public id!: number;
 
   public url!: string;
+
+  ownerId!: number;
+
+  games?: GameModel[];
+
+  // #region association: owner
+  public readonly owner?: GameModel;
+
+  public getOwner!: BelongsToGetAssociationMixin<GameModel>;
+  // #endregion
 
   // #region association: localizedfields
 
@@ -69,9 +82,16 @@ export class AgreementModel
   }
 
   // #endregion
-
   public static associations: {
     fields: Association<AgreementModel, LocalizedFieldModel>;
-    games: Association<AgreementModel, GameModel>;
+    owner: Association<AgreementModel, GameModel>;
   };
+
+  public toHttpModel(): AgreementDescription {
+    return {
+      id: this.id,
+      url: this.url,
+      names: this.names,
+    };
+  }
 }

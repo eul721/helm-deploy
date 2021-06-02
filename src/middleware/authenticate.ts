@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { authBearerPrefix } from '../configuration/httpconfig';
-import { warn } from '../logger';
+import { debug, warn } from '../logger';
 import { UserContext } from '../models/auth/usercontext';
 import { HttpCode } from '../models/http/httpcode';
 import { validateToken } from '../utils/auth';
@@ -23,13 +23,14 @@ async function authenticateMiddleware(req: Request, res: Response, next: NextFun
 
   const token = bearerToken.substr(authBearerPrefix.length);
   const validateResult = await validateToken(token);
+  debug(`validate result: ${validateResult.valid}, userId: ${validateResult.userId}`);
 
-  if (!validateResult.valid || !validateResult.userID) {
+  if (!validateResult.valid || !validateResult.userId || !validateResult.accountType) {
     sendMessageResponse(res, HttpCode.FORBIDDEN, 'Invalid token');
     return;
   }
 
-  res.locals.userContext = new UserContext(validateResult.userID, validateResult.payload);
+  res.locals.userContext = new UserContext(validateResult.userId, validateResult.accountType, validateResult.payload);
   next();
 }
 

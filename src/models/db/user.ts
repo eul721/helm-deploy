@@ -22,12 +22,20 @@ export const UserDef: ModelAttributes = {
     type: DataTypes.STRING(128),
     unique: true,
   },
+  // type/provider of externalId
+  accountType: {
+    allowNull: false,
+    type: DataTypes.STRING(128),
+  },
   ownerId: INTERNAL_ID_REFERENCE(),
 };
+
+export type AccountType = 'dev-login' | '2K-dna';
 
 export interface UserAttributes {
   id: number;
   externalId: string;
+  accountType: AccountType;
   ownerId: number;
   readonly groupsWithUser?: GroupModel[];
   readonly owner?: DivisionModel;
@@ -39,6 +47,8 @@ export class UserModel extends Model<UserAttributes, UserCreationAttributes> imp
   id!: number;
 
   externalId!: string;
+
+  accountType!: AccountType;
 
   ownerId!: number;
 

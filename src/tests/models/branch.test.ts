@@ -1,6 +1,6 @@
 import { BranchModel } from '../../models/db/branch';
 import { getDBInstance } from '../../models/db/database';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 
 describe('src/models/branch', () => {
   const testDb: SampleDatabase = new SampleDatabase();
@@ -11,7 +11,7 @@ describe('src/models/branch', () => {
   });
 
   it('should initialize correctly', async () => {
-    const numtestDbDefaults = 5;
+    const numtestDbDefaults = 6;
     const firstResult = await BranchModel.findAll();
     expect(firstResult).toHaveLength(numtestDbDefaults);
     await BranchModel.create({ bdsBranchId: 1234 });

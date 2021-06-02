@@ -10,7 +10,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID } from '../defines/definitions';
+import { AtLeastOne, INTERNAL_ID } from '../defines/definitions';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
@@ -49,6 +49,8 @@ export interface BranchAttributes {
 }
 
 export type BranchCreationAttributes = Optional<BranchAttributes, 'id' | 'visibility' | 'password'>;
+
+export type BranchUniqueIdentifier = AtLeastOne<Pick<BranchAttributes, 'id' | 'bdsBranchId'>>;
 
 export class BranchModel
   extends LocalizableModel<BranchAttributes, BranchCreationAttributes>

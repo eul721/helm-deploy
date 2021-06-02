@@ -2,7 +2,7 @@ import { app } from './app';
 import { envConfig } from './configuration/envconfig';
 import { info, warn } from './logger';
 import { initializeDB } from './models/db/database';
-import { SampleDatabase } from './tests/testutils';
+import { SampleDatabase } from './utils/sampledatabase';
 
 async function reinitializeDummyData() {
   info('====================================\n       Generating Test Data\n====================================');

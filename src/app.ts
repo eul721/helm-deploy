@@ -9,7 +9,7 @@ import { publishApiRouter } from './controllers/publish';
 import { bdsApiRouter } from './controllers/bds';
 import { debugApiRouter } from './controllers/debug';
 import { envConfig } from './configuration/envconfig';
-import { devTokenGeneratorApiRouter } from './controllers/devtokengenerator';
+import { devToolsApiRouter } from './controllers/devtools';
 import { licensingApiRouter } from './controllers/licensing';
 import { debug, error, info } from './logger';
 import { rbacApiRouter } from './controllers/rbac/basic';
@@ -39,7 +39,7 @@ DNA.initialize({
     app.use('/webhooks', webhookRouter);
 
     if (envConfig.isDev()) {
-      app.use('/dev/token', devTokenGeneratorApiRouter);
+      app.use('/dev/token', devToolsApiRouter);
 
       debug('Debugger Gateway loaded');
       app.use('/public', express.static(path.join(__dirname, 'static')));

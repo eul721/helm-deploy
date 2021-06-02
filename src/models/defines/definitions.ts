@@ -41,3 +41,5 @@ export enum MODEL_ID_DEFAULTS {
   BuildModel = '400000',
   GameModel = '100000',
 }
+
+export type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U];

@@ -3,13 +3,14 @@ import {
   BelongsToGetAssociationMixin,
   BelongsToManyGetAssociationsMixin,
   DataTypes,
+  HasManyAddAssociationMixin,
   HasManyCreateAssociationMixin,
   HasManyGetAssociationsMixin,
   HasManyRemoveAssociationMixin,
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE, AtLeastOne } from '../defines/definitions';
 import { AgreementCreationAttributes, AgreementModel } from './agreement';
 import { BuildCreationAttributes, BuildModel } from './build';
 import { BranchCreationAttributes, BranchModel } from './branch';
@@ -49,6 +50,8 @@ export interface GameAttributes {
 
 export type GameCreationAttributes = Optional<GameAttributes, 'id' | 'defaultBranch' | 'ownerId' | 'contentfulId'>;
 
+export type GameUniqueIdentifier = AtLeastOne<Pick<GameAttributes, 'id' | 'bdsTitleId' | 'contentfulId'>>;
+
 export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttributes> implements GameAttributes {
   public id!: number;
 
@@ -66,6 +69,8 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public createAgreement!: HasManyCreateAssociationMixin<AgreementModel>;
 
+  public addAgreement!: HasManyAddAssociationMixin<AgreementModel, number>;
+
   public removeAgreement!: HasManyRemoveAssociationMixin<AgreementModel, number>;
 
   public getAgreements!: HasManyGetAssociationsMixin<AgreementModel>;
@@ -80,6 +85,8 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public createBuild!: HasManyCreateAssociationMixin<BuildModel>;
 
+  public addBuild!: HasManyAddAssociationMixin<BuildModel, number>;
+
   public removeBuild!: HasManyRemoveAssociationMixin<BuildModel, number>;
 
   public getBuilds!: HasManyGetAssociationsMixin<BuildModel>;
@@ -93,6 +100,8 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
   public readonly branches?: BranchModel[];
 
   public createBranch!: HasManyCreateAssociationMixin<BranchModel>;
+
+  public addBranch!: HasManyAddAssociationMixin<BranchModel, number>;
 
   public removeBranch!: HasManyRemoveAssociationMixin<BranchModel, number>;
 

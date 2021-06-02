@@ -129,8 +129,8 @@ webhookRouter.post('/verify', async (req, res) => {
   } else if (payload.titleId) {
     const affectsLiveRelease = RbacService.affectsLiveRelease({
       gameDesc: { bdsTitleId: payload.titleId },
-      branchDesc: { bdsBranchId: payload.branchId },
-      buildDesc: { bdsBuildId: payload.buildId },
+      branchDesc: payload.branchId ? { bdsBranchId: payload.branchId } : undefined,
+      buildDesc: payload.buildId ? { bdsBuildId: payload.buildId } : undefined,
     });
 
     let permission: ResourcePermissionType;

@@ -16,6 +16,6 @@ export function sendMessageResponse(res: Response, code: HttpCode = HttpCode.OK,
   res.status(code).json(message ? { message } : {});
 }
 
-export function sendServiceResponse(serviceResponse: ServiceResponse<any>, res: Response) {
+export function sendServiceResponse(serviceResponse: ServiceResponse<unknown>, res: Response) {
   res.status(serviceResponse.code).json(serviceResponse.payload ?? { message: serviceResponse.message ?? '' });
 }

@@ -1,6 +1,6 @@
 import { getDBInstance } from '../../models/db/database';
 import { HttpCode } from '../../models/http/httpcode';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 import { TitleService } from '../../services/title';
 
 describe('src/services/title', () => {

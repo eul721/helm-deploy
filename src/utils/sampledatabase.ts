@@ -62,15 +62,18 @@ export class SampleDatabase {
 
   public permissions: PermissionModel[] = [];
 
-  public static contentfulIds: { game: string }[] = [
-    { game: '6sAfVxoGuShx9DV38DcFxI' },
-    { game: '5Apf8DiUW6dVyqmwjytKzf' },
-    { game: '6MjdXYJ6dk2kxSXh0C0H60' },
-    { game: '5r3Loln4BEezgXtidiCxHm' },
-    { game: 'tz1zm9ktk7RtSTH6STkhG' },
-  ];
-
-  public static debugAdminEmail = 'debug@admin';
+  public static readonly creationData = {
+    gameContentfulIds: [
+      '6sAfVxoGuShx9DV38DcFxI',
+      '5Apf8DiUW6dVyqmwjytKzf',
+      '6MjdXYJ6dk2kxSXh0C0H60',
+      '5r3Loln4BEezgXtidiCxHm',
+      'tz1zm9ktk7RtSTH6STkhG',
+    ],
+    debugAdminEmail: 'debug@admin',
+    divisionName: 'NotFake Division',
+    groupNames: ['viewers', 'civ devs', 'civ admin', 'devops', 'admins'],
+  };
 
   public initAll = async () => {
     try {
@@ -78,7 +81,7 @@ export class SampleDatabase {
       this.permissions = await Promise.all(ResourcePermissions.map(async id => PermissionModel.create({ id })));
 
       await DivisionModel.create({ name: 'empty div' });
-      this.division = await DivisionModel.create({ name: 'NotFake Division' });
+      this.division = await DivisionModel.create({ name: SampleDatabase.creationData.divisionName });
 
       // Games that relate to test data in BDS and real Contentful IDs
       await this.createResources();
@@ -86,19 +89,24 @@ export class SampleDatabase {
       // users setup
       [this.userCto, this.userSrDev, this.userJrDev, this.userQA, this.userGuest] = await Promise.all([
         this.division.createUserEntry({
-          externalId: SampleDatabase.debugAdminEmail,
+          externalId: SampleDatabase.creationData.debugAdminEmail,
+          accountType: 'dev-login',
         }),
         this.division.createUserEntry({
           externalId: 'teddanson@thegood.place',
+          accountType: 'dev-login',
         }),
         this.division.createUserEntry({
           externalId: 'julia@vice.president',
+          accountType: 'dev-login',
         }),
         this.division.createUserEntry({
           externalId: 'test@user',
+          accountType: 'dev-login',
         }),
         this.division.createUserEntry({
           externalId: 'guest@user',
+          accountType: 'dev-login',
         }),
       ]);
 
@@ -167,11 +175,11 @@ export class SampleDatabase {
     ]);
     await viewerRole.addAssignedGames(this.getAllGames());
 
-    this.adminGroup = await this.division.createGroupEntry({ name: 'admins' });
-    this.devopsGroup = await this.division.createGroupEntry({ name: 'devops' });
-    this.qaGroup = await this.division.createGroupEntry({ name: 'QA' });
-    this.civDevGroup = await this.division.createGroupEntry({ name: 'civ devs' });
-    this.civAdminGroup = await this.division.createGroupEntry({ name: 'civ admin' });
+    this.qaGroup = await this.division.createGroupEntry({ name: SampleDatabase.creationData.groupNames[0] });
+    this.civDevGroup = await this.division.createGroupEntry({ name: SampleDatabase.creationData.groupNames[1] });
+    this.civAdminGroup = await this.division.createGroupEntry({ name: SampleDatabase.creationData.groupNames[2] });
+    this.devopsGroup = await this.division.createGroupEntry({ name: SampleDatabase.creationData.groupNames[3] });
+    this.adminGroup = await this.division.createGroupEntry({ name: SampleDatabase.creationData.groupNames[4] });
 
     await Promise.all([
       this.adminGroup.addAssignedRole(contentAdminRole),
@@ -195,23 +203,23 @@ export class SampleDatabase {
 
   private async createResources() {
     this.gameXcom2 = await this.division.createGame({
-      contentfulId: SampleDatabase.contentfulIds[0].game,
+      contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
       bdsTitleId: 1000000,
     });
     this.gameWarOfChosen = await this.division.createGame({
-      contentfulId: SampleDatabase.contentfulIds[1].game,
+      contentfulId: SampleDatabase.creationData.gameContentfulIds[1],
       bdsTitleId: 1000001,
     });
     this.gameCiv6 = await this.division.createGame({
-      contentfulId: SampleDatabase.contentfulIds[2].game,
+      contentfulId: SampleDatabase.creationData.gameContentfulIds[2],
       bdsTitleId: 1000003,
     });
     this.gameGatheringStorm = await this.division.createGame({
-      contentfulId: SampleDatabase.contentfulIds[3].game,
+      contentfulId: SampleDatabase.creationData.gameContentfulIds[3],
       bdsTitleId: 1000066,
     });
     this.gameRiseAndFall = await this.division.createGame({
-      contentfulId: SampleDatabase.contentfulIds[4].game,
+      contentfulId: SampleDatabase.creationData.gameContentfulIds[4],
       bdsTitleId: 1000067,
     });
 
@@ -221,6 +229,10 @@ export class SampleDatabase {
       visibility: 'public',
     });
     await this.gameXcom2.setDefaultBranch(this.branchXcom.id);
+    await this.gameXcom2.createBranchEntry({
+      bdsBranchId: 4444444,
+      visibility: 'private',
+    });
 
     this.branchWarOfChosen = await this.gameWarOfChosen.createBranchEntry({
       bdsBranchId: 4000003,
@@ -263,12 +275,6 @@ export class SampleDatabase {
     await this.gameXcom2.addName('XCOM 2 Super Game', Locale.en);
     await this.gameXcom2.addName('XCOM 2 Superpeli', Locale.fi);
 
-    const xcomAgreement1 = await this.gameXcom2.createAgreementEntry({
-      url: 'http://example.com/eula',
-    });
-    await xcomAgreement1.addName('Example Agreement One', Locale.en);
-    await xcomAgreement1.addName('Example Agreement Uno', Locale.es);
-
     // War of the chosen builds
     const wocBuild1 = await this.gameWarOfChosen.createBuild({
       bdsBuildId: 2000004,
@@ -303,5 +309,18 @@ export class SampleDatabase {
       bdsBuildId: 2000074,
     });
     await this.branchRiseAndFall.addBuild(riseAndFallBuild1);
+
+    // Agreements
+    const xcomAgreement1 = await this.gameXcom2.createAgreementEntry({
+      url: 'http://example.com/eula',
+    });
+    await xcomAgreement1.addName('Example Agreement One', Locale.en);
+    await xcomAgreement1.addName('Example Agreement Uno', Locale.es);
+
+    const civ6Agreement = await this.gameCiv6.createAgreementEntry({
+      url: 'http://civ6.com/eula',
+    });
+    await civ6Agreement.addName('Example Agreement One', Locale.en);
+    await civ6Agreement.addName('Example Agreement Uno', Locale.es);
   }
 }

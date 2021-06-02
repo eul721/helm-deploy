@@ -1,6 +1,6 @@
 import { BuildModel } from '../../models/db/build';
 import { getDBInstance } from '../../models/db/database';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 
 describe('src/models/build', () => {
   const testDb: SampleDatabase = new SampleDatabase();

@@ -1,6 +1,6 @@
 export type HeaderParam = 'authorization' | 'webhookToken' | 'deviceId' | 'deviceName';
 
-export type QueryParam = 'userName' | 'roleName' | 'email' | 'password' | 'divisionId' | 'groupName';
+export type QueryParam = 'userName' | 'roleName' | 'email' | 'password' | 'divisionId' | 'groupName' | 'url' | 'dnaId';
 
 export enum PathParam {
   title = 'title',
@@ -11,6 +11,8 @@ export enum PathParam {
   gameId = 'gameId',
   branchId = 'branchId',
   permissionId = 'permissionId',
+  contentfulId = 'contentfulId',
+  eulaId = 'eulaId',
 }
 
 export const Segment = {
@@ -20,6 +22,9 @@ export const Segment = {
   roles: `roles/:${PathParam.roleId}`,
   permissions: `permissions/:${PathParam.permissionId}`,
   games: `games/:${PathParam.gameId}`,
+  branches: `branches/:${PathParam.branchId}`,
+  contentful: `contentful/:${PathParam.contentfulId}`,
+  eula: `eulas/:${PathParam.eulaId}`,
 };
 
 export const headerParamLookup: { [K in HeaderParam]: string } = {

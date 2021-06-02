@@ -1,7 +1,7 @@
 import { DNATokenPayload } from '@take-two-t2gp/t2gp-node-toolkit';
 import { Response } from 'express';
 import { LicensingService } from '../../services/licensing';
-import { UserModel } from '../db/user';
+import { AccountType, UserModel } from '../db/user';
 import { HttpCode } from '../http/httpcode';
 import { ServiceResponse } from '../http/serviceresponse';
 
@@ -19,8 +19,9 @@ export class UserContext {
    * @param userId used id, most likely an email, corresponds to RBAC external ids
    * @param payload DNA token payload, received as part of token validation
    */
-  constructor(userId: string, payload?: DNATokenPayload) {
+  constructor(userId: string, accountType: AccountType, payload?: DNATokenPayload) {
     this.userId = userId;
+    this.accountType = accountType;
     this.identity = payload;
   }
 
@@ -74,7 +75,8 @@ export class UserContext {
     if (this.studioUserModel) {
       return this.studioUserModel;
     }
-    this.studioUserModel = (await UserModel.findOne({ where: { externalId: this.userId } })) ?? undefined;
+    this.studioUserModel =
+      (await UserModel.findOne({ where: { externalId: this.userId, accountType: this.accountType } })) ?? undefined;
     return this.studioUserModel;
   }
 
@@ -89,6 +91,8 @@ export class UserContext {
 
   // params
   private userId: string;
+
+  private accountType: AccountType;
 
   private identity?: DNATokenPayload;
 

@@ -16,7 +16,7 @@ import { rbacApiRouter } from './basic';
  * @apiVersion  0.0.1
  * @apiDescription Create a user
  *
- * @apiParam (Query) {String} userName Identifier (normally email) of the user to create
+ * @apiParam (Query) {String} dnaId DNA Identifier of the user to create
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
@@ -26,9 +26,9 @@ rbacApiRouter.post(
   `/${Segment.division}/users`,
   getAuthorizeForRbacMiddleware('create-account', RbacResource.DIVISION),
   async (req, res) => {
-    const id = getQueryParamValue(req, 'userName');
+    const id = getQueryParamValue(req, 'dnaId');
     if (!id) {
-      sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing userName query param');
+      sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing dnaId query param');
       return;
     }
 
@@ -38,7 +38,7 @@ rbacApiRouter.post(
       return;
     }
 
-    await UserModel.create({ externalId: id });
+    await UserModel.create({ externalId: id, accountType: '2K-dna' });
 
     sendMessageResponse(res, HttpCode.CREATED);
   }

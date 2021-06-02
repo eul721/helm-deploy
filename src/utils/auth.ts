@@ -4,7 +4,7 @@ import * as JWT from 'jsonwebtoken';
 import { TokenValidationResult } from '../models/auth/tokenvalidationresult';
 import { envConfig } from '../configuration/envconfig';
 import { error, info, warn } from '../logger';
-import { PublisherTokenIssuer } from '../services/devtokengenerator';
+import { PublisherTokenIssuer } from '../services/devtools';
 
 const NUM_DNA_VERIFY_ATTEMPTS = 3;
 
@@ -40,7 +40,8 @@ export async function validateToken(token: string): Promise<TokenValidationResul
         }
         return {
           valid: true,
-          userID: payload.sub as string,
+          userId: payload.sub as string,
+          accountType: 'dev-login',
           payload,
         };
       default:
@@ -72,7 +73,8 @@ export async function validateToken(token: string): Promise<TokenValidationResul
           }
           return {
             payload: result.payload,
-            userID: result.payload?.sub,
+            userId: result.payload?.sub,
+            accountType: '2K-dna',
             valid: result.valid,
           };
         }

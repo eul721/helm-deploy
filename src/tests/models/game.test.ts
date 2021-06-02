@@ -1,7 +1,7 @@
 import { getDBInstance } from '../../models/db/database';
 import { GameModel } from '../../models/db/game';
 import { Locale } from '../../models/db/localizedfield';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 
 describe('src/models/game', () => {
   const testDb: SampleDatabase = new SampleDatabase();
@@ -18,11 +18,18 @@ describe('src/models/game', () => {
 
   describe('type check', () => {
     it('should have defined methods', async () => {
+      expect(GameModel.prototype.createAgreement).toBeDefined();
+      expect(GameModel.prototype.addAgreement).toBeDefined();
+      expect(GameModel.prototype.removeAgreement).toBeDefined();
+      expect(GameModel.prototype.getAgreements).toBeDefined();
+
       expect(GameModel.prototype.createBuild).toBeDefined();
+      expect(GameModel.prototype.addBuild).toBeDefined();
       expect(GameModel.prototype.removeBuild).toBeDefined();
       expect(GameModel.prototype.getBuilds).toBeDefined();
 
       expect(GameModel.prototype.createBranch).toBeDefined();
+      expect(GameModel.prototype.addBranch).toBeDefined();
       expect(GameModel.prototype.removeBranch).toBeDefined();
       expect(GameModel.prototype.getBranches).toBeDefined();
 
@@ -37,6 +44,7 @@ describe('src/models/game', () => {
       const modelWithAssociations = await GameModel.findOne({
         where: { id: testDb.gameCiv6.id },
         include: [
+          GameModel.associations.agreements,
           GameModel.associations.builds,
           GameModel.associations.branches,
           GameModel.associations.owner,
@@ -47,6 +55,7 @@ describe('src/models/game', () => {
       expect(modelWithAssociations).toBeTruthy();
       expect(modelWithAssociations?.owner).toBeTruthy();
 
+      expect(modelWithAssociations?.agreements?.length).toBeGreaterThan(0);
       expect(modelWithAssociations?.builds?.length).toBeGreaterThan(0);
       expect(modelWithAssociations?.branches?.length).toBeGreaterThan(0);
       expect(modelWithAssociations?.rolesWithGame?.length).toBeGreaterThan(0);

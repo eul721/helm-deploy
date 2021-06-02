@@ -3,10 +3,10 @@ import request from 'supertest';
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { getDBInstance } from '../../models/db/database';
 import { HttpCode } from '../../models/http/httpcode';
-import { SampleDatabase } from '../testutils';
-import { DevTokenGeneratorService } from '../../services/devtokengenerator';
+import { SampleDatabase } from '../../utils/sampledatabase';
 import { downloadApiRouter } from '../../controllers/download';
 import { headerParamLookup } from '../../configuration/httpconfig';
+import { DevToolsService } from '../../services/devtools';
 
 const urlBase = '/api/games';
 
@@ -25,9 +25,9 @@ describe('src/controllers/webhooks', () => {
     beforeAll(async () => {
       await getDBInstance().sync({ force: true });
       await sampleDb.initAll();
-      const response = await DevTokenGeneratorService.createDevJwt(SampleDatabase.debugAdminEmail);
+      const response = await DevToolsService.createDevJwt(SampleDatabase.creationData.debugAdminEmail);
       realUserToken = response.payload;
-      const responseFake = await DevTokenGeneratorService.createDevJwt('random@fake');
+      const responseFake = await DevToolsService.createDevJwt('random@fake');
       fakeUserToken = responseFake.payload;
     });
 
@@ -77,7 +77,7 @@ describe('src/controllers/webhooks', () => {
     });
 
     describe('when calling get on /download/branch', () => {
-      const validUrl = `${urlBase}/download/branch?title=${SampleDatabase.contentfulIds[0].game}&deviceId=10&deviceName=testDevice`;
+      const validUrl = `${urlBase}/download/branch?title=${SampleDatabase.creationData.gameContentfulIds[0]}&deviceId=10&deviceName=testDevice`;
 
       it('should reject if malformed bearer token', async () => {
         const result = await request(app).get(validUrl).set('Authorization', `${realUserToken}`);

@@ -1,6 +1,6 @@
 import { getDBInstance } from '../../models/db/database';
 import { RoleModel } from '../../models/db/role';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 
 describe('src/models/role', () => {
   const testDb: SampleDatabase = new SampleDatabase();

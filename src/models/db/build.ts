@@ -8,7 +8,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID } from '../defines/definitions';
+import { AtLeastOne, INTERNAL_ID } from '../defines/definitions';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
 import { Fields, LocalizedFieldModel } from './localizedfield';
@@ -36,6 +36,8 @@ export interface BuildAttributes {
 }
 
 export type BuildCreationAttributes = Optional<BuildAttributes, 'id' | 'mandatory'>;
+
+export type BuildUniqueIdentifier = AtLeastOne<Pick<BuildAttributes, 'id' | 'bdsBuildId'>>;
 
 export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationAttributes> implements BuildAttributes {
   public id!: number;

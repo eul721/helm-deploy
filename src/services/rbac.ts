@@ -13,9 +13,9 @@ import { HttpCode } from '../models/http/httpcode';
 import { GroupModel } from '../models/db/group';
 import { warn } from '../logger';
 import { DivisionAttributes, DivisionModel } from '../models/db/division';
-import { BuildAttributes } from '../models/db/build';
-import { BranchAttributes } from '../models/db/branch';
-import { GameAttributes, GameModel } from '../models/db/game';
+import { BuildUniqueIdentifier } from '../models/db/build';
+import { BranchUniqueIdentifier } from '../models/db/branch';
+import { GameAttributes, GameModel, GameUniqueIdentifier } from '../models/db/game';
 import { UserDescription } from '../models/http/rbac/userdescription';
 
 export enum AccessType {
@@ -131,13 +131,12 @@ export class RbacService {
   /**
    * TODO not sure belongs in this service or elsewhere, maybe title/game one?
    * TODO implement
-   *
    * @param target description of the affected resource
    */
   public static async affectsLiveRelease(target: {
-    gameDesc: Partial<GameAttributes>;
-    branchDesc?: Partial<BranchAttributes>;
-    buildDesc?: Partial<BuildAttributes>;
+    gameDesc: GameUniqueIdentifier;
+    branchDesc?: BranchUniqueIdentifier;
+    buildDesc?: BuildUniqueIdentifier;
   }) {
     // TODO this has to come after contentful is replaced
     return !!target;

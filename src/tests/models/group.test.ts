@@ -1,6 +1,6 @@
 import { getDBInstance } from '../../models/db/database';
 import { GroupModel } from '../../models/db/group';
-import { SampleDatabase } from '../testutils';
+import { SampleDatabase } from '../../utils/sampledatabase';
 
 describe('src/models/groupd', () => {
   const testDb: SampleDatabase = new SampleDatabase();

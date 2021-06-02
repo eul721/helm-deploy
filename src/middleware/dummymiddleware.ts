@@ -4,7 +4,7 @@ import { RbacContext } from '../models/auth/rbaccontext';
 import { Title, UserContext } from '../models/auth/usercontext';
 import { UserModel } from '../models/db/user';
 import { HttpCode } from '../models/http/httpcode';
-import { SampleDatabase } from '../tests/testutils';
+import { SampleDatabase } from '../utils/sampledatabase';
 import { Middleware } from '../utils/middleware';
 
 export const dummyMiddleware: Middleware = async (_req: Request, _res: Response, next: NextFunction) => {
@@ -12,7 +12,7 @@ export const dummyMiddleware: Middleware = async (_req: Request, _res: Response,
 };
 
 export async function dummyAuthenticateMiddleware(_req: Request, res: Response, next: NextFunction) {
-  res.locals.userContext = new UserContext(SampleDatabase.debugAdminEmail);
+  res.locals.userContext = new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login');
   next();
 }
 
@@ -23,8 +23,8 @@ export async function dummyAuthorizePlayerMiddleware(_req: Request, res: Respons
   UserContext.get(res).fetchOwnedTitles = async () => {
     return {
       code: HttpCode.OK,
-      payload: SampleDatabase.contentfulIds.map(item => {
-        return { contentfulId: item.game };
+      payload: SampleDatabase.creationData.gameContentfulIds.map(item => {
+        return { contentfulId: item };
       }),
     };
   };
@@ -34,7 +34,7 @@ export async function dummyAuthorizePlayerMiddleware(_req: Request, res: Respons
 export async function dummyAuthorizePublisherMiddleware(_req: Request, res: Response, next: NextFunction) {
   // replace the studio model getter with a debug-version if running with auth disabled
   UserContext.get(res).fetchStudioUserModel = async () => {
-    let model = await UserModel.findOne({ where: { externalId: SampleDatabase.debugAdminEmail } });
+    let model = await UserModel.findOne({ where: { externalId: SampleDatabase.creationData.debugAdminEmail } });
     model = model ?? (await UserModel.findByPk(1)) ?? (await UserModel.create());
     return model;
   };
