@@ -2,8 +2,9 @@ import nock from 'nock';
 import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
 import { mocked } from 'ts-jest/utils';
 import { HttpCode } from '../../models/http/httpcode';
-import { LicenseData, LicensingService } from '../../services/licensing';
+import { LicensingService } from '../../services/licensing';
 import { SampleDatabase } from '../../utils/sampledatabase';
+import { DnaLicenseResponse } from '../../models/http/dna/dnalicenseresponse';
 
 jest.mock('@take-two-t2gp/t2gp-node-toolkit');
 
@@ -16,7 +17,7 @@ describe('src/services/licensing', () => {
   });
 
   describe('LicensingService.fetchLicense', () => {
-    const licensesResponseValidPayload: LicenseData = {
+    const licensesResponseValidPayload: DnaLicenseResponse = {
       licenseBinary: 'licenseBinary',
       licenses: [
         { expireAt: 1, referenceId: SampleDatabase.creationData.gameContentfulIds[0] },
@@ -26,7 +27,6 @@ describe('src/services/licensing', () => {
     };
 
     it('should return OK and license payload it receives from DNA', async () => {
-      // mockedCrossfetch.mockResolvedValueOnce({ code: HttpCode.OK, getBody: async () => licensesResponseValidPayload });
       mockedDnaConfig.getUrl.mockReturnValueOnce({
         baseUrl: 'https://dummyUrl.com',
         contextPath: 'contextPath',
@@ -43,7 +43,7 @@ describe('src/services/licensing', () => {
       expect(scope.isDone()).toBe(true);
       expect(response.code).toBe(HttpCode.OK);
       expect(response.payload).toBeTruthy();
-      expect(response.payload?.licenses).toHaveLength(licensesResponseValidPayload.licenses.length);
+      expect(response.payload).toHaveLength(licensesResponseValidPayload.licenses.length);
     });
   });
 });

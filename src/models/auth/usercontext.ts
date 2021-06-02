@@ -50,11 +50,11 @@ export class UserContext {
       return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
 
-    const titles = (
-      await LicensingService.fetchLicense(this.deviceId, this.deviceName, this.userToken)
-    ).payload?.licenses.map(license => {
-      return { contentfulId: license.referenceId };
-    });
+    const titles = (await LicensingService.fetchLicense(this.deviceId, this.deviceName, this.userToken)).payload?.map(
+      id => {
+        return { contentfulId: id };
+      }
+    );
     return { code: HttpCode.OK, payload: titles };
   }
 

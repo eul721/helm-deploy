@@ -1,32 +1,18 @@
 import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
 import fetch from 'cross-fetch';
 import { envConfig } from '../configuration/envconfig';
-import { debug, error, info, warn } from '../logger';
+import { debug, error, warn } from '../logger';
+import { DeviceRegistrationData } from '../models/http/dna/deviceregistrationdata';
+import { DnaErrorResponse } from '../models/http/dna/dnaerrorresponse';
+import { DnaLicenseResponse } from '../models/http/dna/dnalicenseresponse';
 import { HttpCode } from '../models/http/httpcode';
+import { LicenseData } from '../models/http/licensedata';
 import { ServiceResponse } from '../models/http/serviceresponse';
 
-interface EntitlementData {
-  referenceId: string; // this is the same as app/contentful id
-  expireAt: number;
-}
-
-interface DeviceRegistrationData {
-  deviceId: number;
-  name: string;
-
-  /// <summary>
-  /// a value of '0' by default? (GUESSING!)
-  /// a value of '1' should be used if the response from GET /grantedlicenses/me was: 404 / DeviceNotRegisteredForPrivilegedLicense(40406008)
-  /// a value of '2' should be used if the response from GET /grantedlicenses/me was: 404 / DeviceNotRegisteredForNonPrivilegedLicense(40406009)
-  /// </summary>
-  resourceType: 0 | 1 | 2;
-}
-
-export interface LicenseData {
-  licenseBinary: string;
-  licenses: EntitlementData[];
-}
-
+/**
+ * Licensing specification can be found here: https://hub.gametools.dev/display/2KCORE/Licensing+-+API+Specification+-+Prod
+ * Much of the code in this class has been ported over from /dna-client-library/unity/dev-unity/Packages/DNA Client Library/Runtime/Subsystems/Licensing.cs (perforce)
+ */
 export class LicensingService {
   /**
    * Returns all licenses for the given user+device
@@ -40,59 +26,68 @@ export class LicensingService {
     deviceId: number,
     deviceName: string,
     userToken: string
-  ): Promise<ServiceResponse<LicenseData>> {
+  ): Promise<ServiceResponse<string[]>> {
+    debug('fetchLicense');
     const deviceRegistrationData: DeviceRegistrationData = { deviceId, name: deviceName, resourceType: 0 };
-    const urlBase = DNA.config.getUrl('sso')?.baseUrl;
+    const urlBase = DNA.config.getUrl('license')?.baseUrl;
     if (!urlBase) {
-      error('DNA toolkit is not initialized properly');
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+      error(
+        'Failed to locate licensing services, DNA toolkit is not initialized properly or we do not have access rights'
+      );
+      return { code: HttpCode.INTERNAL_SERVER_ERROR, message: 'Failed to locate licensing services' };
     }
 
     let response = await LicensingService.fetchLicenseRequest(urlBase, deviceId, userToken);
-    if (response.fetchResponseCode !== HttpCode.OK) {
+    debug(`fetchLicense first try response: ${response.status}, code: ${response.dnaCode}`);
+
+    if (response.dnaCode && response.status !== HttpCode.OK) {
       debug('License retrieval first attept failed');
       const failureHandlerStatus = await LicensingService.handleFailedLicenseResponse(
-        response.fetchResponseCode,
+        response.dnaCode,
         deviceRegistrationData,
         userToken
       );
+
+      debug(
+        `handleFailedLicenseResponse response: ${failureHandlerStatus.code}, code: ${failureHandlerStatus.payload?.code}`
+      );
+
+      if (failureHandlerStatus.code === HttpCode.BAD_REQUEST) {
+        // this might seem odd but device registration returns BAD_REQUEST when there are no licenses, so from out perspective its more valid to interpret that as OK but no licenses
+        debug("received BAD_REQUEST, interpreting this as 'no licenses'");
+        return { code: HttpCode.OK, payload: [] };
+      }
+
       if (failureHandlerStatus.code !== HttpCode.OK) {
-        info('License retrieval failed for reasons other than unregistered device');
+        warn(
+          `License retrieval failed for reasons other than unregistered device, status: ${failureHandlerStatus.code}`
+        );
         return { code: failureHandlerStatus.code };
       }
 
       // retry if it looks like we could recover by registering the device
       response = await LicensingService.fetchLicenseRequest(urlBase, deviceId, userToken);
-      if (response.fetchResponseCode !== HttpCode.OK) {
+      if (response.dnaCode && response.status !== HttpCode.OK) {
         // if registering device succeeded but we still failed to get licenses then its not obvious what went wrong
-        error(`License fetch failed after successfuly registering device, name: ${deviceName}, id ${deviceId}`);
+        error(
+          `License fetch failed after successfuly registering device, status: ${response.status}, code: ${response.dnaCode}, name: ${deviceName}, id ${deviceId}`
+        );
         return { code: HttpCode.CONFLICT };
       }
     }
 
-    if (!response.licenseData) {
-      error(
-        `License fetch appears to have succeeded but no license data was returned, name: ${deviceName}, id ${deviceId}`
-      );
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
-    }
-
-    return { code: HttpCode.OK, payload: response.licenseData };
+    return { code: HttpCode.OK, payload: response.licenses };
   }
 
   private static getUserAgent(): string {
     return `T2 Licensing Service ${envConfig.CLIENT_VERSION} (${envConfig.DNA_APP_ID})`;
   }
 
-  private static async fetchLicenseRequest(
-    urlBase: string,
-    deviceId: number,
-    userToken: string
-  ): Promise<{ fetchResponseCode: number; licenseData?: LicenseData }> {
+  private static async fetchLicenseRequest(urlBase: string, deviceId: number, userToken: string): Promise<LicenseData> {
     const type = 20; // type -> will always be '20', representing pre-release licenses
     const urlFetch = `${urlBase}/grantedlicenses/me?deviceId=${deviceId}&type=${type}`;
     try {
-      const response = await fetch(urlFetch, {
+      const dnaResponse = await fetch(urlFetch, {
         headers: {
           'User-Agent': LicensingService.getUserAgent(),
           'Content-Type': 'application/json',
@@ -101,10 +96,16 @@ export class LicensingService {
         },
         method: 'get',
       });
-      return { fetchResponseCode: response.status, licenseData: await response.json() };
+      if (dnaResponse.status !== HttpCode.OK) {
+        const errorResponse: DnaErrorResponse = await dnaResponse.json();
+        return { dnaCode: errorResponse.code, licenses: [], status: dnaResponse.status };
+      }
+
+      const response: DnaLicenseResponse = await dnaResponse.json();
+      return { licenses: response.licenses.map(item => item.referenceId), status: HttpCode.OK };
     } catch (err) {
       warn('Encountered error in fetchLicenseRequest, error=%s', err);
-      return { fetchResponseCode: HttpCode.INTERNAL_SERVER_ERROR };
+      return { status: HttpCode.INTERNAL_SERVER_ERROR, licenses: [] };
     }
   }
 
@@ -113,29 +114,24 @@ export class LicensingService {
    * returns an HTTP code corresponding to the failure handling, if it's 200 caller should retry
    */
   private static async handleFailedLicenseResponse(
-    responseCode: number,
+    dnaCode: number,
     deviceRegistrationData: DeviceRegistrationData,
     userToken: string
-  ): Promise<ServiceResponse> {
-    switch (responseCode) {
-      case 500: // Internal error
-        return { code: HttpCode.INTERNAL_SERVER_ERROR };
+  ): Promise<ServiceResponse<DnaErrorResponse>> {
+    switch (dnaCode) {
       case 42201001: // Reach Max Device Registration
         return { code: HttpCode.FORBIDDEN };
 
       case 40401007: // Device Id Not Found
       case 40406002: // Device Not Found
-        await LicensingService.registerDevice({ ...deviceRegistrationData, resourceType: 0 }, userToken);
-        break;
+        return LicensingService.registerDevice({ ...deviceRegistrationData, resourceType: 0 }, userToken);
 
       case 40406008: // DeviceNotRegisteredForPrivilegedLicense
-        await LicensingService.registerDevice({ ...deviceRegistrationData, resourceType: 1 }, userToken);
-        break;
+        return LicensingService.registerDevice({ ...deviceRegistrationData, resourceType: 1 }, userToken);
 
       case 40406009: // DeviceNotRegisteredForNonPrivilegedLicense
       case 40406010: // "Non-Privileged License detected but device is not registered. Please register the device using resource type 2 (Granted License)."
-        await LicensingService.registerDevice({ ...deviceRegistrationData, resourceType: 2 }, userToken);
-        break;
+        return LicensingService.registerDevice({ ...deviceRegistrationData, resourceType: 2 }, userToken);
 
       case 40001001: // Item Already Entitled
       case 40001002: // App Group Not Found
@@ -152,8 +148,6 @@ export class LicensingService {
       default:
         return { code: HttpCode.BAD_REQUEST };
     }
-
-    return { code: HttpCode.OK };
   }
 
   /**
@@ -162,8 +156,15 @@ export class LicensingService {
   private static async registerDevice(
     deviceRegistrationData: DeviceRegistrationData,
     userToken: string
-  ): Promise<number> {
-    const urlBase = DNA.config.getUrl('sso')?.baseUrl;
+  ): Promise<ServiceResponse<DnaErrorResponse>> {
+    const urlBase = DNA.config.getUrl('license')?.baseUrl;
+    if (!urlBase) {
+      error(
+        'Failed to locate licensing services, DNA toolkit is not initialized properly or we do not have access rights'
+      );
+      return { code: HttpCode.INTERNAL_SERVER_ERROR, message: 'Failed to locate licensing services' };
+    }
+
     const urlRegister = `${urlBase}/registrations/me`;
     try {
       const response = await fetch(urlRegister, {
@@ -174,12 +175,20 @@ export class LicensingService {
           'Cache-Control': 'no-cache',
           Authorization: userToken,
         },
-        method: 'get',
+        method: 'post',
       });
-      return response.status;
+
+      debug(`registerDevice returned status: ${response.status}`);
+      if (response.status === HttpCode.OK || response.status === HttpCode.CREATED) {
+        return { code: HttpCode.OK };
+      }
+
+      const responseBody: DnaErrorResponse = await response.json();
+      debug(`registerDevice returned DNA code: ${responseBody.code}, message: ${responseBody.message}`);
+      return { code: response.status, payload: responseBody };
     } catch (err) {
       warn('Encountered error in registerDevice, error=%s', err);
-      return HttpCode.INTERNAL_SERVER_ERROR;
+      return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
   }
 }
