@@ -34,6 +34,11 @@ export const GameDef: ModelAttributes = {
   },
   defaultBranch: INTERNAL_ID_REFERENCE(),
   ownerId: INTERNAL_ID_REFERENCE(),
+  installationPath: {
+    allowNull: true,
+    type: DataTypes.STRING(256),
+    unique: true,
+  },
 };
 
 export interface GameAttributes {
@@ -42,13 +47,17 @@ export interface GameAttributes {
   defaultBranch: number;
   id: number;
   ownerId: number;
+  installationPath: string;
   readonly branches?: BranchModel[];
   readonly builds?: BuildModel[];
   readonly owner?: DivisionModel;
   readonly rolesWithGame?: RoleModel[];
 }
 
-export type GameCreationAttributes = Optional<GameAttributes, 'id' | 'defaultBranch' | 'ownerId' | 'contentfulId'>;
+export type GameCreationAttributes = Optional<
+  GameAttributes,
+  'id' | 'defaultBranch' | 'ownerId' | 'contentfulId' | 'installationPath'
+>;
 
 export type GameUniqueIdentifier = AtLeastOne<Pick<GameAttributes, 'id' | 'bdsTitleId' | 'contentfulId'>>;
 
@@ -61,7 +70,9 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public defaultBranch!: number;
 
-  ownerId!: number;
+  public installationPath!: string;
+
+  public ownerId!: number;
 
   // #region association: agreements
 

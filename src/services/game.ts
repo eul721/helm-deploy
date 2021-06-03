@@ -353,6 +353,7 @@ export class GameService {
         })) ?? [],
       // TODO: transfer former contentful spec to SQL
       supportedLanguages: ['mocklanguage1', 'mocklanguage2'],
+      installationPath: game.installationPath,
     };
   }
 }
