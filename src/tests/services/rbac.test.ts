@@ -25,20 +25,17 @@ describe('src/services/rbacservice', () => {
 
       it('should permit within correct division', async () => {
         const result = await RbacService.hasDivisionPermission(userContext, 'rbac-admin', testDb.division.id);
-        expect(result.payload).toBe(true);
         expect(result.code).toBe(HttpCode.OK);
       });
 
       it('should forbid for wrong division', async () => {
         const result = await RbacService.hasDivisionPermission(userContext, 'rbac-admin', 12345);
-        expect(result.payload).toBe(false);
-        expect(result.code).toBe(HttpCode.OK);
+        expect(result.code).toBe(HttpCode.FORBIDDEN);
       });
 
       it('should forbid for correct division but missing permission', async () => {
         const result = await RbacService.hasDivisionPermission(userContext, 't2-admin', testDb.division.id);
-        expect(result.payload).toBe(false);
-        expect(result.code).toBe(HttpCode.OK);
+        expect(result.code).toBe(HttpCode.FORBIDDEN);
       });
     });
   });
@@ -54,7 +51,6 @@ describe('src/services/rbacservice', () => {
           'read'
         );
         expect(result.code).toBe(HttpCode.OK);
-        expect(result.payload).toBe(true);
       });
 
       it('should allow editing production resources', async () => {
@@ -64,7 +60,6 @@ describe('src/services/rbacservice', () => {
           ['update', 'change-production']
         );
         expect(result.code).toBe(HttpCode.OK);
-        expect(result.payload).toBe(true);
       });
     });
 
@@ -82,7 +77,6 @@ describe('src/services/rbacservice', () => {
           'update'
         );
         expect(result.code).toBe(HttpCode.OK);
-        expect(result.payload).toBe(true);
       });
 
       it('should forbit editing production resources', async () => {
@@ -91,8 +85,7 @@ describe('src/services/rbacservice', () => {
           { contentfulId: testDb.gameCiv6.contentfulId },
           ['update', 'change-production']
         );
-        expect(result.code).toBe(HttpCode.OK);
-        expect(result.payload).toBe(false);
+        expect(result.code).toBe(HttpCode.FORBIDDEN);
       });
     });
   });

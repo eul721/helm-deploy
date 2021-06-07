@@ -5,6 +5,9 @@ import { TokenValidationResult } from '../models/auth/tokenvalidationresult';
 import { envConfig } from '../configuration/envconfig';
 import { error, info, warn } from '../logger';
 import { PublisherTokenIssuer } from '../services/devtools';
+import { GameModel } from '../models/db/game';
+import { ResourcePermissionType } from '../models/db/permission';
+import { AdminRequirements } from '../models/auth/adminrequirements';
 
 const NUM_DNA_VERIFY_ATTEMPTS = 3;
 
@@ -90,5 +93,30 @@ export async function validateToken(token: string): Promise<TokenValidationResul
     return {
       valid: false,
     };
+  }
+}
+
+/**
+ * @param target description of the affected resource
+ */
+export function checkRequiredPermission(
+  basePermission: ResourcePermissionType,
+  game: GameModel,
+  branchId?: number,
+  adminRequirements?: AdminRequirements
+): ResourcePermissionType {
+  switch (adminRequirements) {
+    case AdminRequirements.Always:
+      return 'change-production';
+    case AdminRequirements.ReleasedGame:
+      return game.contentfulId && game.defaultBranch ? 'change-production' : basePermission;
+    case AdminRequirements.DefaultBranch:
+      if (!branchId || Number.isNaN(branchId)) {
+        throw new Error(`Passed in branch id is not a number: ${branchId}`);
+      }
+      return game.defaultBranch === branchId ? 'change-production' : basePermission;
+    case AdminRequirements.Never:
+    default:
+      return basePermission;
   }
 }

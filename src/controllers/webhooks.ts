@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { error, info, warn } from '../logger';
+import { info, warn } from '../logger';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { WebhookPayload } from '../models/http/webhook/webhookpayload';
@@ -15,6 +15,9 @@ import { ResourcePermissionType } from '../models/db/permission';
 import { WebhookTarget } from '../models/http/webhook/webhooktarget';
 import { WebhookAction } from '../models/http/webhook/webhookaction';
 import { sendMessageResponse, sendServiceResponse } from '../utils/http';
+import { checkRequiredPermission } from '../utils/auth';
+import { GameModel } from '../models/db/game';
+import { AdminRequirements } from '../models/auth/adminrequirements';
 
 export const webhookRouter = Router();
 
@@ -111,45 +114,93 @@ webhookRouter.post('/verify', async (req, res) => {
   const payload: WebhookPayload = res.locals.payload as WebhookPayload;
   info('Webhook received: %s', req.body);
 
-  const context = UserContext.get(res);
-  let response: ServiceResponse<boolean> = { code: HttpCode.BAD_REQUEST, payload: false };
+  let response: ServiceResponse = {
+    code: HttpCode.BAD_REQUEST,
+    message: 'Failed to process webhook, could be a code issue or malformed request',
+  };
 
-  if (
-    payload.target === WebhookTarget.LAUNCH_OPTIONS ||
-    payload.target === WebhookTarget.REDISTRIBUTABLE ||
-    payload.target === WebhookTarget.WEBHOOKS
-  ) {
-    response = await RbacService.hasDivisionPermission(
-      context,
-      't2-admin',
-      (await context.fetchStudioUserModel())?.ownerId ?? 0
-    );
-  } else if (payload.action === WebhookAction.READ) {
-    response = await RbacService.hasResourcePermission(context, { bdsTitleId: payload.titleId }, 'read');
-  } else if (payload.titleId) {
-    const affectsLiveRelease = RbacService.affectsLiveRelease({
-      gameDesc: { bdsTitleId: payload.titleId },
-      branchDesc: payload.branchId ? { bdsBranchId: payload.branchId } : undefined,
-      buildDesc: payload.buildId ? { bdsBuildId: payload.buildId } : undefined,
-    });
-
-    let permission: ResourcePermissionType;
-    if (payload.action === WebhookAction.CREATE) {
-      permission = 'create';
-    } else if (payload.action === WebhookAction.DELETE) {
-      permission = 'delete';
-    } else {
-      permission = 'update';
+  const actionToPermission = (action: WebhookAction): ResourcePermissionType => {
+    switch (action) {
+      case WebhookAction.CREATE:
+        return 'create';
+      case WebhookAction.DELETE:
+        return 'delete';
+      case WebhookAction.MODIFY:
+        return 'update';
+      case WebhookAction.READ:
+        return 'read';
+      default:
+        throw new Error('actionToPermission code needs updating');
     }
-    response = await RbacService.hasRoleWithAllResourcePermission(
-      context,
-      { bdsTitleId: payload.titleId },
-      affectsLiveRelease ? [permission, 'change-production'] : [permission]
-    );
-  } else {
-    error(
-      `Failed to classify a webhook check in any category, this is unexpected and could be a code issue, payload: ${payload}`
-    );
+  };
+
+  switch (payload.target) {
+    // admin options
+    case WebhookTarget.LAUNCH_OPTIONS:
+    case WebhookTarget.REDISTRIBUTABLE:
+    case WebhookTarget.WEBHOOKS:
+      response = await RbacService.hasDivisionPermission(
+        UserContext.get(res),
+        't2-admin',
+        (await UserContext.get(res).fetchStudioUserModel())?.ownerId ?? 0
+      );
+      break;
+
+    case WebhookTarget.BUILD:
+    case WebhookTarget.DEPOT:
+      // builds in BDS cannot be modified, aren't on a branch when created and can only be removed when not set on a branch, meaning this cannot affect production
+      // depots are internal to build and likewise cannot change production
+      response = payload.titleId
+        ? await RbacService.hasResourcePermission(
+            UserContext.get(res),
+            { bdsTitleId: payload.titleId },
+            actionToPermission(payload.action)
+          )
+        : response;
+      break;
+
+    case WebhookTarget.TITLE: {
+      const game = await GameModel.findOne({ where: { bdsTitleId: payload.titleId } });
+      if (!payload.titleId || !game) {
+        sendMessageResponse(res, HttpCode.NOT_FOUND, 'Failed to find game');
+        return;
+      }
+
+      const permission = checkRequiredPermission(
+        actionToPermission(payload.action),
+        game,
+        payload.branchId,
+        AdminRequirements.ReleasedGame
+      );
+      response = await RbacService.hasResourcePermission(
+        UserContext.get(res),
+        { bdsTitleId: payload.titleId },
+        permission
+      );
+      break;
+    }
+    case WebhookTarget.BRANCH: {
+      const game = await GameModel.findOne({ where: { bdsTitleId: payload.titleId } });
+      if (!payload.titleId || !game) {
+        sendMessageResponse(res, HttpCode.NOT_FOUND, 'Failed to find game');
+        return;
+      }
+
+      const permission = checkRequiredPermission(
+        actionToPermission(payload.action),
+        game,
+        payload.branchId,
+        AdminRequirements.DefaultBranch
+      );
+      response = await RbacService.hasResourcePermission(
+        UserContext.get(res),
+        { bdsTitleId: payload.titleId },
+        permission
+      );
+      break;
+    }
+    default:
+      throw new Error(`/webhooks/verify WebhookTarget switch code needs updating with new value: ${payload.target}`);
   }
 
   sendServiceResponse(response, res);

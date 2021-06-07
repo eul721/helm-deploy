@@ -13,9 +13,7 @@ import { HttpCode } from '../models/http/httpcode';
 import { GroupModel } from '../models/db/group';
 import { warn } from '../logger';
 import { DivisionAttributes, DivisionModel } from '../models/db/division';
-import { BuildUniqueIdentifier } from '../models/db/build';
-import { BranchUniqueIdentifier } from '../models/db/branch';
-import { GameAttributes, GameModel, GameUniqueIdentifier } from '../models/db/game';
+import { GameAttributes, GameUniqueIdentifier } from '../models/db/game';
 import { UserDescription } from '../models/http/rbac/userdescription';
 
 export enum AccessType {
@@ -36,7 +34,7 @@ export class RbacService {
     userContext: UserContext,
     permission: DivisionPermissionType,
     targetDivisionId: number
-  ): Promise<ServiceResponse<boolean>> {
+  ): Promise<ServiceResponse> {
     try {
       const user = await userContext.fetchStudioUserModel();
       const permissionFilter: WhereOptions<PermissionModel> = { id: permission };
@@ -59,10 +57,10 @@ export class RbacService {
           },
         ],
       });
-      return { code: HttpCode.OK, payload: result.count > 0 };
+      return { code: result.count > 0 ? HttpCode.OK : HttpCode.FORBIDDEN };
     } catch (err) {
       warn('Encountered error, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR, payload: false };
+      return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
   }
 
@@ -70,15 +68,15 @@ export class RbacService {
    * Checks whether the given user has specified resource-access permission for a given game,
    *
    * @param userContext information about the requester
-   * @param gameFilter description/filter for the game the permissions are to apply to, this can be any unique id field
+   * @param gameDesc unique game desciption
    * @param permission queried permission
    */
   public static async hasResourcePermission(
     userContext: UserContext,
-    gameFilter: WhereOptions<GameModel>,
+    gameDesc: GameUniqueIdentifier,
     permission: ResourcePermissionType
-  ): Promise<ServiceResponse<boolean>> {
-    return RbacService.hasRoleWithAllResourcePermission(userContext, gameFilter, [permission]);
+  ): Promise<ServiceResponse> {
+    return RbacService.hasRoleWithAllResourcePermission(userContext, gameDesc, [permission]);
   }
 
   /**
@@ -86,14 +84,14 @@ export class RbacService {
    * For example a role could allow updating live release, and another could allow creating new non-live resources but the person with both those shouldn't be allowed creating live releases
    *
    * @param userContext information about the requester
-   * @param gameFilter description/filter for the game the permissions are to apply to, this can be any unique id field
+   * @param gameDesc unique game desciption
    * @param permissions array of queries permissions
    */
   public static async hasRoleWithAllResourcePermission(
     userContext: UserContext,
-    gameFilter: WhereOptions<GameModel>,
+    gameDesc: GameUniqueIdentifier,
     permissions: ResourcePermissionType[]
-  ): Promise<ServiceResponse<boolean>> {
+  ): Promise<ServiceResponse> {
     if (permissions.length === 0) {
       return { code: HttpCode.BAD_REQUEST };
     }
@@ -110,7 +108,7 @@ export class RbacService {
             association: GroupModel.associations.assignedRoles,
             include: [
               { association: RoleModel.associations.assignedPermissions, where: permissionFilter, required: true },
-              { association: RoleModel.associations.assignedGames, where: gameFilter, required: true },
+              { association: RoleModel.associations.assignedGames, where: gameDesc, required: true },
             ],
             required: true,
           },
@@ -121,25 +119,11 @@ export class RbacService {
         group.assignedRoles?.some(role => role.assignedPermissions?.length === permissions.length)
       );
 
-      return { code: HttpCode.OK, payload: someRoleHasAllRequiredPermissions };
+      return { code: someRoleHasAllRequiredPermissions ? HttpCode.OK : HttpCode.FORBIDDEN };
     } catch (err) {
       warn('Encountered error, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR, payload: false };
+      return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
-  }
-
-  /**
-   * TODO not sure belongs in this service or elsewhere, maybe title/game one?
-   * TODO implement
-   * @param target description of the affected resource
-   */
-  public static async affectsLiveRelease(target: {
-    gameDesc: GameUniqueIdentifier;
-    branchDesc?: BranchUniqueIdentifier;
-    buildDesc?: BuildUniqueIdentifier;
-  }) {
-    // TODO this has to come after contentful is replaced
-    return !!target;
   }
 
   /**

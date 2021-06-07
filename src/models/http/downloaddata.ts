@@ -19,5 +19,4 @@ export interface DownloadData {
   agreements: Agreement[];
   // prerequisites: Prerequisite[];
   supportedLanguages: string[];
-  installationPath: string;
 }

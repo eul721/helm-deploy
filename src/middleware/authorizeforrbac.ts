@@ -30,7 +30,7 @@ async function rbacRequiredPermissionAuth(
     Number.parseInt(req.params[PathParam.groupId], 10),
     Number.parseInt(req.params[PathParam.roleId], 10),
     Number.parseInt(req.params[PathParam.userId], 10),
-    req.params[PathParam.gameId],
+    Number.parseInt(req.params[PathParam.gameId], 10),
     req.params[PathParam.permissionId]
   );
 

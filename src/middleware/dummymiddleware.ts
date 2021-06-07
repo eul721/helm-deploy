@@ -6,6 +6,7 @@ import { UserModel } from '../models/db/user';
 import { HttpCode } from '../models/http/httpcode';
 import { SampleDatabase } from '../utils/sampledatabase';
 import { Middleware } from '../utils/middleware';
+import { ResourceContext } from '../models/auth/resourcecontext';
 
 export const dummyMiddleware: Middleware = async (_req: Request, _res: Response, next: NextFunction) => {
   next();
@@ -47,9 +48,18 @@ export async function dummyAuthorizeForRbacMiddleware(req: Request, res: Respons
     Number.parseInt(req.params[PathParam.groupId], 10),
     Number.parseInt(req.params[PathParam.roleId], 10),
     Number.parseInt(req.params[PathParam.userId], 10),
-    req.params[PathParam.gameId],
+    Number.parseInt(req.params[PathParam.gameId], 10),
     req.params[PathParam.permissionId]
   );
   res.locals.rbacContext = rbacContext;
+  next();
+}
+
+export async function dummyAuthorizeResourceMiddleware(req: Request, res: Response, next: NextFunction) {
+  const resourceContext = new ResourceContext(
+    Number.parseInt(req.params[PathParam.gameId], 10),
+    Number.parseInt(req.params[PathParam.branchId], 10)
+  );
+  res.locals.resourceContext = resourceContext;
   next();
 }

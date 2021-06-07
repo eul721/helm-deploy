@@ -1,30 +1,30 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { Response } from 'express';
 import { DivisionModel } from '../db/division';
-import { GameModel } from '../db/game';
 import { GroupModel } from '../db/group';
 import { PermissionModel } from '../db/permission';
 import { RoleModel } from '../db/role';
 import { UserModel } from '../db/user';
+import { ResourceContext } from './resourcecontext';
 
 /**
  * Data set on a request context (res.locals.rbacContext) that contains information about the rbac request
  * This information is generally created by rbac middleware and used by the controllers/services
  */
-export class RbacContext {
+export class RbacContext extends ResourceContext {
   constructor(
     divisionId: number,
     groupId: number,
     roleId: number,
     userId: number,
-    gameId?: string,
+    gameId?: number,
     permission?: string
   ) {
+    super(gameId);
     this.divisionId = Number.isNaN(divisionId) ? undefined : divisionId;
     this.groupId = Number.isNaN(groupId) ? undefined : groupId;
     this.roleId = Number.isNaN(roleId) ? undefined : roleId;
     this.userId = Number.isNaN(userId) ? undefined : userId;
-    this.gameId = gameId;
     this.permission = permission;
   }
 
@@ -76,17 +76,6 @@ export class RbacContext {
     return this.user;
   }
 
-  public async fetchGameModel(): Promise<Maybe<GameModel>> {
-    if (this.game) {
-      return this.game;
-    }
-
-    if (this.gameId) {
-      this.game = (await GameModel.findOne({ where: { id: this.gameId } })) ?? undefined;
-    }
-    return this.game;
-  }
-
   public async fetchPermissionModel(): Promise<Maybe<PermissionModel>> {
     return PermissionModel.findOne({ where: { id: this.permission } });
   }
@@ -100,8 +89,6 @@ export class RbacContext {
 
   public userId?: number;
 
-  public gameId?: string;
-
   public permission?: string;
 
   // params
@@ -112,6 +99,4 @@ export class RbacContext {
   private role?: RoleModel;
 
   private user?: UserModel;
-
-  private game?: GameModel;
 }

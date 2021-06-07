@@ -75,6 +75,7 @@ describe('src/controllers/webhooks', () => {
 
       beforeAll(async () => {
         await sampleDb.initAll();
+        payload.titleId = sampleDb.gameCiv6.bdsTitleId;
         const response = await DevToolsService.createDevJwt(SampleDatabase.creationData.debugAdminEmail);
         realUserToken = response.payload;
         const responseFake = await DevToolsService.createDevJwt('random@fake');
