@@ -1,21 +1,30 @@
 import { NextFunction, Request, Response } from 'express';
 import { PathParam } from '../configuration/httpconfig';
-import { warn } from '../logger';
+import { info, warn } from '../logger';
 import { AdminRequirements } from '../models/auth/adminrequirements';
 import { ResourceContext } from '../models/auth/resourcecontext';
-import { UserContext } from '../models/auth/usercontext';
-import { GameModel } from '../models/db/game';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { ResourcePermissionType } from '../models/db/permission';
 import { HttpCode } from '../models/http/httpcode';
-import { RbacService } from '../services/rbac';
+import { RbacService } from '../services/rbac/basic';
 import { checkRequiredPermission } from '../utils/auth';
-import { sendMessageResponse } from '../utils/http';
+import { sendMessageResponse, sendServiceResponse } from '../utils/http';
 import { Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
 import { dummyAuthorizeResourceMiddleware } from './dummymiddleware';
+import { envConfig } from '../configuration/envconfig';
+import { malformedRequestPastValidation } from '../models/http/serviceresponse';
+
+export function createResourceContext(req: Request, res: Response): ResourceContext {
+  const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
+  const branchId = Number.parseInt(req.params[PathParam.branchId], 10);
+  const resourceContext = new ResourceContext(gameId, branchId);
+  res.locals.resourceContext = resourceContext;
+  return resourceContext;
+}
 
 /**
  * @apiDefine AuthorizeResourceAccessMiddleware
- * @apiDescription Checks if the caller has required permissions to modify resource
+ * @apiDescription Checks if the caller has required permissions to modify resource, sets ResourceContext
  * @apiVersion 0.0.1
  */
 async function resourceAccessAuth(
@@ -25,28 +34,51 @@ async function resourceAccessAuth(
   basePermission: ResourcePermissionType,
   adminRequirements?: AdminRequirements
 ) {
-  const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
-  if (Number.isNaN(gameId)) {
-    sendMessageResponse(res, HttpCode.BAD_REQUEST, `Passed in game id is not a number: ${gameId}`);
+  const resourceContext = createResourceContext(req, res);
+  if (!resourceContext.gameUid) {
+    sendMessageResponse(
+      res,
+      HttpCode.BAD_REQUEST,
+      `Passed in game id is not a number: ${req.params[PathParam.gameId]}`
+    );
     return;
   }
 
-  const game = await GameModel.findOne({ where: { id: gameId } });
+  const game = await ResourceContext.get(res).fetchGameModel();
   if (!game) {
-    sendMessageResponse(res, HttpCode.NOT_FOUND, `Cannot find game with given id ${gameId}`);
+    sendMessageResponse(res, HttpCode.NOT_FOUND, `Cannot find game with given id ${req.params[PathParam.gameId]}`);
     return;
   }
 
-  const branchId = Number.parseInt(req.params[PathParam.branchId], 10);
-  const requiredRights = checkRequiredPermission(basePermission, game, branchId, adminRequirements);
-
-  const hasPermission = RbacService.hasResourcePermission(UserContext.get(res), { id: gameId }, requiredRights);
-  if (!hasPermission) {
-    sendMessageResponse(res, HttpCode.FORBIDDEN, 'User does not have the required permissions');
+  const branch = await ResourceContext.get(res).fetchBranchModel();
+  if (branch && branch.ownerId !== game.id) {
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, `Requested branch ${branch.id} does not belong to title ${game.id}`);
     return;
   }
 
-  res.locals.resourceContext = new ResourceContext(gameId, branchId);
+  const requiredRights = checkRequiredPermission(
+    basePermission,
+    game,
+    await resourceContext.fetchBranchModel(),
+    adminRequirements
+  );
+
+  const userId = (await AuthenticateContext.get(res).fetchStudioUserModel())?.id;
+  if (!userId) {
+    sendServiceResponse(malformedRequestPastValidation(), res);
+    return;
+  }
+
+  const hasPermission = await RbacService.hasResourcePermission(userId, { id: game.id }, requiredRights);
+  if (hasPermission.code !== HttpCode.OK) {
+    if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
+      info('resourceAccessAuth would have rejected the request here if rbac check was not disabled');
+    } else {
+      sendMessageResponse(res, HttpCode.FORBIDDEN, 'User does not have the required permissions');
+      return;
+    }
+  }
+
   next();
 }
 

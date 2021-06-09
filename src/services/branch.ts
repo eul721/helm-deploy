@@ -4,8 +4,7 @@ import { BranchModel } from '../models/db/branch';
 import { GameModel } from '../models/db/game';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
-import { UserContext } from '../models/auth/usercontext';
-import { RbacService } from './rbac';
+import { ResourceContext } from '../models/auth/resourcecontext';
 
 export class BranchService {
   /**
@@ -41,7 +40,7 @@ export class BranchService {
       warn('Created a branch not corresponding to a game, this is unexpected but potentially valid');
     }
 
-    return { code: HttpCode.INTERNAL_SERVER_ERROR };
+    return { code: HttpCode.OK };
   }
 
   /**
@@ -97,66 +96,46 @@ export class BranchService {
   /**
    * Function for setting a password on a branch
    *
-   * @param titleId id of the owning title
-   * @param branchId id of the modified branch
+   * @param resourceContext id of the modified branch
    * @param password password to set
    */
   public static async setPassword(
-    userContext: UserContext,
-    titleId: number,
-    branchId: number,
-    password: string
-  ): Promise<ServiceResponse> {
-    try {
-      const branch = await BranchModel.findOne({ where: { id: branchId }, include: BranchModel.associations.owner });
-      if (!branch) {
-        return { code: HttpCode.NOT_FOUND, message: 'Failed to find the requested branch' };
-      }
-
-      if (branch.owner?.id !== titleId) {
-        return { code: HttpCode.BAD_REQUEST, message: 'Requested branch does not belong to the specified title' };
-      }
-
-      const permissionsResponse = await RbacService.hasResourcePermission(
-        userContext,
-        { id: titleId },
-        'change-production'
-      );
-      if (permissionsResponse.code !== HttpCode.OK || !permissionsResponse.payload) {
-        return { code: HttpCode.FORBIDDEN, message: `Access denied` };
-      }
-
-      if (branch.owner?.defaultBranch === branchId && password.length > 0) {
-        return { code: HttpCode.BAD_REQUEST, message: 'Cannot set a non empty password on the default branch' };
-      }
-
-      // TODO plaintext, should move to hash at some point
-      branch.password = password;
-      await branch.save();
-      return { code: HttpCode.OK };
-    } catch (sqlErr) {
-      warn('Encountered error updating branch password, error=%s', sqlErr);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+    resourceContext: ResourceContext,
+    password?: string
+  ): Promise<ServiceResponse<BranchModel>> {
+    if (password !== '' && !password) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Missing password parameter' };
     }
+
+    const branch = await resourceContext.fetchBranchModel();
+    if (!branch) {
+      return { code: HttpCode.NOT_FOUND, message: 'Failed to find the requested branch' };
+    }
+
+    const game = await resourceContext.fetchGameModel();
+    if (game?.defaultBranch === branch.id && password.length > 0) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Cannot set a non empty password on the default branch' };
+    }
+
+    // TODO plaintext, should move to hash at some point
+    branch.password = password;
+    await branch.save();
+    return { code: HttpCode.OK, payload: branch };
   }
 
   private static async addNewBuildToBranch(branch: BranchModel | null, build: BuildModel | null): Promise<boolean> {
-    try {
-      if (build && branch) {
-        const allBuilds = await branch.getBuilds();
+    if (build && branch) {
+      const allBuilds = await branch.getBuilds();
 
-        // un-associate all newer version (in case it's a rollback), also prevents adding same build multiple times
-        allBuilds.forEach(async buildEntry => {
-          if (buildEntry.id >= build.id) {
-            branch.removeBuild(buildEntry);
-          }
-        });
+      // un-associate all newer version (in case it's a rollback), also prevents adding same build multiple times
+      allBuilds.forEach(async buildEntry => {
+        if (buildEntry.id >= build.id) {
+          branch.removeBuild(buildEntry);
+        }
+      });
 
-        branch.addBuild(build);
-        return true;
-      }
-    } catch (sqlErr) {
-      warn('Encountered error updating branch builds, error=%s', sqlErr);
+      branch.addBuild(build);
+      return true;
     }
     return false;
   }

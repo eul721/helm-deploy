@@ -9,7 +9,6 @@ import { HttpCode } from '../models/http/httpcode';
 import { UserModel } from '../models/db/user';
 import { SampleDatabase } from '../utils/sampledatabase';
 import { DivisionModel } from '../models/db/division';
-import { UserContext } from '../models/auth/usercontext';
 import { GroupModel } from '../models/db/group';
 
 export const PublisherTokenIssuer = 'publishservicedev';
@@ -147,14 +146,13 @@ export class DevToolsService {
    * Grants current called aditional access levels, additive (view/edit/content admin/ admin)
    *
    * This method is for DEVELOPMENT only and shall not be used in non-development environments
-   * @param userContext information about caller
+   * @param user information about caller
    */
-  public static async grantAccess(userContext: UserContext): Promise<ServiceResponse<void>> {
+  public static async grantAccess(user: UserModel): Promise<ServiceResponse<void>> {
     if (!envConfig.isDev() && !envConfig.isTest()) {
       throw new Error('Dev/test only function');
     }
 
-    const user = await userContext.fetchStudioUserModel();
     const groups = await user?.getGroupsWithUser();
     if (!user || !groups) {
       return { code: HttpCode.INTERNAL_SERVER_ERROR, message: 'Failed to load user groups' };

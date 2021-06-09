@@ -1,11 +1,9 @@
 import { Router } from 'express';
 import { getAuthenticateMiddleware } from '../../middleware/authenticate';
 import { getAuthorizePublisherMiddleware } from '../../middleware/authorizepublisher';
-import { UserContext } from '../../models/auth/usercontext';
-import { UserAttributes, UserModel } from '../../models/db/user';
-import { HttpCode } from '../../models/http/httpcode';
-import { RbacService } from '../../services/rbac';
-import { sendServiceResponse } from '../../utils/http';
+import { AuthenticateContext } from '../../models/auth/authenticatecontext';
+import { RbacService } from '../../services/rbac/basic';
+import { endpointServiceCallWrapper } from '../../utils/service';
 
 export const rbacApiRouter = Router();
 
@@ -21,12 +19,14 @@ rbacApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware()
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  */
-rbacApiRouter.get('/about', async (_req, res) => {
-  const context = UserContext.get(res);
-  const callerId = (await context.fetchStudioUserModel())?.externalId ?? '';
-  const response = await RbacService.assembleUserInfo(callerId);
-  sendServiceResponse(response, res);
-});
+rbacApiRouter.get(
+  '/about',
+  endpointServiceCallWrapper(async (_req, res) => {
+    const context = AuthenticateContext.get(res);
+    const callerId = (await context.fetchStudioUserModel())?.externalId ?? '';
+    return RbacService.assembleUserInfo(callerId);
+  })
+);
 
 /**
  * @api {GET} /api/rbac/users List users
@@ -38,12 +38,9 @@ rbacApiRouter.get('/about', async (_req, res) => {
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  */
-rbacApiRouter.get('/users', async (_req, res) => {
-  const context = UserContext.get(res);
-  const externalIdAttrib: keyof UserAttributes = 'externalId';
-  const users = await UserModel.findAll({
-    where: { ownerId: (await context.fetchStudioUserModel())?.ownerId },
-    attributes: [externalIdAttrib],
-  });
-  res.status(HttpCode.OK).json(users.map(user => user.toHttpModel()));
-});
+rbacApiRouter.get(
+  '/users',
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacService.getUsersInOwnDivision(AuthenticateContext.get(res));
+  })
+);

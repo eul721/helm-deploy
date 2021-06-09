@@ -24,7 +24,7 @@ export interface AgreementAttributes {
 export type AgreementCreationAttributes = Optional<AgreementAttributes, 'id' | 'ownerId'>;
 
 export class AgreementModel
-  extends LocalizableModel<ModelAttributes, AgreementCreationAttributes>
+  extends LocalizableModel<AgreementAttributes, AgreementCreationAttributes>
   implements AgreementAttributes {
   public id!: number;
 

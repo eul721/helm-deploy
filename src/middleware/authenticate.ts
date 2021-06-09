@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { authBearerPrefix } from '../configuration/httpconfig';
 import { debug, warn } from '../logger';
-import { UserContext } from '../models/auth/usercontext';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { HttpCode } from '../models/http/httpcode';
 import { validateToken } from '../utils/auth';
 import { getHeaderParamValue, sendMessageResponse } from '../utils/http';
@@ -10,7 +10,7 @@ import { dummyAuthenticateMiddleware } from './dummymiddleware';
 
 /**
  * @apiDefine AuthenticateMiddleware
- * @apiDescription Handles token based authentication
+ * @apiDescription Handles token based authentication, sets AuthenticateContext
  * @apiVersion 0.0.1
  * @apiHeader {String} Authorization='Bearer token' JWT of the user
  */
@@ -30,7 +30,10 @@ async function authenticateMiddleware(req: Request, res: Response, next: NextFun
     return;
   }
 
-  res.locals.userContext = new UserContext(validateResult.userId, validateResult.accountType, validateResult.payload);
+  AuthenticateContext.set(
+    res,
+    new AuthenticateContext(bearerToken, validateResult.userId, validateResult.accountType, validateResult.payload)
+  );
   next();
 }
 

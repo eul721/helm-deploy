@@ -2,9 +2,8 @@ import { Segment } from '../../configuration/httpconfig';
 import { getAuthorizeForRbacMiddleware } from '../../middleware/authorizeforrbac';
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { RbacResource } from '../../models/auth/rbacresource';
-import { RoleModel } from '../../models/db/role';
-import { HttpCode } from '../../models/http/httpcode';
-import { getQueryParamValue, sendMessageResponse } from '../../utils/http';
+import { RbacRolesService } from '../../services/rbac/roles';
+import { endpointServiceCallWrapper } from '../../utils/service';
 import { rbacApiRouter } from './basic';
 
 /**
@@ -20,28 +19,12 @@ import { rbacApiRouter } from './basic';
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  */
-rbacApiRouter.get(
+rbacApiRouter.post(
   `/${Segment.division}/roles`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  async (req, res) => {
-    const name = getQueryParamValue(req, 'roleName');
-    if (!name) {
-      sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing roleName query param');
-      return;
-    }
-
-    const rbacContext = RbacContext.get(res);
-    const division = await rbacContext.fetchDivisionModel();
-
-    const existingRole = await RoleModel.findOne({ where: { name, ownerId: division?.id } });
-    if (existingRole) {
-      sendMessageResponse(res, HttpCode.CONFLICT, 'A role with this name already exists');
-      return;
-    }
-
-    await division?.createRoleEntry({ name });
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.createRole(RbacContext.get(res));
+  })
 );
 
 /**
@@ -58,12 +41,9 @@ rbacApiRouter.get(
 rbacApiRouter.get(
   `/${Segment.division}/roles`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const division = await rbacContext.fetchDivisionModel();
-    const roles = await division?.getRoles();
-    res.status(HttpCode.OK).json(roles?.map(role => role.toHttpModel()) ?? []);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.getRoles(RbacContext.get(res));
+  })
 );
 
 /**
@@ -80,18 +60,9 @@ rbacApiRouter.get(
 rbacApiRouter.post(
   `/${Segment.roles}/${Segment.permissions}`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const role = await rbacContext.fetchRoleModel();
-    const permission = await rbacContext.fetchPermissionModel();
-    if (!permission) {
-      sendMessageResponse(res, HttpCode.BAD_REQUEST, `Requested permission doesn't exist: ${rbacContext.permission}`);
-      return;
-    }
-
-    await role?.addAssignedPermission(permission);
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.addPermissionToRole(RbacContext.get(res));
+  })
 );
 
 /**
@@ -108,20 +79,9 @@ rbacApiRouter.post(
 rbacApiRouter.delete(
   `/${Segment.roles}/${Segment.permissions}`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const role = await rbacContext.fetchRoleModel();
-    const permission = await rbacContext.fetchPermissionModel();
-
-    if (!permission) {
-      sendMessageResponse(res, HttpCode.BAD_REQUEST, `Requested permission doesn't exist: ${rbacContext.permission}`);
-      return;
-    }
-
-    await role?.removeAssignedPermission(permission);
-
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.removePermissionFromRole(RbacContext.get(res));
+  })
 );
 
 /**
@@ -138,13 +98,9 @@ rbacApiRouter.delete(
 rbacApiRouter.get(
   `/${Segment.roles}/permissions`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const role = await rbacContext.fetchRoleModel();
-    const permissions = await role?.getAssignedPermissions();
-
-    res.status(HttpCode.OK).json(permissions?.map(permission => permission.toHttpModel()) ?? []);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.getPermissionsInRole(RbacContext.get(res));
+  })
 );
 
 /**
@@ -164,19 +120,9 @@ rbacApiRouter.post(
     resource: RbacResource.GAME,
     allowDifferentOwner: false,
   }),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const role = await rbacContext.fetchRoleModel();
-    const game = await rbacContext.fetchGameModel();
-
-    if (!role || !game) {
-      sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Malformed request made it past validation');
-      return;
-    }
-
-    await role.addAssignedGame(game);
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.addGameToRole(RbacContext.get(res));
+  })
 );
 
 /**
@@ -196,19 +142,9 @@ rbacApiRouter.delete(
     resource: RbacResource.GAME,
     allowDifferentOwner: false,
   }),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const role = await rbacContext.fetchRoleModel();
-    const game = await rbacContext.fetchGameModel();
-
-    if (!role || !game) {
-      sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Malformed request made it past validation');
-      return;
-    }
-
-    role.removeAssignedGame(game);
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.removeGameFromRole(RbacContext.get(res));
+  })
 );
 
 /**
@@ -225,10 +161,7 @@ rbacApiRouter.delete(
 rbacApiRouter.get(
   `/${Segment.roles}/games`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const role = await rbacContext.fetchRoleModel();
-    const games = await role?.getAssignedGames();
-    res.status(HttpCode.OK).json(games?.map(game => game.toHttpModel()) ?? []);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacRolesService.getGamesInRole(RbacContext.get(res));
+  })
 );

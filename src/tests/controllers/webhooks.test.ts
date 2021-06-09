@@ -20,11 +20,18 @@ app.use(express.json());
 app.use(urlBase, webhookRouter);
 
 describe('src/controllers/webhooks', () => {
-  describe('validation and auth', () => {
-    beforeAll(async () => {
-      await getDBInstance().sync({ force: true });
-    });
+  const sampleDb = new SampleDatabase();
 
+  let token = '';
+
+  beforeAll(async () => {
+    await getDBInstance().sync({ force: true, match: /_test$/ });
+    await sampleDb.initAll();
+    const tokenResponse = await DevToolsService.createDevJwt(SampleDatabase.creationData.debugAdminEmail);
+    token = `Bearer ${tokenResponse?.payload}`;
+  });
+
+  describe('validation and auth', () => {
     describe('post execution webhooks', () => {
       const payload: WebhookPayload = { target: WebhookTarget.TITLE, action: WebhookAction.CREATE, titleId: 111111 };
 
@@ -33,6 +40,7 @@ describe('src/controllers/webhooks', () => {
           const result = await request(app)
             .post(urlBase)
             .send('{"malformed":"json"')
+            .set('Authorization', token)
             .set('Content-Type', 'application/json');
           expect(result.status).toBe(HttpCode.BAD_REQUEST);
         });
@@ -40,7 +48,11 @@ describe('src/controllers/webhooks', () => {
 
       describe('with a valid webhook payload', () => {
         it('should reject as unauthorized if missing shared secret', async () => {
-          const result = await request(app).post(urlBase).send(payload).set('Content-Type', 'application/json');
+          const result = await request(app)
+            .post(urlBase)
+            .send(payload)
+            .set('Content-Type', 'application/json')
+            .set('Authorization', token);
           expect(result.status).toBe(HttpCode.UNAUTHORIZED);
         });
 
@@ -49,6 +61,7 @@ describe('src/controllers/webhooks', () => {
             .post(urlBase)
             .send(payload)
             .set('Content-Type', 'application/json')
+            .set('Authorization', token)
             .set(headerParamLookup.webhookToken, 'random invalid value');
           expect(result.status).toBe(HttpCode.UNAUTHORIZED);
         });
@@ -58,6 +71,7 @@ describe('src/controllers/webhooks', () => {
             .post(urlBase)
             .send(payload)
             .set('Content-Type', 'application/json')
+            .set('Authorization', token)
             .set(headerParamLookup.webhookToken, envConfig.WEBHOOK_SECRET_KEY ?? '');
           expect(result.status).toBe(HttpCode.OK);
         });
@@ -65,25 +79,17 @@ describe('src/controllers/webhooks', () => {
     });
 
     describe('pre execution webhooks (auth)', () => {
-      let realUserToken: Maybe<string>;
-
       let fakeUserToken: Maybe<string>;
-
-      const sampleDb = new SampleDatabase();
 
       const payload: WebhookPayload = { target: WebhookTarget.TITLE, action: WebhookAction.CREATE, titleId: 222222 };
 
       beforeAll(async () => {
-        await sampleDb.initAll();
         payload.titleId = sampleDb.gameCiv6.bdsTitleId;
-        const response = await DevToolsService.createDevJwt(SampleDatabase.creationData.debugAdminEmail);
-        realUserToken = response.payload;
         const responseFake = await DevToolsService.createDevJwt('random@fake');
         fakeUserToken = responseFake.payload;
       });
 
       it('should have token values', async () => {
-        expect(realUserToken).toBeTruthy();
         expect(fakeUserToken).toBeTruthy();
       });
 
@@ -98,16 +104,6 @@ describe('src/controllers/webhooks', () => {
           .send(payload)
           .set('Content-Type', 'application/json')
           .set(headerParamLookup.webhookToken, 'random invalid value');
-        expect(result.status).toBe(HttpCode.UNAUTHORIZED);
-      });
-
-      it('should reject if malformed bearer token', async () => {
-        const result = await request(app)
-          .post(urlVerify)
-          .send(payload)
-          .set('Content-Type', 'application/json')
-          .set(headerParamLookup.webhookToken, envConfig.WEBHOOK_SECRET_KEY ?? '')
-          .set('Authorization', `${realUserToken}`);
         expect(result.status).toBe(HttpCode.UNAUTHORIZED);
       });
 
@@ -127,7 +123,7 @@ describe('src/controllers/webhooks', () => {
           .send(payload)
           .set('Content-Type', 'application/json')
           .set(headerParamLookup.webhookToken, envConfig.WEBHOOK_SECRET_KEY ?? '')
-          .set('Authorization', `Bearer ${realUserToken}`);
+          .set('Authorization', token);
         expect(result.status).toBe(HttpCode.OK);
       });
     });

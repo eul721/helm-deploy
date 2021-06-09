@@ -1,11 +1,14 @@
 import { mocked } from 'ts-jest/utils';
-import { UserContext } from '../../models/auth/usercontext';
+import { PlayerContext } from '../../models/auth/playercontext';
 import { getDBInstance } from '../../models/db/database';
 import { HttpCode } from '../../models/http/httpcode';
 import { GameService } from '../../services/game';
+import { LicensingService } from '../../services/licensing';
 import { SampleDatabase } from '../../utils/sampledatabase';
 
-jest.mock('../../models/auth/usercontext');
+jest.mock('../../services/licensing');
+
+const mockedLicensingService = mocked(LicensingService);
 
 describe('src/services/game', () => {
   const sampleDb = new SampleDatabase();
@@ -17,49 +20,29 @@ describe('src/services/game', () => {
 
   describe('GameService.getGameDownloadModel', () => {
     describe('when the user owns the game', () => {
-      const userContext = mocked(new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login'));
-      userContext.checkIfTitleIsOwned.mockResolvedValue({ code: HttpCode.OK, payload: true });
-
-      it('should return a valid game download model', async () => {
-        const serviceResponse = await GameService.getGameDownloadModel(userContext, {
-          contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
-        });
-        expect(serviceResponse.code).toBe(HttpCode.OK);
-        expect(serviceResponse.payload).toBeTruthy();
-        expect(serviceResponse.payload?.names).toBeTruthy();
-        expect(serviceResponse.payload?.agreements.length).toBeGreaterThan(0);
-      });
-
-      it('should return forbidden if a private or invalid branch is requested for an owned game', async () => {
-        const serviceResponse = await GameService.getGameDownloadModel(
-          userContext,
-          { contentfulId: SampleDatabase.creationData.gameContentfulIds[0] },
-          12345134
+      it('should return not found if a private or invalid branch is requested for an owned game', async () => {
+        const playerContext = new PlayerContext(
+          '',
+          '',
+          '',
+          {
+            contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
+          },
+          { id: 12345134 }
         );
-        expect(serviceResponse.code).toBe(HttpCode.FORBIDDEN);
+        const serviceResponse = await GameService.getGameDownloadModel(playerContext);
+        expect(serviceResponse.code).toBe(HttpCode.NOT_FOUND);
       });
-    });
-  });
-
-  describe('when the user does not own the game', () => {
-    const userContext = mocked(new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login'));
-    userContext.checkIfTitleIsOwned.mockResolvedValueOnce({ code: HttpCode.OK, payload: false });
-
-    it('should refuse the request', async () => {
-      const serviceResponse = await GameService.getGameDownloadModel(userContext, {
-        contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
-      });
-      expect(serviceResponse.code).toBe(HttpCode.FORBIDDEN);
     });
   });
 
   describe('when the request is invalid', () => {
-    const userContext = mocked(new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login'));
-
     it('should return not found for invalid contentful id', async () => {
-      const serviceResponse = await GameService.getGameDownloadModel(userContext, {
+      const playerContext = new PlayerContext('', '', '', {
         contentfulId: 'random invalid value',
       });
+
+      const serviceResponse = await GameService.getGameDownloadModel(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.NOT_FOUND);
     });
   });
@@ -81,31 +64,27 @@ describe('src/services/game', () => {
   });
 
   describe('GameService.getOwnedGames', () => {
-    const userContext = mocked(new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login'));
+    const playerContext = new PlayerContext('', '', '');
 
     it('should return nothing if user owns no games', async () => {
-      userContext.fetchOwnedTitles.mockResolvedValueOnce({
+      mockedLicensingService.fetchLicenses.mockResolvedValueOnce({
         code: HttpCode.OK,
         payload: [],
       });
 
-      const serviceResponse = await GameService.getOwnedGames(userContext);
+      const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload?.model.downloadData).toBeTruthy();
       expect(Object.keys(serviceResponse.payload?.model.downloadData ?? {})).toHaveLength(0);
     });
 
     it('should return all games the user owns', async () => {
-      userContext.fetchOwnedTitles.mockResolvedValueOnce({
+      mockedLicensingService.fetchLicenses.mockResolvedValueOnce({
         code: HttpCode.OK,
-        payload: SampleDatabase.creationData.gameContentfulIds.map(item => {
-          return {
-            contentfulId: item,
-          };
-        }),
+        payload: SampleDatabase.creationData.gameContentfulIds,
       });
 
-      const serviceResponse = await GameService.getOwnedGames(userContext);
+      const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
       expect(Object.keys(serviceResponse.payload?.model.downloadData ?? {})).toHaveLength(
@@ -115,18 +94,17 @@ describe('src/services/game', () => {
   });
 
   describe('GameService.getBranches', () => {
-    const userContext = mocked(new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login'));
-
-    it('should return not found for invalid id', async () => {
-      const serviceResponse = await GameService.getBranches(userContext, { contentfulId: 'random bad id' });
-      expect(serviceResponse.code).toBe(HttpCode.NOT_FOUND);
+    it('should return server error for invalid id', async () => {
+      const playerContext = new PlayerContext('', '', '', { contentfulId: 'random bad id' });
+      const serviceResponse = await GameService.getBranches(playerContext);
+      expect(serviceResponse.code).toBe(HttpCode.INTERNAL_SERVER_ERROR);
     });
 
     it('should return at least one branch for a game', async () => {
-      userContext.fetchStudioUserModel.mockResolvedValueOnce(undefined);
-      const serviceResponse = await GameService.getBranches(userContext, {
+      const playerContext = new PlayerContext('', '', '', {
         contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
       });
+      const serviceResponse = await GameService.getBranches(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
       expect(serviceResponse.payload?.length).toBeGreaterThan(0);

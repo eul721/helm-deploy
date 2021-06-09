@@ -10,8 +10,13 @@ export class BuildService {
    *
    * @param bdsTitleId id of the created build
    */
-  public static async onCreated(bdsBuildId: number): Promise<ServiceResponse> {
-    await BuildModel.create({ bdsBuildId });
+  public static async onCreated(bdsTitleId: number, bdsBuildId: number): Promise<ServiceResponse> {
+    const gameModel = await GameModel.findOne({ where: { bdsTitleId }, include: GameModel.associations.branches });
+    if (!gameModel) {
+      return { code: HttpCode.NOT_FOUND, message: 'Cannot find the game that owns newly created build' };
+    }
+
+    await gameModel.createBuildEntry({ bdsBuildId });
     return { code: HttpCode.OK };
   }
 

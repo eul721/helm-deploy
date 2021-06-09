@@ -1,5 +1,5 @@
 export interface DeviceRegistrationData {
-  deviceId: number;
+  deviceId: string;
   name: string;
 
   /// <summary>

@@ -1,12 +1,19 @@
 import express from 'express';
 import request from 'supertest';
-import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
+import nock from 'nock';
+import { mocked } from 'ts-jest/utils';
+import { DNA, Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { getDBInstance } from '../../models/db/database';
 import { HttpCode } from '../../models/http/httpcode';
 import { SampleDatabase } from '../../utils/sampledatabase';
 import { downloadApiRouter } from '../../controllers/download';
 import { headerParamLookup } from '../../configuration/httpconfig';
 import { DevToolsService } from '../../services/devtools';
+import { DnaLicenseResponse } from '../../models/http/dna/dnalicenseresponse';
+
+jest.mock('@take-two-t2gp/t2gp-node-toolkit');
+
+const mockedDnaConfig = mocked(DNA.config);
 
 const urlBase = '/api/games';
 
@@ -66,6 +73,22 @@ describe('src/controllers/webhooks', () => {
       });
 
       it('should accept with valid token and query params', async () => {
+        mockedDnaConfig.getUrl.mockReturnValueOnce({
+          baseUrl: 'https://dummyUrl.com',
+          contextPath: 'contextPath',
+          name: 'name',
+          host: 'host',
+          scheme: 'scheme',
+          serviceId: 'serviceId',
+          tags: [],
+        });
+
+        const responseBody: DnaLicenseResponse = {
+          licenseBinary: 'licenseBinary',
+          licenses: [{ referenceId: sampleDb.gameCiv6.contentfulId, expireAt: 1 }],
+        };
+        const scope = nock('https://dummyUrl.com').get(/.*/).reply(HttpCode.OK, responseBody);
+
         const validUrl = `${urlBase}/${sampleDb.gameCiv6.id}/branches`;
         const result = await request(app)
           .get(validUrl)
@@ -73,6 +96,7 @@ describe('src/controllers/webhooks', () => {
           .set(headerParamLookup.deviceId, '10')
           .set(headerParamLookup.deviceName, 'testDevice');
         expect(result.status).toBe(HttpCode.OK);
+        expect(scope.isDone()).toBe(true);
       });
     });
 

@@ -1,16 +1,21 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { NextFunction, Request, Response } from 'express';
-import { PathParam } from '../configuration/httpconfig';
 import { warn } from '../logger';
-import { RbacContext } from '../models/auth/rbaccontext';
 import { RbacResource } from '../models/auth/rbacresource';
-import { UserContext } from '../models/auth/usercontext';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { DivisionPermissionType } from '../models/db/permission';
 import { HttpCode } from '../models/http/httpcode';
-import { RbacService } from '../services/rbac';
-import { sendMessageResponse } from '../utils/http';
-import { getResourceOwnerId, Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
+import { RbacService } from '../services/rbac/basic';
+import { sendMessageResponse, sendServiceResponse } from '../utils/http';
+import {
+  createRbacContext,
+  getResourceOwnerId,
+  Middleware,
+  middlewareExceptionWrapper,
+  useDummyAuth,
+} from '../utils/middleware';
 import { dummyAuthorizeForRbacMiddleware } from './dummymiddleware';
+import { malformedRequestPastValidation } from '../models/http/serviceresponse';
 
 /**
  * @apiDefine AuthorizeForRbacMiddleware
@@ -25,15 +30,7 @@ async function rbacRequiredPermissionAuth(
   primaryResource: RbacResource,
   secondaryResource?: { resource: RbacResource; allowDifferentOwner: boolean }
 ) {
-  const rbacContext = new RbacContext(
-    Number.parseInt(req.params[PathParam.divisionId], 10),
-    Number.parseInt(req.params[PathParam.groupId], 10),
-    Number.parseInt(req.params[PathParam.roleId], 10),
-    Number.parseInt(req.params[PathParam.userId], 10),
-    Number.parseInt(req.params[PathParam.gameId], 10),
-    req.params[PathParam.permissionId]
-  );
-
+  const rbacContext = createRbacContext(req, res);
   const targetDivisionId: Maybe<number> = await getResourceOwnerId(rbacContext, primaryResource);
 
   if (secondaryResource) {
@@ -59,7 +56,13 @@ async function rbacRequiredPermissionAuth(
     return;
   }
 
-  const hasPermission = RbacService.hasDivisionPermission(UserContext.get(res), permission, targetDivisionId);
+  const userModel = await AuthenticateContext.get(res).fetchStudioUserModel();
+  if (!userModel) {
+    sendServiceResponse(malformedRequestPastValidation(), res);
+    return;
+  }
+
+  const hasPermission = RbacService.hasDivisionPermission(userModel, permission, targetDivisionId);
   if (!hasPermission) {
     sendMessageResponse(res, HttpCode.FORBIDDEN, 'User does not have the required permissions');
     return;

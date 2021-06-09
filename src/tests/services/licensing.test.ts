@@ -5,6 +5,7 @@ import { HttpCode } from '../../models/http/httpcode';
 import { LicensingService } from '../../services/licensing';
 import { SampleDatabase } from '../../utils/sampledatabase';
 import { DnaLicenseResponse } from '../../models/http/dna/dnalicenseresponse';
+import { PlayerContext } from '../../models/auth/playercontext';
 
 jest.mock('@take-two-t2gp/t2gp-node-toolkit');
 
@@ -38,8 +39,7 @@ describe('src/services/licensing', () => {
       });
 
       const scope = nock('https://dummyUrl.com').get(/.*/).reply(HttpCode.OK, licensesResponseValidPayload);
-
-      const response = await LicensingService.fetchLicense(1234, 'device', 'token');
+      const response = await LicensingService.fetchLicenses(new PlayerContext('token', 'deviceid', 'devicename'));
       expect(scope.isDone()).toBe(true);
       expect(response.code).toBe(HttpCode.OK);
       expect(response.payload).toBeTruthy();

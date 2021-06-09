@@ -28,8 +28,18 @@ export class RbacContext extends ResourceContext {
     this.permission = permission;
   }
 
+  public static set(res: Response, context: RbacContext) {
+    if (Object.prototype.hasOwnProperty.call(res.locals, 'rbacContext')) {
+      throw new Error('RbacContext is already set');
+    }
+    res.locals.playerContext = context;
+  }
+
   public static get(res: Response): RbacContext {
-    return res.locals.rbacContext as RbacContext;
+    if (Object.prototype.hasOwnProperty.call(res.locals, 'rbacContext')) {
+      return res.locals.rbacContext as RbacContext;
+    }
+    throw new Error('Missing rbac context on the request, rbac middleware must have malfuntioned');
   }
 
   public async fetchDivisionModel(): Promise<Maybe<DivisionModel>> {

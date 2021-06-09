@@ -21,6 +21,7 @@ describe('src/controllers/publish', () => {
     let fakeUserToken: Maybe<string>;
 
     let validUrl: Maybe<string>;
+
     let badUrl: Maybe<string>;
 
     beforeAll(async () => {

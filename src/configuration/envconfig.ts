@@ -18,6 +18,7 @@ const {
   NODE_ENVIRONMENT = 'development',
   PORT = '5000',
   WEBHOOK_SECRET_KEY = '',
+  TEMP_FLAG_VERSION_1_0_AUTH_OFF = 'true',
 } = process.env;
 
 /*
@@ -44,6 +45,8 @@ interface EnvVars {
   NODE_ENVIRONMENT: string;
   PORT: string;
   WEBHOOK_SECRET_KEY?: string;
+  /* Temporary flag just for the 1.0 version to disable some parts of auth (licensing and BDS-webhook RBAC checks) */
+  TEMP_FLAG_VERSION_1_0_AUTH_OFF: boolean;
   isDev(): boolean;
   isTest(): boolean;
 }
@@ -67,6 +70,7 @@ export const envConfig: EnvVars = {
   NODE_ENVIRONMENT,
   PORT,
   WEBHOOK_SECRET_KEY,
+  TEMP_FLAG_VERSION_1_0_AUTH_OFF: TEMP_FLAG_VERSION_1_0_AUTH_OFF === 'true',
 
   isDev: () => {
     return envConfig.NODE_ENVIRONMENT === 'development' || envConfig.NODE_ENVIRONMENT === 'develop';

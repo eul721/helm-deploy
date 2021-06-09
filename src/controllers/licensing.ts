@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
-import { UserContext } from '../models/auth/usercontext';
-import { sendServiceResponse } from '../utils/http';
+import { PlayerContext } from '../models/auth/playercontext';
+import { LicensingService } from '../services/licensing';
+import { endpointServiceCallWrapper } from '../utils/service';
 
 export const licensingApiRouter = Router();
 
-licensingApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware());
+licensingApiRouter.use(getAuthenticateMiddleware());
 
 /**
  * @api {GET} /api/licensing Get licenses
@@ -18,8 +19,10 @@ licensingApiRouter.use(getAuthenticateMiddleware(), getAuthorizePlayerMiddleware
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-licensingApiRouter.get('/', async (_req, res) => {
-  const userContext = UserContext.get(res);
-  const response = await userContext.fetchOwnedTitles();
-  sendServiceResponse(response, res);
-});
+licensingApiRouter.get(
+  '/',
+  getAuthorizePlayerMiddleware(),
+  endpointServiceCallWrapper(async (_req, res) => {
+    return LicensingService.fetchLicenses(PlayerContext.get(res));
+  })
+);

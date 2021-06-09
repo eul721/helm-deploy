@@ -1,11 +1,16 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { NextFunction, Request, Response } from 'express';
 import { envConfig } from '../configuration/envconfig';
+import { PathParam } from '../configuration/httpconfig';
 import { error } from '../logger';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
+import { PlayerContext } from '../models/auth/playercontext';
 import { RbacContext } from '../models/auth/rbaccontext';
 import { RbacResource } from '../models/auth/rbacresource';
+import { BranchUniqueIdentifier } from '../models/db/branch';
+import { GameUniqueIdentifier } from '../models/db/game';
 import { HttpCode } from '../models/http/httpcode';
-import { sendMessageResponse } from './http';
+import { getHeaderParamValue, sendMessageResponse } from './http';
 
 /**
  * Type defining middleware
@@ -42,4 +47,41 @@ export async function getResourceOwnerId(rbacContext: RbacContext, resource: Rba
     default:
       return undefined;
   }
+}
+
+export function createRbacContext(req: Request, res: Response): RbacContext {
+  const rbacContext = new RbacContext(
+    Number.parseInt(req.params[PathParam.divisionId], 10),
+    Number.parseInt(req.params[PathParam.groupId], 10),
+    Number.parseInt(req.params[PathParam.roleId], 10),
+    Number.parseInt(req.params[PathParam.userId], 10),
+    Number.parseInt(req.params[PathParam.gameId], 10),
+    req.params[PathParam.permissionId]
+  );
+  RbacContext.set(res, rbacContext);
+  return rbacContext;
+}
+
+export function createPlayerContext(req: Request, res: Response): PlayerContext {
+  const deviceId = getHeaderParamValue(req, 'deviceId');
+  const deviceName = getHeaderParamValue(req, 'deviceName');
+  const bdsGameId = Number.parseInt(req.params[PathParam.bdsTitle], 10);
+  const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
+  let gameUid: Maybe<GameUniqueIdentifier> = !Number.isNaN(bdsGameId) ? { bdsTitleId: bdsGameId } : undefined;
+  gameUid = gameUid ?? !Number.isNaN(gameId) ? { id: gameId } : undefined;
+
+  const bdsbranchId = Number.parseInt(req.params[PathParam.bdsBranch], 10);
+  const branchId = Number.parseInt(req.params[PathParam.branchId], 10);
+  let branchUid: Maybe<BranchUniqueIdentifier> = !Number.isNaN(bdsbranchId) ? { bdsBranchId: bdsbranchId } : undefined;
+  branchUid = branchUid ?? !Number.isNaN(branchId) ? { id: branchId } : undefined;
+
+  const playerContext = new PlayerContext(
+    AuthenticateContext.get(res).bearerToken,
+    deviceId,
+    deviceName,
+    gameUid,
+    branchUid
+  );
+  PlayerContext.set(res, playerContext);
+  return playerContext;
 }

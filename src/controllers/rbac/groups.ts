@@ -2,9 +2,9 @@ import { Segment } from '../../configuration/httpconfig';
 import { getAuthorizeForRbacMiddleware } from '../../middleware/authorizeforrbac';
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { RbacResource } from '../../models/auth/rbacresource';
-import { GroupModel } from '../../models/db/group';
-import { HttpCode } from '../../models/http/httpcode';
-import { getQueryParamValue, sendMessageResponse } from '../../utils/http';
+import { RbacGroupsService } from '../../services/rbac/groups';
+import { getQueryParamValue } from '../../utils/http';
+import { endpointServiceCallWrapper } from '../../utils/service';
 import { rbacApiRouter } from './basic';
 
 /**
@@ -23,25 +23,10 @@ import { rbacApiRouter } from './basic';
 rbacApiRouter.post(
   `/${Segment.division}/groups`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  async (req, res) => {
+  endpointServiceCallWrapper(async (req, res) => {
     const name = getQueryParamValue(req, 'groupName');
-    if (!name) {
-      sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Missing groupName query param');
-      return;
-    }
-
-    const rbacContext = RbacContext.get(res);
-    const division = await rbacContext.fetchDivisionModel();
-
-    const existingGroup = await GroupModel.findOne({ where: { name, ownerId: division?.id } });
-    if (existingGroup) {
-      sendMessageResponse(res, HttpCode.CONFLICT, 'A group with this name already exists');
-      return;
-    }
-
-    await division?.createGroupEntry({ name });
-    sendMessageResponse(res);
-  }
+    return RbacGroupsService.createGroup(RbacContext.get(res), name);
+  })
 );
 
 /**
@@ -61,12 +46,9 @@ rbacApiRouter.delete(
     resource: RbacResource.GROUP,
     allowDifferentOwner: true,
   }),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const group = await rbacContext.fetchGroupModel();
-    await group?.destroy();
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.removeGroup(RbacContext.get(res));
+  })
 );
 
 /**
@@ -83,12 +65,9 @@ rbacApiRouter.delete(
 rbacApiRouter.get(
   `/${Segment.division}/groups`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const division = await rbacContext.fetchDivisionModel();
-    const groups = await division?.getGroups();
-    res.status(HttpCode.OK).json(groups?.map(group => group.toHttpModel()));
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.getGroups(RbacContext.get(res));
+  })
 );
 
 /**
@@ -108,19 +87,9 @@ rbacApiRouter.post(
     resource: RbacResource.USER,
     allowDifferentOwner: true,
   }),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const group = await rbacContext.fetchGroupModel();
-    const user = await rbacContext.fetchUserModel();
-
-    if (!user || !group) {
-      sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Malformed request made it past validation');
-      return;
-    }
-
-    await group.addAssignedUser(user);
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.addUserToGroup(RbacContext.get(res));
+  })
 );
 
 /**
@@ -140,20 +109,9 @@ rbacApiRouter.delete(
     resource: RbacResource.USER,
     allowDifferentOwner: true,
   }),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const group = await rbacContext.fetchGroupModel();
-    const user = await rbacContext.fetchUserModel();
-
-    if (!user || !group) {
-      sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Malformed request made it past validation');
-      return;
-    }
-
-    await group.removeAssignedUser(user);
-
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.removeUserFromGroup(RbacContext.get(res));
+  })
 );
 
 /**
@@ -170,12 +128,9 @@ rbacApiRouter.delete(
 rbacApiRouter.get(
   `/${Segment.groups}/users`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.GROUP),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const group = await rbacContext.fetchGroupModel();
-    const users = await group?.getAssignedUsers();
-    res.status(HttpCode.OK).json(users?.map(user => user.toHttpModel()) ?? []);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.getUsersInGroup(RbacContext.get(res));
+  })
 );
 
 /**
@@ -195,20 +150,9 @@ rbacApiRouter.post(
     resource: RbacResource.ROLE,
     allowDifferentOwner: false,
   }),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const group = await rbacContext.fetchGroupModel();
-    const role = await rbacContext.fetchRoleModel();
-
-    if (!role || !group) {
-      sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Malformed request made it past validation');
-      return;
-    }
-
-    await group.addAssignedRole(role);
-
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.addRoleToGroup(RbacContext.get(res));
+  })
 );
 
 /**
@@ -228,20 +172,9 @@ rbacApiRouter.delete(
     resource: RbacResource.ROLE,
     allowDifferentOwner: false,
   }),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const group = await rbacContext.fetchGroupModel();
-    const role = await rbacContext.fetchRoleModel();
-
-    if (!role || !group) {
-      sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Malformed request made it past validation');
-      return;
-    }
-
-    await group.removeAssignedRole(role);
-
-    sendMessageResponse(res);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.removeRoleFromGroup(RbacContext.get(res));
+  })
 );
 
 /**
@@ -258,10 +191,7 @@ rbacApiRouter.delete(
 rbacApiRouter.get(
   `/${Segment.groups}/roles`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.GROUP),
-  async (_req, res) => {
-    const rbacContext = RbacContext.get(res);
-    const group = await rbacContext.fetchGroupModel();
-    const roles = await group?.getAssignedRoles();
-    res.status(HttpCode.OK).json(roles?.map(role => role.toHttpModel()) ?? []);
-  }
+  endpointServiceCallWrapper(async (_req, res) => {
+    return RbacGroupsService.getRolesInGroup(RbacContext.get(res));
+  })
 );

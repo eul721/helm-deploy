@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { warn } from '../logger';
-import { UserContext } from '../models/auth/usercontext';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { HttpCode } from '../models/http/httpcode';
 import { sendMessageResponse } from '../utils/http';
 import { Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
@@ -12,12 +12,11 @@ import { dummyAuthorizePublisherMiddleware } from './dummymiddleware';
  * @apiVersion 0.0.1
  */
 async function authorizePublisherMiddleware(_req: Request, res: Response, next: NextFunction) {
-  const context = UserContext.get(res);
+  const context = AuthenticateContext.get(res);
   if (!(await context.fetchStudioUserModel())) {
     sendMessageResponse(res, HttpCode.NOT_FOUND, 'User not found in RBAC');
     return;
   }
-  res.locals.userContext = context;
   next();
 }
 

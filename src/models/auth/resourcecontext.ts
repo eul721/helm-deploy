@@ -1,51 +1,19 @@
-import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { Response } from 'express';
-import { BranchModel } from '../db/branch';
-import { GameModel } from '../db/game';
+import { GameContext } from './base/gamecontext';
 
 /**
- * Data set on a request context (res.locals.rbacContext) that contains information about the rbac request
- * This information is generally created by rbac middleware and used by the controllers/services
+ * Data set on a request context (res.locals.resourceContext) that contains information about the requested resource
+ * This context is publisher-facing
  */
-export class ResourceContext {
+export class ResourceContext extends GameContext {
   constructor(gameId?: number, branchId?: number) {
-    this.gameId = Number.isNaN(gameId) ? undefined : gameId;
-    this.branchId = Number.isNaN(branchId) ? undefined : branchId;
+    super(
+      gameId && !Number.isNaN(gameId) ? { id: gameId } : undefined,
+      branchId && !Number.isNaN(branchId) ? { id: branchId } : undefined
+    );
   }
 
   public static get(res: Response): ResourceContext {
     return res.locals.resourceContext as ResourceContext;
   }
-
-  public async fetchGameModel(): Promise<Maybe<GameModel>> {
-    if (this.game) {
-      return this.game;
-    }
-
-    if (this.gameId) {
-      this.game = (await GameModel.findOne({ where: { id: this.gameId } })) ?? undefined;
-    }
-    return this.game;
-  }
-
-  public async fetchBranchModel(): Promise<Maybe<BranchModel>> {
-    if (this.branch) {
-      return this.branch;
-    }
-
-    if (this.branchId) {
-      this.branch = (await BranchModel.findOne({ where: { id: this.branchId } })) ?? undefined;
-    }
-    return this.branch;
-  }
-
-  // passed in headers
-  public gameId?: number;
-
-  public branchId?: number;
-
-  // params
-  private game?: GameModel;
-
-  private branch?: BranchModel;
 }

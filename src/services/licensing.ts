@@ -2,6 +2,7 @@ import { DNA } from '@take-two-t2gp/t2gp-node-toolkit';
 import fetch from 'cross-fetch';
 import { envConfig } from '../configuration/envconfig';
 import { debug, error, warn } from '../logger';
+import { PlayerContext } from '../models/auth/playercontext';
 import { DeviceRegistrationData } from '../models/http/dna/deviceregistrationdata';
 import { DnaErrorResponse } from '../models/http/dna/dnaerrorresponse';
 import { DnaLicenseResponse } from '../models/http/dna/dnalicenseresponse';
@@ -18,17 +19,18 @@ export class LicensingService {
    * Returns all licenses for the given user+device
    * Registers the device internally if it hasn't been registered yet
    *
-   * @param deviceId device id of the requester
-   * @param deviceName device name of the requester
-   * @param userToken JWT of the requester
+   * @param playerContext request context
    */
-  public static async fetchLicense(
-    deviceId: number,
-    deviceName: string,
-    userToken: string
-  ): Promise<ServiceResponse<string[]>> {
-    debug('fetchLicense');
-    const deviceRegistrationData: DeviceRegistrationData = { deviceId, name: deviceName, resourceType: 0 };
+  public static async fetchLicenses(playerContext: PlayerContext): Promise<ServiceResponse<string[]>> {
+    if (!playerContext.deviceId || !playerContext.deviceName) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Missing deviceId or deviceName on player context' };
+    }
+
+    const deviceRegistrationData: DeviceRegistrationData = {
+      deviceId: playerContext.deviceId,
+      name: playerContext.deviceName,
+      resourceType: 0,
+    };
     const urlBase = DNA.config.getUrl('license')?.baseUrl;
     if (!urlBase) {
       error(
@@ -37,7 +39,11 @@ export class LicensingService {
       return { code: HttpCode.INTERNAL_SERVER_ERROR, message: 'Failed to locate licensing services' };
     }
 
-    let response = await LicensingService.fetchLicenseRequest(urlBase, deviceId, userToken);
+    let response = await LicensingService.fetchLicenseRequest(
+      urlBase,
+      playerContext.deviceId,
+      playerContext.bearerToken
+    );
     debug(`fetchLicense first try response: ${response.status}, code: ${response.dnaCode}`);
 
     if (response.dnaCode && response.status !== HttpCode.OK) {
@@ -45,7 +51,7 @@ export class LicensingService {
       const failureHandlerStatus = await LicensingService.handleFailedLicenseResponse(
         response.dnaCode,
         deviceRegistrationData,
-        userToken
+        playerContext.bearerToken
       );
 
       debug(
@@ -66,11 +72,11 @@ export class LicensingService {
       }
 
       // retry if it looks like we could recover by registering the device
-      response = await LicensingService.fetchLicenseRequest(urlBase, deviceId, userToken);
+      response = await LicensingService.fetchLicenseRequest(urlBase, playerContext.deviceId, playerContext.bearerToken);
       if (response.dnaCode && response.status !== HttpCode.OK) {
         // if registering device succeeded but we still failed to get licenses then its not obvious what went wrong
         error(
-          `License fetch failed after successfuly registering device, status: ${response.status}, code: ${response.dnaCode}, name: ${deviceName}, id ${deviceId}`
+          `License fetch failed after successfuly registering device, status: ${response.status}, code: ${response.dnaCode}, name: ${playerContext.deviceName}, id ${playerContext.deviceId}`
         );
         return { code: HttpCode.CONFLICT };
       }
@@ -83,7 +89,7 @@ export class LicensingService {
     return `T2 Licensing Service ${envConfig.CLIENT_VERSION} (${envConfig.DNA_APP_ID})`;
   }
 
-  private static async fetchLicenseRequest(urlBase: string, deviceId: number, userToken: string): Promise<LicenseData> {
+  private static async fetchLicenseRequest(urlBase: string, deviceId: string, userToken: string): Promise<LicenseData> {
     const type = 20; // type -> will always be '20', representing pre-release licenses
     const urlFetch = `${urlBase}/grantedlicenses/me?deviceId=${deviceId}&type=${type}`;
     try {

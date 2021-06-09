@@ -71,7 +71,7 @@ export class SampleDatabase {
       'tz1zm9ktk7RtSTH6STkhG',
     ],
     debugAdminEmail: 'debug@admin',
-    divisionName: 'NotFake Division',
+    divisionName: 't2',
     groupNames: ['viewers', 'civ devs', 'civ admin', 'devops', 'admins'],
   };
 
@@ -204,69 +204,63 @@ export class SampleDatabase {
   private async createResources() {
     this.gameXcom2 = await this.division.createGame({
       contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
-      bdsTitleId: 1000000,
+      bdsTitleId: 9991000000,
     });
     this.gameWarOfChosen = await this.division.createGame({
       contentfulId: SampleDatabase.creationData.gameContentfulIds[1],
-      bdsTitleId: 1000001,
+      bdsTitleId: 9991000001,
     });
     this.gameCiv6 = await this.division.createGame({
       contentfulId: SampleDatabase.creationData.gameContentfulIds[2],
-      bdsTitleId: 1000003,
+      bdsTitleId: 9991000003,
     });
     this.gameGatheringStorm = await this.division.createGame({
       contentfulId: SampleDatabase.creationData.gameContentfulIds[3],
-      bdsTitleId: 1000066,
+      bdsTitleId: 9991000066,
     });
     this.gameRiseAndFall = await this.division.createGame({
       contentfulId: SampleDatabase.creationData.gameContentfulIds[4],
-      bdsTitleId: 1000067,
+      bdsTitleId: 9991000067,
     });
 
     // Branches for "real" games
     this.branchXcom = await this.gameXcom2.createBranchEntry({
-      bdsBranchId: 4000000,
-      visibility: 'public',
+      bdsBranchId: 9994000000,
     });
     await this.gameXcom2.setDefaultBranch(this.branchXcom.id);
     await this.gameXcom2.createBranchEntry({
-      bdsBranchId: 4444444,
-      visibility: 'private',
+      bdsBranchId: 9994444444,
     });
 
     this.branchWarOfChosen = await this.gameWarOfChosen.createBranchEntry({
-      bdsBranchId: 4000003,
-      visibility: 'public',
+      bdsBranchId: 9994000003,
     });
     await this.gameWarOfChosen.setDefaultBranch(this.branchWarOfChosen.id);
 
     this.branchCiv6 = await this.gameCiv6.createBranchEntry({
-      bdsBranchId: 4000001,
-      visibility: 'public',
+      bdsBranchId: 9994000001,
     });
     await this.gameCiv6.setDefaultBranch(this.branchCiv6.id);
 
     this.branchGatheringStorm = await this.gameGatheringStorm.createBranchEntry({
-      bdsBranchId: 4000047,
-      visibility: 'public',
+      bdsBranchId: 9994000047,
     });
     await this.gameGatheringStorm.setDefaultBranch(this.branchGatheringStorm.id);
 
     this.branchRiseAndFall = await this.gameRiseAndFall.createBranchEntry({
-      bdsBranchId: 4000048,
-      visibility: 'public',
+      bdsBranchId: 9994000048,
     });
     await this.gameRiseAndFall.setDefaultBranch(this.branchRiseAndFall.id);
 
     // Xcom builds
     const xcomBuild1 = await this.gameXcom2.createBuild({
-      bdsBuildId: 2000000,
+      bdsBuildId: 9992000000,
     });
     const xcomBuild2 = await this.gameXcom2.createBuild({
-      bdsBuildId: 2000070,
+      bdsBuildId: 9992000070,
     });
     const xcomBuild3 = await this.gameXcom2.createBuild({
-      bdsBuildId: 2000071,
+      bdsBuildId: 9992000071,
     });
     await this.branchXcom.addBuild(xcomBuild1);
     await this.branchXcom.addBuild(xcomBuild2);
@@ -277,13 +271,13 @@ export class SampleDatabase {
 
     // War of the chosen builds
     const wocBuild1 = await this.gameWarOfChosen.createBuild({
-      bdsBuildId: 2000004,
+      bdsBuildId: 9992000004,
     });
     const wocBuild2 = await this.gameWarOfChosen.createBuild({
-      bdsBuildId: 2000005,
+      bdsBuildId: 9992000005,
     });
     const wocBuild3 = await this.gameWarOfChosen.createBuild({
-      bdsBuildId: 2000010,
+      bdsBuildId: 9992000010,
     });
     await this.branchWarOfChosen.addBuild(wocBuild1);
     await this.branchWarOfChosen.addBuild(wocBuild2);
@@ -292,21 +286,21 @@ export class SampleDatabase {
     // Civ6 builds
     this.civ6Build1 = await this.gameCiv6.createBuild({
       contentfulId: 'civ6TestBuild001',
-      bdsBuildId: 2000001,
+      bdsBuildId: 9992000001,
     });
     await this.branchCiv6.addBuild(this.civ6Build1);
 
     // Gathering Storm builds
     const gatheringStormBuild1 = await this.gameGatheringStorm.createBuild({
       contentfulId: 'gatheringStormTestBuild001',
-      bdsBuildId: 2000073,
+      bdsBuildId: 9992000073,
     });
     await this.branchGatheringStorm.addBuild(gatheringStormBuild1);
 
     // Rise and Fall builds
     const riseAndFallBuild1 = await this.gameRiseAndFall.createBuild({
       contentfulId: 'riseAndFallTestBuild001',
-      bdsBuildId: 2000074,
+      bdsBuildId: 9992000074,
     });
     await this.branchRiseAndFall.addBuild(riseAndFallBuild1);
 

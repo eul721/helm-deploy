@@ -1,9 +1,7 @@
 import { HttpCode } from '../../models/http/httpcode';
-import { RbacService } from '../../services/rbac';
+import { RbacService } from '../../services/rbac/basic';
 import { SampleDatabase } from '../../utils/sampledatabase';
 import { getDBInstance } from '../../models/db/database';
-import { UserContext } from '../../models/auth/usercontext';
-import { error } from '../../logger';
 
 jest.setTimeout(60 * 1000);
 
@@ -11,30 +9,24 @@ describe('src/services/rbacservice', () => {
   const testDb: SampleDatabase = new SampleDatabase();
 
   beforeAll(async () => {
-    try {
-      await getDBInstance().sync({ force: true });
-      await testDb.initAll();
-    } catch (err) {
-      error('Failure initializing test suite, error=%s', err);
-    }
+    await getDBInstance().sync({ force: true });
+    await testDb.initAll();
   });
 
   describe('RbacService.hasDivisionPermission', () => {
     describe('for sample database admin with permissions only in his own division', () => {
-      const userContext = new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login');
-
       it('should permit within correct division', async () => {
-        const result = await RbacService.hasDivisionPermission(userContext, 'rbac-admin', testDb.division.id);
+        const result = await RbacService.hasDivisionPermission(testDb.userCto, 'rbac-admin', testDb.division.id);
         expect(result.code).toBe(HttpCode.OK);
       });
 
       it('should forbid for wrong division', async () => {
-        const result = await RbacService.hasDivisionPermission(userContext, 'rbac-admin', 12345);
+        const result = await RbacService.hasDivisionPermission(testDb.userCto, 'rbac-admin', 12345);
         expect(result.code).toBe(HttpCode.FORBIDDEN);
       });
 
       it('should forbid for correct division but missing permission', async () => {
-        const result = await RbacService.hasDivisionPermission(userContext, 't2-admin', testDb.division.id);
+        const result = await RbacService.hasDivisionPermission(testDb.userCto, 't2-admin', testDb.division.id);
         expect(result.code).toBe(HttpCode.FORBIDDEN);
       });
     });
@@ -42,11 +34,9 @@ describe('src/services/rbacservice', () => {
 
   describe('RbacService.hasResourcePermission', () => {
     describe('for sample database admin with permissions only in his own division', () => {
-      const userContext = new UserContext(SampleDatabase.creationData.debugAdminEmail, 'dev-login');
-
       it('should permit read', async () => {
         const result = await RbacService.hasResourcePermission(
-          userContext,
+          testDb.userCto.id,
           { contentfulId: testDb.gameCiv6.contentfulId },
           'read'
         );
@@ -55,7 +45,7 @@ describe('src/services/rbacservice', () => {
 
       it('should allow editing production resources', async () => {
         const result = await RbacService.hasRoleWithAllResourcePermission(
-          userContext,
+          testDb.userCto.id,
           { contentfulId: testDb.gameCiv6.contentfulId },
           ['update', 'change-production']
         );
@@ -64,15 +54,9 @@ describe('src/services/rbacservice', () => {
     });
 
     describe('for civ6 dev with permissions mainly for a single game', () => {
-      let userContext: UserContext;
-
-      beforeAll(async () => {
-        userContext = new UserContext(testDb.userJrDev.externalId, 'dev-login');
-      });
-
       it('should permit read', async () => {
         const result = await RbacService.hasResourcePermission(
-          userContext,
+          testDb.userJrDev.id,
           { contentfulId: testDb.gameCiv6.contentfulId },
           'update'
         );
@@ -81,7 +65,7 @@ describe('src/services/rbacservice', () => {
 
       it('should forbit editing production resources', async () => {
         const result = await RbacService.hasRoleWithAllResourcePermission(
-          userContext,
+          testDb.userJrDev.id,
           { contentfulId: testDb.gameCiv6.contentfulId },
           ['update', 'change-production']
         );

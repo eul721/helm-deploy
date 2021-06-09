@@ -1,40 +1,53 @@
 import { NextFunction, Request, Response } from 'express';
-import { warn } from '../logger';
-import { UserContext } from '../models/auth/usercontext';
+import { info, warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { dummyAuthorizePlayerMiddleware } from './dummymiddleware';
-import { headerParamLookup } from '../configuration/httpconfig';
-import { getHeaderParamValue, sendMessageResponse } from '../utils/http';
-import { Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
+import { getQueryParamValue, sendMessageResponse, sendServiceResponse } from '../utils/http';
+import { createPlayerContext, Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
+import { LicensingService } from '../services/licensing';
+import { envConfig } from '../configuration/envconfig';
 
 /**
  * @apiDefine AuthorizePlayerMiddleware
- * @apiDescription Handles player authorization via licensing service
+ * @apiDescription Handles player authorization via licensing service, sets PlayerContext
  * @apiVersion 0.0.1
+ *
  * @apiHeader {String} x-t2-device-name device name of the user, for licensing checks
  * @apiHeader {Number} x-t2-device-id device id of the user, for licensing checks
- * @apiHeader {String} Authorization='Bearer token' JWT of the user
+ *
+ * @apiParam (Query) {String} branch Optional branch id of the requested branch, if requesting non-default
+ * @apiParam (Query) {String} password Password for the branch, if applicable
  */
 async function authorizePlayerMiddleware(req: Request, res: Response, next: NextFunction) {
-  const userContext = UserContext.get(res);
-  const deviceIdString = getHeaderParamValue(req, 'deviceId');
-  const deviceName = getHeaderParamValue(req, 'deviceName');
-  const token = getHeaderParamValue(req, 'authorization');
-  if (!deviceIdString || !deviceName || !token) {
-    sendMessageResponse(
-      res,
-      HttpCode.BAD_REQUEST,
-      `Missing required headers: ${headerParamLookup.deviceId}, ${headerParamLookup.deviceName}, ${headerParamLookup.authorization}`
-    );
+  const playerContext = createPlayerContext(req, res);
+  const response = await LicensingService.fetchLicenses(playerContext);
+  if (response.code !== HttpCode.OK) {
+    sendServiceResponse(response, res);
     return;
   }
 
-  const deviceId = parseInt(deviceIdString, 10);
-  if (Number.isNaN(deviceId)) {
-    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Device id in wrong format');
+  const game = await playerContext.fetchGameModel();
+  if (game && !response.payload?.some(title => title === game?.contentfulId)) {
+    if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
+      info('authorizePlayerMiddleware would have rejected the request here if licensing check was not disabled');
+    } else {
+      sendMessageResponse(res, HttpCode.FORBIDDEN, 'Requested game is not owned');
+      return;
+    }
+  }
+
+  const branch = await playerContext.fetchBranchModel();
+  const password = getQueryParamValue(req, 'password');
+  if (branch && branch.password && branch.password.length > 0 && branch.password !== password) {
+    sendMessageResponse(res, HttpCode.FORBIDDEN, 'Requested branch requires a valid password');
     return;
   }
-  userContext.initLicensingData(deviceId, deviceName, token);
+
+  if (branch && game && branch.ownerId !== game.id) {
+    sendMessageResponse(res, HttpCode.BAD_REQUEST, 'Requested branch does not belong to the title');
+    return;
+  }
+
   next();
 }
 

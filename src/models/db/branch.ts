@@ -10,7 +10,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { AtLeastOne, INTERNAL_ID } from '../defines/definitions';
+import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
@@ -18,6 +18,7 @@ import { LocalizableModel } from './mixins/localizablemodel';
 
 export const BranchDef: ModelAttributes = {
   id: INTERNAL_ID(),
+  ownerId: INTERNAL_ID_REFERENCE(),
   bdsBranchId: {
     allowNull: false,
     type: DataTypes.BIGINT,
@@ -27,28 +28,18 @@ export const BranchDef: ModelAttributes = {
     allowNull: true,
     type: DataTypes.STRING(64),
   },
-  visibility: {
-    allowNull: true,
-    type: DataTypes.STRING(16),
-    defaultValue: 'private',
-  },
 };
-
-export type Visibility = 'public' | 'private';
 
 export interface BranchAttributes {
   id: number;
+  ownerId: number;
   bdsBranchId: number;
   password: string;
-  /**
-   * Visibility of this Branch - public or private
-   */
-  visibility: Visibility;
   readonly builds?: BuildModel[];
   readonly owner?: GameModel;
 }
 
-export type BranchCreationAttributes = Optional<BranchAttributes, 'id' | 'visibility' | 'password'>;
+export type BranchCreationAttributes = Optional<BranchAttributes, 'id' | 'password' | 'ownerId'>;
 
 export type BranchUniqueIdentifier = AtLeastOne<Pick<BranchAttributes, 'id' | 'bdsBranchId'>>;
 
@@ -61,11 +52,7 @@ export class BranchModel
 
   public password!: string;
 
-  public visibility!: Visibility;
-
-  public get isPublic() {
-    return this.visibility === 'public';
-  }
+  public ownerId!: number;
 
   // #region association: builds
   public readonly builds?: BuildModel[];

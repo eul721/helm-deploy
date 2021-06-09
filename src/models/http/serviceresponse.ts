@@ -8,3 +8,7 @@ export interface ServiceResponse<T = void> {
   payload?: T;
   message?: string;
 }
+
+export function malformedRequestPastValidation<T>(): ServiceResponse<T> {
+  return { code: HttpCode.INTERNAL_SERVER_ERROR, message: 'Malformed request made it past validation' };
+}

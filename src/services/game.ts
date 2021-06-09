@@ -1,65 +1,38 @@
 import { Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
-import { GameModel, GameUniqueIdentifier } from '../models/db/game';
+import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import { Branch } from '../models/http/branch';
-import { ServiceResponse } from '../models/http/serviceresponse';
-import { info, warn } from '../logger';
+import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
+import { info } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { Catalogue } from '../models/http/catalogue';
 import { CatalogueItem } from '../models/http/catalogueItem';
-import { UserContext } from '../models/auth/usercontext';
 import { Locale } from '../models/db/localizedfield';
 import { AgreementModel } from '../models/db/agreement';
-import { RbacService } from './rbac';
 import { AgreementDescription } from '../models/http/rbac/agreementdescription';
+import { ResourceContext } from '../models/auth/resourcecontext';
+import { PlayerContext } from '../models/auth/playercontext';
+import { LicensingService } from './licensing';
+import { envConfig } from '../configuration/envconfig';
 
 export class GameService {
   /**
    * Finds download data of a single a game
-   * This is a Player facing method
    *
-   * @param userContext information about the requester
-   * @param gameDesc unique game desciption
-   * @param branchIdOverride id of the branch to fetch if requesting a non-default one
-   * @param branchOverridePassword password for branch override, only used if it's non public and password protected
+   * @param playerContext request context
    */
-  public static async getGameDownloadModel(
-    userContext: UserContext,
-    gameDesc: GameUniqueIdentifier,
-    branchIdOverride?: number,
-    branchOverridePassword?: string
-  ): Promise<ServiceResponse<DownloadData>> {
-    try {
-      const game = await GameModel.findOne({ where: gameDesc, include: { all: true } });
-      if (!game) {
-        return { code: HttpCode.NOT_FOUND };
-      }
-
-      const response = await userContext.checkIfTitleIsOwned({ contentfulId: game.contentfulId });
-      if (response.code !== HttpCode.OK || !response.payload) {
-        return { code: HttpCode.FORBIDDEN };
-      }
-
-      let branch: BranchModel;
-      if (branchIdOverride) {
-        [branch] = game.branches?.filter(gameBranch => gameBranch.id === branchIdOverride) ?? [];
-      } else {
-        [branch] = game.branches?.filter(gameBranch => gameBranch.id === game.defaultBranch) ?? [];
-      }
-      if (!branch) {
-        return { code: HttpCode.FORBIDDEN };
-      }
-
-      if (branch.password && branch.password !== branchOverridePassword) {
-        return { code: HttpCode.FORBIDDEN };
-      }
-
-      return { code: HttpCode.OK, payload: await GameService.constructGameDownloadModel(game, branch) };
-    } catch (err) {
-      warn('Encountered error in getGameDownloadModel, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+  public static async getGameDownloadModel(playerContext: PlayerContext): Promise<ServiceResponse<DownloadData>> {
+    const game = await playerContext.fetchGameModel();
+    if (!game) {
+      return { code: HttpCode.NOT_FOUND };
     }
+    const branch = await playerContext.fetchBranchModel();
+    if (!branch) {
+      return { code: HttpCode.NOT_FOUND };
+    }
+
+    return { code: HttpCode.OK, payload: await GameService.constructGameDownloadModel(game, branch) };
   }
 
   /**
@@ -68,242 +41,229 @@ export class GameService {
    */
   public static async getAllGames(): Promise<ServiceResponse<Catalogue>> {
     const items: CatalogueItem[] = (await GameModel.findAll()).map(item => {
-      return { contentfulId: item.contentfulId, bdsTitleId: item.bdsTitleId };
+      return { id: item.id, contentfulId: item.contentfulId, bdsTitleId: item.bdsTitleId };
     });
     return { code: HttpCode.OK, payload: { items } };
   }
 
   /**
    * Returns download data of all games, returns only publicly released branches
-   * This is a Player facing method
    *
-   * @param userContext information about the requester
+   * @param playerContext request context
    */
-  public static async getOwnedGames(userContext: UserContext): Promise<ServiceResponse<DownloadDataRoot>> {
-    try {
-      const response = await userContext.fetchOwnedTitles();
-      if (response.code !== HttpCode.OK) {
-        return { code: response.code };
-      }
-      const ownedTitles: string[] = response.payload?.map(title => title.contentfulId) ?? [];
-      const playerOwnedGames = await GameModel.findAll({
+  public static async getOwnedGames(playerContext: PlayerContext): Promise<ServiceResponse<DownloadDataRoot>> {
+    const response = await LicensingService.fetchLicenses(playerContext);
+    if (response.code !== HttpCode.OK) {
+      return { code: response.code };
+    }
+
+    let playerOwnedGames: GameModel[] = [];
+    if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
+      playerOwnedGames = await GameModel.findAll({
+        include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
+      });
+    } else {
+      const ownedTitles: string[] = response.payload ?? [];
+      playerOwnedGames = await GameModel.findAll({
         include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
         where: { contentfulId: { [Op.in]: ownedTitles } },
       });
-      const gameModelsJson: { [key: string]: DownloadData } = {};
-
-      playerOwnedGames.forEach(gameModel => {
-        const [publicBranch] = gameModel.branches?.filter(branch => branch.isPublic) ?? [];
-        if (!publicBranch) {
-          return;
-        }
-        gameModelsJson[gameModel.contentfulId] = GameService.transformGameModelToDownloadModel(
-          gameModel,
-          publicBranch,
-          Locale.en
-        );
-      });
-
-      return { code: HttpCode.OK, payload: { model: { downloadData: gameModelsJson } } };
-    } catch (err) {
-      warn('Encountered error in getOwnedGames, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
     }
+
+    const gameModelsJson: { [key: string]: DownloadData } = {};
+
+    playerOwnedGames.forEach(gameModel => {
+      const [publicBranch] = gameModel.branches?.filter(branch => branch.id === gameModel.defaultBranch) ?? [];
+      if (!publicBranch) {
+        return;
+      }
+      gameModelsJson[gameModel.contentfulId] = GameService.transformGameModelToDownloadModel(
+        gameModel,
+        publicBranch,
+        Locale.en
+      );
+    });
+
+    return { code: HttpCode.OK, payload: { model: { downloadData: gameModelsJson } } };
   }
 
   /**
    * Returns all branches of the specified game
-   * This can process both player and publisher requests
    *
-   * @param userContext information about the requester
-   * @param gameDesc unique game desciption
+   * @param playerContext request context
    */
-  public static async getBranches(
-    userContext: UserContext,
-    gameDesc: GameUniqueIdentifier
-  ): Promise<ServiceResponse<Branch[]>> {
-    try {
-      const game = await GameModel.findOne({
-        include: { all: true },
-        where: gameDesc,
-      });
-      if (!game) {
-        return { code: HttpCode.NOT_FOUND };
-      }
+  public static async getBranches(playerContext: PlayerContext): Promise<ServiceResponse<Branch[]>> {
+    const game = await playerContext.fetchGameModel();
+    if (!game) {
+      return malformedRequestPastValidation();
+    }
 
-      const branches: Branch[] = [];
-      const studioUser = await userContext.fetchStudioUserModel();
-      const allowedPrivateBranches = studioUser && (await studioUser.getOwner()).id === (await game.getOwner()).id;
-      // TODO: Add locale parameter to UserContext or by other means
-      const locale = Locale.en;
-      game.branches?.forEach(branch => {
-        if (!branch) {
-          return;
-        }
-        if (!branch.isPublic && !allowedPrivateBranches) {
-          return;
-        }
-        branches.push({
-          isPublic: branch.isPublic,
+    const branches: Branch[] = [];
+    // TODO: Add locale parameter to UserContext or by other means
+    const locale = Locale.en;
+    (await game.getBranches())?.forEach(branch => {
+      if (!branch) {
+        return;
+      }
+      branches.push({
+        id: branch.id,
+        name: branch.getNameLoaded(locale),
+        passwordProtected: branch.password !== null,
+      });
+    });
+
+    return { code: HttpCode.OK, payload: branches };
+  }
+
+  /**
+   * Returns all branches of the specified game
+   *
+   * @param resourceContext information about the requested resource
+   */
+  public static async getBranchesPublisher(resourceContext: ResourceContext): Promise<ServiceResponse<Branch[]>> {
+    // TODO: Add locale parameter to UserContext or by other means
+    const locale = Locale.en;
+    const game = await resourceContext.fetchGameModel();
+    const branchModels = await game?.getBranches();
+    const branches: Branch[] =
+      branchModels?.map(branch => {
+        return {
+          id: branch.id,
           name: branch.getNameLoaded(locale),
           passwordProtected: branch.password !== null,
-          publicRelease: branch.isPublic,
-        });
-      });
+        };
+      }) ?? [];
 
-      return { code: HttpCode.OK, payload: branches };
-    } catch (err) {
-      warn('Encountered error in getGames, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
-    }
+    return { code: HttpCode.OK, payload: branches };
   }
 
   /**
    * Returns all branches of the specified game
    * This can process both player and publisher requests
    *
-   * @param userContext information about the requester
-   * @param gameDesc unique game desciption
+   * @param resourceContext information about the requested resource
    * @param contentfulId contentful id to set for the game
    */
   public static async setContentfulId(
-    userContext: UserContext,
-    gameDesc: GameUniqueIdentifier,
+    resourceContext: ResourceContext,
     contentfulId: string
-  ): Promise<ServiceResponse> {
-    try {
-      const game = await GameModel.findOne({ where: gameDesc });
-      if (!game) {
-        return { code: HttpCode.NOT_FOUND };
-      }
-
-      const gameWithOverlappingContentfulId = await GameModel.findOne({ where: { contentfulId } });
-      if (gameWithOverlappingContentfulId) {
-        return {
-          code: HttpCode.CONFLICT,
-          message: `Contentful id ${contentfulId} is already assigned to game ${gameWithOverlappingContentfulId.id}`,
-        };
-      }
-
-      const permissionsResponse = await RbacService.hasResourcePermission(userContext, gameDesc, 'change-production');
-      if (permissionsResponse.code !== HttpCode.OK || !permissionsResponse.payload) {
-        return { code: HttpCode.FORBIDDEN, message: `Access denied` };
-      }
-
-      game.contentfulId = contentfulId;
-      await game.save();
-
-      info(`Set contentful id ${contentfulId} on game id ${game.id}`);
-
-      return { code: HttpCode.OK };
-    } catch (err) {
-      warn('Encountered error in getGames, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+  ): Promise<ServiceResponse<GameModel>> {
+    const game = await resourceContext.fetchGameModel();
+    if (!game) {
+      return malformedRequestPastValidation();
     }
+
+    const gameWithOverlappingContentfulId = await GameModel.findOne({ where: { contentfulId } });
+    if (gameWithOverlappingContentfulId) {
+      return {
+        code: HttpCode.CONFLICT,
+        message: `Contentful id ${contentfulId} is already assigned to game ${gameWithOverlappingContentfulId.id}`,
+      };
+    }
+
+    game.contentfulId = contentfulId;
+    await game.save();
+
+    info(`Set contentful id ${contentfulId} on game id ${game.id}`);
+
+    return { code: HttpCode.OK, payload: game };
   }
 
   /**
    * Sets a branch to be the main/default one
    *
-   * @param userContext information about the requester
-   * @param gameDesc unique game desciption
-   * @param branchId id of the branch to become the default
+   * @param resourceContext information about the requested resource
    */
-  public static async setMainBranch(userContext: UserContext, gameDesc: GameUniqueIdentifier, branchId: number) {
-    try {
-      const game = await GameModel.findOne({ where: gameDesc, include: GameModel.associations.branches });
-      if (!game || !game.branches?.some(branch => branch.id === branchId)) {
-        return { code: HttpCode.NOT_FOUND };
-      }
+  public static async setMainBranch(resourceContext: ResourceContext): Promise<ServiceResponse> {
+    const game = await resourceContext.fetchGameModel();
+    const branch = await resourceContext.fetchBranchModel();
 
-      const permissionsResponse = await RbacService.hasResourcePermission(userContext, gameDesc, 'change-production');
-      if (permissionsResponse.code !== HttpCode.OK || !permissionsResponse.payload) {
-        return { code: HttpCode.FORBIDDEN, message: `Access denied` };
-      }
-
-      game.defaultBranch = branchId;
-      await game.save();
-
-      info(`Set default branch id ${branchId} on game id ${game.id}`);
-
-      return { code: HttpCode.OK };
-    } catch (err) {
-      warn('Encountered error in setMainBranch, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+    if (!game || !branch) {
+      return malformedRequestPastValidation();
     }
+    game.defaultBranch = branch.id;
+    await game.save();
+
+    info(`Set default branch id ${branch.id} on game id ${game.id}`);
+
+    return { code: HttpCode.OK };
   }
 
   /**
    * Assigns an EULA to a game
    *
-   * @param userContext information about the requester
-   * @param gameDesc unique game desciption
+   * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to assign
    */
   public static async createEula(
-    userContext: UserContext,
-    gameDesc: GameUniqueIdentifier,
-    eulaUrl: string
+    resourceContext: ResourceContext,
+    eulaUrl?: string
   ): Promise<ServiceResponse<AgreementDescription>> {
-    try {
-      const game = await GameModel.findOne({ where: gameDesc, include: GameModel.associations.agreements });
-      if (!game) {
-        return { code: HttpCode.NOT_FOUND };
-      }
-
-      const permissionsResponse = await RbacService.hasResourcePermission(userContext, gameDesc, 'change-production');
-      if (permissionsResponse.code !== HttpCode.OK || !permissionsResponse.payload) {
-        return { code: HttpCode.FORBIDDEN, message: `Access denied` };
-      }
-
-      if (game.agreements?.some(agreement => agreement.url === eulaUrl)) {
-        return { code: HttpCode.CONFLICT, message: 'The game already contains an EULA with this url' };
-      }
-
-      const agreement = await game.createAgreementEntry({ url: eulaUrl });
-      return { code: HttpCode.OK, payload: agreement.toHttpModel() };
-    } catch (err) {
-      warn('Encountered error in assignEula, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+    if (!eulaUrl) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Missing url query param' };
     }
+
+    const game = await resourceContext.fetchGameModel();
+    if (!game) {
+      return malformedRequestPastValidation();
+    }
+
+    const existingAgreement = await AgreementModel.findOne({ where: { ownerId: game.id, url: eulaUrl } });
+    if (existingAgreement) {
+      return { code: HttpCode.CONFLICT, message: 'The game already contains an EULA with this url' };
+    }
+
+    const agreement = await game.createAgreementEntry({ url: eulaUrl });
+    return { code: HttpCode.OK, payload: agreement.toHttpModel() };
   }
 
   /**
    * Unassigns an EULA to a game
    *
-   * @param userContext information about the requester
-   * @param gameDesc unique game desciption
+   * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to unassign
    */
-  public static async removeEula(
-    userContext: UserContext,
-    gameDesc: GameUniqueIdentifier,
-    eulaId: number
-  ): Promise<ServiceResponse<void>> {
-    try {
-      const permissionsResponse = await RbacService.hasResourcePermission(userContext, gameDesc, 'change-production');
-      if (permissionsResponse.code !== HttpCode.OK || !permissionsResponse.payload) {
-        return { code: HttpCode.FORBIDDEN, message: `Access denied` };
-      }
-
-      const game = await GameModel.findOne({ where: gameDesc, include: GameModel.associations.agreements });
-      const eula = await AgreementModel.findOne({ where: { id: eulaId } });
-      if (!game || !eula) {
-        return { code: HttpCode.NOT_FOUND };
-      }
-
-      if (!game.agreements?.some(agreement => agreement.id === eula.id)) {
-        return { code: HttpCode.BAD_REQUEST, message: 'The game does not contains this EULA' };
-      }
-
-      await game.removeAgreement(eula);
-      await eula.destroy();
-
-      return { code: HttpCode.OK };
-    } catch (err) {
-      warn('Encountered error in unassignEula, error=%s', err);
-      return { code: HttpCode.INTERNAL_SERVER_ERROR };
+  public static async removeEula(resourceContext: ResourceContext, eulaId: number): Promise<ServiceResponse<void>> {
+    if (Number.isNaN(eulaId)) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a number' };
     }
+
+    const game = await resourceContext.fetchGameModel();
+    if (!game) {
+      return malformedRequestPastValidation();
+    }
+
+    const eula = await AgreementModel.findOne({ where: { id: eulaId } });
+    if (!game || !eula) {
+      return { code: HttpCode.NOT_FOUND };
+    }
+
+    if (eula.ownerId !== game.id) {
+      return { code: HttpCode.BAD_REQUEST, message: 'The game does not contains this EULA' };
+    }
+
+    await game.removeAgreement(eula);
+    await eula.destroy();
+
+    return { code: HttpCode.OK };
+  }
+
+  /**
+   * Get EULA of a game
+   *
+   * @param resourceContext information about the requested resource
+   *
+   */
+  public static async getEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription[]>> {
+    const game = await resourceContext.fetchGameModel();
+    if (!game) {
+      return malformedRequestPastValidation();
+    }
+    const agreements = await AgreementModel.findAll({
+      where: { ownerId: game.id },
+      include: { all: true },
+    });
+    return { code: HttpCode.OK, payload: agreements.map(item => item.toHttpModel()) };
   }
 
   private static async constructGameDownloadModel(

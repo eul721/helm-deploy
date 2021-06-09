@@ -1,4 +1,4 @@
-import { DNA, DNATokenPayload } from '@take-two-t2gp/t2gp-node-toolkit';
+import { DNA, DNATokenPayload, Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import retry from 'async-retry';
 import * as JWT from 'jsonwebtoken';
 import { TokenValidationResult } from '../models/auth/tokenvalidationresult';
@@ -8,6 +8,7 @@ import { PublisherTokenIssuer } from '../services/devtools';
 import { GameModel } from '../models/db/game';
 import { ResourcePermissionType } from '../models/db/permission';
 import { AdminRequirements } from '../models/auth/adminrequirements';
+import { BranchModel } from '../models/db/branch';
 
 const NUM_DNA_VERIFY_ATTEMPTS = 3;
 
@@ -102,7 +103,7 @@ export async function validateToken(token: string): Promise<TokenValidationResul
 export function checkRequiredPermission(
   basePermission: ResourcePermissionType,
   game: GameModel,
-  branchId?: number,
+  branch: Maybe<BranchModel>,
   adminRequirements?: AdminRequirements
 ): ResourcePermissionType {
   switch (adminRequirements) {
@@ -111,10 +112,12 @@ export function checkRequiredPermission(
     case AdminRequirements.ReleasedGame:
       return game.contentfulId && game.defaultBranch ? 'change-production' : basePermission;
     case AdminRequirements.DefaultBranch:
-      if (!branchId || Number.isNaN(branchId)) {
-        throw new Error(`Passed in branch id is not a number: ${branchId}`);
+      if (!branch) {
+        throw new Error(
+          `Checking permissions for AdminRequirements.DefaultBranch request but received no valid branch`
+        );
       }
-      return game.defaultBranch === branchId ? 'change-production' : basePermission;
+      return game.defaultBranch === branch.id ? 'change-production' : basePermission;
     case AdminRequirements.Never:
     default:
       return basePermission;

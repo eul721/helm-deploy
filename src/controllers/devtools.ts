@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
-import { UserContext } from '../models/auth/usercontext';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { HttpCode } from '../models/http/httpcode';
+import { malformedRequestPastValidation } from '../models/http/serviceresponse';
 import { DevToolsService } from '../services/devtools';
 import { getQueryParamValue, sendMessageResponse, sendServiceResponse } from '../utils/http';
 
@@ -87,6 +88,11 @@ devToolsApiRouter.post('/dna', async (req, res) => {
  * @apiDescription Grant caller higher access level, for testing only, additive
  */
 devToolsApiRouter.post('/elevate', getAuthenticateMiddleware(), async (_req, res) => {
-  const response = await DevToolsService.grantAccess(UserContext.get(res));
+  const user = await AuthenticateContext.get(res).fetchStudioUserModel();
+  if (!user) {
+    sendServiceResponse(malformedRequestPastValidation(), res);
+    return;
+  }
+  const response = await DevToolsService.grantAccess(user);
   sendServiceResponse(response, res);
 });
