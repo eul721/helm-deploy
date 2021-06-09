@@ -8,14 +8,16 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { AtLeastOne, INTERNAL_ID } from '../defines/definitions';
+import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { BuildDescription } from '../http/builddescription';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
-import { Fields, LocalizedFieldModel } from './localizedfield';
+import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 
 export const BuildDef: ModelAttributes = {
   id: INTERNAL_ID(),
+  ownerId: INTERNAL_ID_REFERENCE(),
   bdsBuildId: {
     allowNull: false,
     type: DataTypes.BIGINT,
@@ -29,13 +31,14 @@ export const BuildDef: ModelAttributes = {
 
 export interface BuildAttributes {
   id: number;
+  ownerId: number;
   bdsBuildId: number;
   mandatory: boolean;
   readonly branches?: BranchModel[];
   readonly owner?: GameModel;
 }
 
-export type BuildCreationAttributes = Optional<BuildAttributes, 'id' | 'mandatory'>;
+export type BuildCreationAttributes = Optional<BuildAttributes, 'id' | 'mandatory' | 'ownerId'>;
 
 export type BuildUniqueIdentifier = AtLeastOne<Pick<BuildAttributes, 'id' | 'bdsBuildId'>>;
 
@@ -45,6 +48,8 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
   public bdsBuildId!: number;
 
   public mandatory!: boolean;
+
+  public ownerId!: number;
 
   // #region association: branches
   public readonly branches?: BranchModel[];
@@ -72,6 +77,12 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
     return this.reduceFields(Fields.patchnotes);
   }
 
+  public getNotesLoaded(locale: Locale) {
+    const [nameObj] =
+      this.fields?.filter(locField => locField.field === Fields.patchnotes && locField.locale === locale) ?? [];
+    return nameObj?.value;
+  }
+
   // #endregion
 
   public static associations: {
@@ -79,4 +90,12 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
     owner: Association<BuildModel, GameModel>;
     branches: Association<GameModel, BranchModel>;
   };
+
+  public toHttpModel(locale: Locale): BuildDescription {
+    return {
+      id: this.id,
+      patchNotes: this.getNotesLoaded(locale),
+      ownerId: this.ownerId,
+    };
+  }
 }

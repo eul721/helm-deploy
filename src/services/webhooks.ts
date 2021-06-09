@@ -24,7 +24,7 @@ export class WebhooksService {
   public static async processNotification(
     authenticateContext: AuthenticateContext,
     payload: WebhookPayload
-  ): Promise<ServiceResponse> {
+  ): Promise<ServiceResponse<unknown>> {
     try {
       switch (payload.target) {
         case WebhookTarget.TITLE:
@@ -134,7 +134,7 @@ export class WebhooksService {
   private static async processTitleNotification(
     authenticateContext: AuthenticateContext,
     payload: WebhookPayload
-  ): Promise<ServiceResponse> {
+  ): Promise<ServiceResponse<unknown>> {
     if (payload.action === WebhookAction.CREATE && payload.titleId) {
       const user = await authenticateContext.fetchStudioUserModel();
       const division = await user?.getOwner();

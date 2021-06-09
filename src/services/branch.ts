@@ -1,3 +1,4 @@
+import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { info, warn } from '../logger';
 import { BuildModel } from '../models/db/build';
 import { BranchModel } from '../models/db/branch';
@@ -79,7 +80,7 @@ export class BranchService {
    * @param bdsBuildId bds id of the build that was set on the branch
    */
   public static async onModified(
-    bdsTitleId: number,
+    bdsTitleId: Maybe<number>,
     bdsBranchId: number,
     bdsBuildId: number
   ): Promise<ServiceResponse> {

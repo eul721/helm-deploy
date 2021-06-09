@@ -2,12 +2,10 @@ import { Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
-import { Branch } from '../models/http/branch';
+import { BranchDescription } from '../models/http/branchdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
 import { info } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
-import { Catalogue } from '../models/http/catalogue';
-import { CatalogueItem } from '../models/http/catalogueItem';
 import { Locale } from '../models/db/localizedfield';
 import { AgreementModel } from '../models/db/agreement';
 import { AgreementDescription } from '../models/http/rbac/agreementdescription';
@@ -15,6 +13,7 @@ import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
 import { envConfig } from '../configuration/envconfig';
+import { GameDescription } from '../models/http/rbac/gamedescription';
 
 export class GameService {
   /**
@@ -39,11 +38,9 @@ export class GameService {
    * Returns download data of all games, returns only publicly released branches
    * This method doesn't care about player/publisher distinction
    */
-  public static async getAllGames(): Promise<ServiceResponse<Catalogue>> {
-    const items: CatalogueItem[] = (await GameModel.findAll()).map(item => {
-      return { id: item.id, contentfulId: item.contentfulId, bdsTitleId: item.bdsTitleId };
-    });
-    return { code: HttpCode.OK, payload: { items } };
+  public static async getAllGames(): Promise<ServiceResponse<GameDescription[]>> {
+    const items: GameDescription[] = (await GameModel.findAll()).map(item => item.toHttpModel());
+    return { code: HttpCode.OK, payload: items };
   }
 
   /**
@@ -92,24 +89,19 @@ export class GameService {
    *
    * @param playerContext request context
    */
-  public static async getBranches(playerContext: PlayerContext): Promise<ServiceResponse<Branch[]>> {
+  public static async getBranches(playerContext: PlayerContext): Promise<ServiceResponse<BranchDescription[]>> {
     const game = await playerContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
-    const branches: Branch[] = [];
-    // TODO: Add locale parameter to UserContext or by other means
-    const locale = Locale.en;
+    const branches: BranchDescription[] = [];
     (await game.getBranches())?.forEach(branch => {
       if (!branch) {
         return;
       }
-      branches.push({
-        id: branch.id,
-        name: branch.getNameLoaded(locale),
-        passwordProtected: branch.password !== null,
-      });
+      // TODO: Add locale parameter to UserContext or by other means
+      branches.push(branch.toHttpModel(Locale.en));
     });
 
     return { code: HttpCode.OK, payload: branches };
@@ -120,19 +112,13 @@ export class GameService {
    *
    * @param resourceContext information about the requested resource
    */
-  public static async getBranchesPublisher(resourceContext: ResourceContext): Promise<ServiceResponse<Branch[]>> {
+  public static async getBranchesPublisher(
+    resourceContext: ResourceContext
+  ): Promise<ServiceResponse<BranchDescription[]>> {
     // TODO: Add locale parameter to UserContext or by other means
-    const locale = Locale.en;
     const game = await resourceContext.fetchGameModel();
     const branchModels = await game?.getBranches();
-    const branches: Branch[] =
-      branchModels?.map(branch => {
-        return {
-          id: branch.id,
-          name: branch.getNameLoaded(locale),
-          passwordProtected: branch.password !== null,
-        };
-      }) ?? [];
+    const branches: BranchDescription[] = branchModels?.map(branch => branch.toHttpModel(Locale.en)) ?? [];
 
     return { code: HttpCode.OK, payload: branches };
   }

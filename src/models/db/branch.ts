@@ -11,6 +11,7 @@ import {
   Optional,
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { BranchDescription } from '../http/branchdescription';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
@@ -115,4 +116,13 @@ export class BranchModel
     fields: Association<BranchModel, LocalizedFieldModel>;
     owner: Association<BranchModel, GameModel>;
   };
+
+  public toHttpModel(locale: Locale): BranchDescription {
+    return {
+      id: this.id,
+      name: this.getNameLoaded(locale),
+      passwordProtected: this.password !== null,
+      ownerId: this.ownerId,
+    };
+  }
 }

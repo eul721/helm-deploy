@@ -17,7 +17,7 @@ export class BuildService {
     }
 
     await gameModel.createBuildEntry({ bdsBuildId });
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, message: 'Created a new build' };
   }
 
   /**

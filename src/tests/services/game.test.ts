@@ -52,14 +52,14 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getAllGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(serviceResponse.payload?.items).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
+      expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
     });
 
     it('should return no games if database is empty', async () => {
       await getDBInstance().sync({ force: true });
       const serviceResponse = await GameService.getAllGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
-      expect(serviceResponse.payload?.items).toHaveLength(0);
+      expect(serviceResponse.payload).toHaveLength(0);
     });
   });
 

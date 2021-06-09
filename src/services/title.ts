@@ -2,6 +2,7 @@ import { GameModel } from '../models/db/game';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { DivisionModel } from '../models/db/division';
+import { GameDescription } from '../models/http/rbac/gamedescription';
 
 export class TitleService {
   /**
@@ -9,9 +10,12 @@ export class TitleService {
    *
    * @param bdsTitleId id of the created title
    */
-  public static async onCreated(division: DivisionModel, bdsTitleId: number): Promise<ServiceResponse> {
-    await division.createGameEntry({ bdsTitleId });
-    return { code: HttpCode.OK };
+  public static async onCreated(
+    division: DivisionModel,
+    bdsTitleId: number
+  ): Promise<ServiceResponse<GameDescription>> {
+    const game = await division.createGameEntry({ bdsTitleId });
+    return { code: HttpCode.OK, payload: game.toHttpModel() };
   }
 
   /**
