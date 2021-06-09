@@ -6,7 +6,7 @@ export interface AgreementDescription {
   id: number;
 
   /** Url to the full text */
-  url: string;
+  urls?: Record<string, string>;
 
   /** Localized names */
   names?: Record<string, string>;

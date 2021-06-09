@@ -1,4 +1,4 @@
-import { Association, BelongsToGetAssociationMixin, DataTypes, ModelAttributes, Optional } from 'sequelize';
+import { Association, BelongsToGetAssociationMixin, ModelAttributes, Optional } from 'sequelize';
 import { INTERNAL_ID } from '../defines/definitions';
 import { AgreementDescription } from '../http/rbac/agreementdescription';
 import { GameModel } from './game';
@@ -7,16 +7,10 @@ import { LocalizableModel } from './mixins/localizablemodel';
 
 export const AgreementDef: ModelAttributes = {
   id: INTERNAL_ID(),
-  url: {
-    allowNull: false,
-    unique: false,
-    type: DataTypes.TEXT(),
-  },
 };
 
 export interface AgreementAttributes {
   id: number;
-  url: string;
   ownerId: number;
   games?: GameModel[];
 }
@@ -27,8 +21,6 @@ export class AgreementModel
   extends LocalizableModel<AgreementAttributes, AgreementCreationAttributes>
   implements AgreementAttributes {
   public id!: number;
-
-  public url!: string;
 
   ownerId!: number;
 
@@ -53,6 +45,17 @@ export class AgreementModel
     );
   }
 
+  public get urls(): Record<string, string> {
+    return (
+      this.fields?.reduce<Record<string, string>>((acc, fieldData) => {
+        if (Fields.url === fieldData.field) {
+          acc[fieldData.locale] = fieldData.value;
+        }
+        return acc;
+      }, {}) ?? {}
+    );
+  }
+
   /**
    * Name of this item given the locale.
    *
@@ -63,6 +66,11 @@ export class AgreementModel
     const [nameObj] =
       this.fields?.filter(locField => locField.field === Fields.name && locField.locale === locale) ?? [];
     return nameObj?.value;
+  }
+
+  public getUrlLoaded(locale: Locale) {
+    const [urlObj] = this.fields?.filter(locField => locField.field === Fields.url && locField.locale === locale) ?? [];
+    return urlObj?.value;
   }
 
   public getName(locale: Locale): Promise<string | undefined> {
@@ -81,6 +89,22 @@ export class AgreementModel
     return this.removeLocalizedField(Fields.name, locale);
   }
 
+  public getUrl(locale: Locale): Promise<string | undefined> {
+    return this.getLocalizedField(Fields.url, locale);
+  }
+
+  public addUrl(value: string, locale: Locale) {
+    return this.upsertLocalizedField(Fields.url, value, locale);
+  }
+
+  public getUrls() {
+    return this.getLocalizedFields(Fields.url);
+  }
+
+  public removeUrl(locale: Locale) {
+    return this.removeLocalizedField(Fields.url, locale);
+  }
+
   // #endregion
   public static associations: {
     fields: Association<AgreementModel, LocalizedFieldModel>;
@@ -90,7 +114,7 @@ export class AgreementModel
   public toHttpModel(): AgreementDescription {
     return {
       id: this.id,
-      url: this.url,
+      urls: this.urls,
       names: this.names,
     };
   }

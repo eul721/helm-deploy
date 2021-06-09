@@ -9,6 +9,6 @@ export interface Agreement {
   // All titles of all locales in a hashmap
   titles?: Record<string, string>;
 
-  // external url to the full text of the agreement
-  url: string;
+  // All localized external urls to the full text of the agreement in a hashmap
+  urls?: Record<string, string>;
 }

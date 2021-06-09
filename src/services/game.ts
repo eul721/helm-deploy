@@ -183,7 +183,8 @@ export class GameService {
    */
   public static async createEula(
     resourceContext: ResourceContext,
-    eulaUrl?: string
+    eulaUrl?: string,
+    locale = Locale.en
   ): Promise<ServiceResponse<AgreementDescription>> {
     if (!eulaUrl) {
       return { code: HttpCode.BAD_REQUEST, message: 'Missing url query param' };
@@ -194,12 +195,13 @@ export class GameService {
       return malformedRequestPastValidation();
     }
 
-    const existingAgreement = await AgreementModel.findOne({ where: { ownerId: game.id, url: eulaUrl } });
-    if (existingAgreement) {
+    await game.reload({ include: { all: true } });
+    if (game.agreements?.some(agreement => agreement.urls[locale] === eulaUrl)) {
       return { code: HttpCode.CONFLICT, message: 'The game already contains an EULA with this url' };
     }
 
-    const agreement = await game.createAgreementEntry({ url: eulaUrl });
+    const agreement = await game.createAgreementEntry({});
+    await agreement.addUrl(eulaUrl, locale);
     return { code: HttpCode.OK, payload: agreement.toHttpModel() };
   }
 
@@ -284,12 +286,10 @@ export class GameService {
         game.agreements?.map(agreementData => ({
           id: agreementData.id.toString(),
           titles: agreementData.names,
-          url: agreementData.url,
+          urls: agreementData.urls,
         })) ?? [],
       branchId: branch.bdsBranchId,
       titleId: game.bdsTitleId,
-      // TODO: Are Prerequisites needed?
-      // prerequisites: [],
       versions:
         game.builds?.map(branchData => ({
           buildId: branchData.bdsBuildId,

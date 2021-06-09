@@ -42,6 +42,7 @@ export enum Fields {
   name = 'name',
   description = 'description',
   patchnotes = 'patchnotes',
+  url = 'url',
 }
 
 /**
@@ -74,6 +75,10 @@ export enum Locale {
   vi = 'vi',
   'zh-CN' = 'zh-CN',
   'zh-Hant' = 'zh-Hant',
+}
+
+export function LocaleFromString(input: string): Locale | undefined {
+  return Locale[input as keyof typeof Locale];
 }
 
 export type LocalizedFieldCreationAttributes = Optional<LocalizedFieldAttributes, 'id'>;

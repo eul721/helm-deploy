@@ -5,7 +5,7 @@ import { BranchModel } from '../models/db/branch';
 import { BuildModel } from '../models/db/build';
 import { DivisionModel } from '../models/db/division';
 import { GameModel } from '../models/db/game';
-import { Locale } from '../models/db/localizedfield';
+import { Locale, LocaleFromString } from '../models/db/localizedfield';
 import { UserModel } from '../models/db/user';
 import { HttpCode } from '../models/http/httpcode';
 import { BranchService } from '../services/branch';
@@ -29,6 +29,16 @@ export function generateHelpText(actions: DebugAction[]): string[] {
 
 export const actions: DebugAction[] = [
   {
+    command: 'help',
+    params: [],
+    action: async (_params: string[]) => {
+      return {
+        code: 200,
+        message: generateHelpText(actions),
+      };
+    },
+  },
+  {
     command: 'users list',
     params: [],
     action: async (_params: string[]) => {
@@ -36,16 +46,6 @@ export const actions: DebugAction[] = [
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),
-      };
-    },
-  },
-  {
-    command: 'help',
-    params: [],
-    action: async (_params: string[]) => {
-      return {
-        code: 200,
-        message: generateHelpText(actions),
       };
     },
   },
@@ -84,7 +84,7 @@ export const actions: DebugAction[] = [
   },
   {
     command: 'title set contentful id',
-    params: ['GAME_PK', 'CONTENTFULL_ID'],
+    params: ['GAME_PK', 'CONTENTFUL_ID'],
     action: async (params: string[]) => {
       const context = new ResourceContext(Number.parseInt(params[0], 10));
       return toDebuggerResponse(await GameService.setContentfulId(context, params[1]));
@@ -92,13 +92,15 @@ export const actions: DebugAction[] = [
   },
   {
     command: 'title add name',
-    params: ['GAME_PK', 'NAME'],
+    params: ['GAME_PK', 'NAME', '[locale="en"]'],
     action: async (params: string[]) => {
-      const game = await GameModel.findOne({ where: { id: params[0] } });
+      const [gameId, name, localeStr = 'en'] = params;
+      const game = await GameModel.findOne({ where: { id: gameId } });
       if (!game) {
         return { code: HttpCode.NOT_FOUND, message: 'Failed to find the game' };
       }
-      await game.addName(params[1], Locale.en);
+      const locale = LocaleFromString(localeStr) ?? Locale.en;
+      await game.addName(name, locale);
       return {
         code: 200,
         message: 'Added',
@@ -109,7 +111,7 @@ export const actions: DebugAction[] = [
     command: 'title eula list',
     params: ['GAME_PK'],
     action: async (params: string[]) => {
-      const gameId = params[0];
+      const [gameId] = params;
       debug('Listing eulas for game=%s', gameId);
       const agreements = await AgreementModel.findAll({
         where: { ownerId: gameId },
@@ -120,31 +122,106 @@ export const actions: DebugAction[] = [
       }
       return {
         code: 200,
-        message: agreements.map(agreement => `name: "${agreement.names[Locale.en]}" url: ${agreement.url}`) ?? [],
+        message: [
+          `Agreements for titleId=${gameId}`,
+          ...(agreements.map(
+            agreement =>
+              `agreementId=${agreement.id} names: "${JSON.stringify(agreement.names)}" urls: ${JSON.stringify(
+                agreement.urls
+              )}`
+          ) ?? []),
+        ],
       };
     },
   },
   {
     command: 'title eula add',
-    params: ['GAME_PK', '"English EULA Title"', 'URL'],
+    params: ['GAME_PK', '"EULA Title"', 'URL', '[locale="en"]'],
     action: async (params: string[]) => {
-      const [gameId, title, url] = params;
+      const [gameId, title, url, localeStr = 'en'] = params;
       debug('Adding EULA to title id=%s name="%s" url=%s', gameId, title, url);
       // Add a EULA for a game
       const game = await GameModel.findByPk(gameId);
       if (!game) {
         return { code: 404, message: `No title found with pk=${gameId}` };
       }
-      const newAgreement = await game.createAgreementEntry({
-        url,
-      });
-      await newAgreement.addName(title, Locale.en);
+      const locale = LocaleFromString(localeStr) || Locale.en;
+      const newAgreement = await game.createAgreementEntry({});
+      await newAgreement.addName(title, locale);
+      await newAgreement.addUrl(url, locale);
       await newAgreement.reload({ include: { all: true } });
       return {
         code: 201,
-        message: `Added agreementId=${newAgreement.id} with name="${newAgreement.names[Locale.en]}" and url=${
-          newAgreement.url
-        } to gameId=${gameId}`,
+        message: `Added agreementId=${newAgreement.id} with name="${newAgreement.names[locale]}" and url=${newAgreement.urls[locale]} to gameId=${gameId}`,
+      };
+    },
+  },
+  {
+    command: 'title eula update',
+    params: ['GAME_PK', 'AGREEMENT_PK', '"EULA Title"', 'URL', '[locale="en"]'],
+    action: async (params: string[]) => {
+      const [gameId, agreementId, title, url, localeStr = 'en'] = params;
+      const game = await GameModel.findByPk(gameId, { include: { all: true } });
+      if (!game) {
+        return {
+          code: 404,
+          message: `No title found with pk=${gameId}`,
+        };
+      }
+      const agreement = await AgreementModel.findByPk(agreementId, { include: { all: true } });
+      if (!agreement) {
+        return {
+          code: 404,
+          message: `No agreement found with pk=${agreementId}`,
+        };
+      }
+      if (!game.agreements?.some(ag => ag.id === agreement.id)) {
+        return {
+          code: 400,
+          message: `Title=${game.id} does not own agreement=${agreement.id}`,
+        };
+      }
+      const locale = LocaleFromString(localeStr) ?? Locale.en;
+      await agreement.addName(title, locale);
+      await agreement.addUrl(url, locale);
+      await agreement.reload({ include: { all: true } });
+      return {
+        code: 200,
+        message: `Updated titleId=${gameId} agreementId=${agreement.id} title=${agreement.names[locale]} url=${agreement.urls[locale]} locale=${locale}`,
+      };
+    },
+  },
+  {
+    command: 'title eula remove',
+    params: ['GAME_PK', 'AGREEMENT_ID'],
+    action: async (params: string[]) => {
+      const [gameId, agreementId] = params;
+      const game = await GameModel.findByPk(gameId, { include: { all: true } });
+      if (!game) {
+        return {
+          code: 404,
+          message: `Game with id=${gameId} not found`,
+        };
+      }
+      const agreement = await AgreementModel.findByPk(agreementId);
+      if (!agreement) {
+        return {
+          code: 404,
+          message: `Could not find agreementId=${agreementId}`,
+        };
+      }
+      if (!game.agreements?.some(ag => ag.id === agreement.id)) {
+        return {
+          code: 400,
+          message: `titleId=${game.id} does not contain agreementId=${agreement.id}`,
+        };
+      }
+      await game.removeAgreement(agreement);
+      await agreement.destroy();
+
+      return {
+        code: 200,
+        message: `Removed agreementId=${agreementId} from titleId=${gameId}`,
       };
     },
   },

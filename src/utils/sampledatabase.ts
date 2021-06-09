@@ -305,15 +305,15 @@ export class SampleDatabase {
     await this.branchRiseAndFall.addBuild(riseAndFallBuild1);
 
     // Agreements
-    const xcomAgreement1 = await this.gameXcom2.createAgreementEntry({
-      url: 'http://example.com/eula',
-    });
+    const xcomAgreement1 = await this.gameXcom2.createAgreementEntry({});
+    await xcomAgreement1.addUrl('http://example.com/eula', Locale.en);
+    await xcomAgreement1.addUrl('http://example.com/eula/es', Locale.es);
     await xcomAgreement1.addName('Example Agreement One', Locale.en);
     await xcomAgreement1.addName('Example Agreement Uno', Locale.es);
 
-    const civ6Agreement = await this.gameCiv6.createAgreementEntry({
-      url: 'http://civ6.com/eula',
-    });
+    const civ6Agreement = await this.gameCiv6.createAgreementEntry({});
+    await civ6Agreement.addUrl('http://civ6.com/eula/en', Locale.en);
+    await civ6Agreement.addUrl('http://civ6.com/eula/es', Locale.es);
     await civ6Agreement.addName('Example Agreement One', Locale.en);
     await civ6Agreement.addName('Example Agreement Uno', Locale.es);
   }

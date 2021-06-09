@@ -105,7 +105,7 @@ export class LocalizableModel<T1, T2> extends Model<T1, T2> {
       });
     }
     return this.createField({
-      field: Fields.name,
+      field,
       locale,
       value,
     });
