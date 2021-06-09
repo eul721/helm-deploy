@@ -186,13 +186,13 @@ export const actions: DebugAction[] = [
   },
   {
     command: 'branch set build',
-    params: ['BRANCH_PK', 'BUILD_PK'],
+    params: ['BDS_BRANCH', 'BDS_BUILD'],
     action: async (params: string[]) => {
-      const branch = await BranchModel.findOne({ where: { id: params[0] } });
-      if (!branch) {
-        return { code: 404, message: 'Failed to find branch to modify' };
-      }
-      const response = await BranchService.onModified(undefined, branch.bdsBranchId, Number.parseInt(params[0], 10));
+      const response = await BranchService.onModified(
+        undefined,
+        Number.parseInt(params[0], 10),
+        Number.parseInt(params[1], 10)
+      );
       return { code: response.code, message: response.code === 200 ? 'OK' : 'Failed' };
     },
   },
