@@ -27,7 +27,7 @@ if (!envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
  * events in T2GP Publisher Services
  *
  * @apiUse WebhookSecretMiddleware
- * @apiUse WebhookValidate
+ * @apiUse WebhookValidateMiddleware
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
 
@@ -61,7 +61,7 @@ if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
  * can be performed by the given user
  *
  * @apiUse WebhookSecretMiddleware
- * @apiUse WebhookValidate
+ * @apiUse WebhookValidateMiddleware
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  */

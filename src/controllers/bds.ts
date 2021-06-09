@@ -70,7 +70,6 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
- * @apiUse AuthorizeBdsReadMiddleware
  */
 bdsApiRouter.get(`/titles/:${PathParam.bdsTitle}`, async (req, res) => {
   await bdsGet(req, res);
@@ -85,7 +84,6 @@ bdsApiRouter.get(`/titles/:${PathParam.bdsTitle}`, async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
- * @apiUse AuthorizeBdsReadMiddleware
  */
 bdsApiRouter.get(`/:${PathParam.bdsTitle}/branches*`, async (req, res) => {
   await bdsGet(req, res);
@@ -100,7 +98,6 @@ bdsApiRouter.get(`/:${PathParam.bdsTitle}/branches*`, async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
- * @apiUse AuthorizeBdsReadMiddleware
  */
 bdsApiRouter.get(`/:${PathParam.bdsTitle}/builds*`, async (req, res) => {
   await bdsGet(req, res);
@@ -115,7 +112,6 @@ bdsApiRouter.get(`/:${PathParam.bdsTitle}/builds*`, async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
- * @apiUse AuthorizeBdsReadMiddleware
  */
 bdsApiRouter.get(`/:${PathParam.bdsTitle}/depots*`, async (req, res) => {
   await bdsGet(req, res);
@@ -130,26 +126,8 @@ bdsApiRouter.get(`/:${PathParam.bdsTitle}/depots*`, async (req, res) => {
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
- * @apiUse AuthorizeBdsReadMiddleware
  */
 bdsApiRouter.get(`/:${PathParam.bdsTitle}/launchOptions*`, async (req, res) => {
   // TODO we might be removing this enpoint entirely as a matchmaker remnant
   await bdsGet(req, res);
 });
-
-/**
-// TODO we probably don't need this enpoint entirely, otherwise need to decide on what permission is needs - t2-admin?
- * @api {GET} bds/redistributables* Get redistributables
- * @apiName GetBdsRedistributables
- * @apiGroup BDS
- * @apiVersion  0.0.1
- * @apiDescription Get redistributables from the BDS
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePlayerMiddleware
- * @apiUse AuthorizeBdsReadMiddleware
- 
-bdsApiRouter.get('/redistributables*', async (req, res) => {
-  await bdsGet(req, res);
-});
-*/
