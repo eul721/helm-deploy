@@ -4,7 +4,7 @@ import { info, warn } from './logger';
 import { initializeDB } from './models/db/database';
 import { SampleDatabase } from './utils/sampledatabase';
 
-async function reinitializeDummyData() {
+export async function reinitializeDummyData() {
   info('====================================\n       Generating Test Data\n====================================');
   const dbExample = new SampleDatabase();
   dbExample.initAll();

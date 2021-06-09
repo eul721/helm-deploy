@@ -123,6 +123,7 @@ export class BranchModel
       name: this.getNameLoaded(locale),
       passwordProtected: this.password !== null,
       ownerId: this.ownerId,
+      bdsBranchId: this.bdsBranchId,
     };
   }
 }

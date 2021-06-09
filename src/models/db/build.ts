@@ -96,6 +96,7 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
       id: this.id,
       patchNotes: this.getNotesLoaded(locale),
       ownerId: this.ownerId,
+      bdsBuildId: this.bdsBuildId,
     };
   }
 }

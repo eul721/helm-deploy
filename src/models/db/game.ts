@@ -188,6 +188,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
       id: this.id,
       contentfulId: this.contentfulId,
       divisionId: this.ownerId,
+      bdsTitleId: this.bdsTitleId,
     };
   }
 }

@@ -10,4 +10,7 @@ export interface GameDescription {
 
   /** Owning division id */
   divisionId: number;
+
+  /** Game bds id */
+  bdsTitleId: number;
 }

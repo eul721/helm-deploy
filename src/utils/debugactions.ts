@@ -1,4 +1,4 @@
-import { debug } from '../logger';
+import { debug, info } from '../logger';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { AgreementModel } from '../models/db/agreement';
 import { BranchModel } from '../models/db/branch';
@@ -14,6 +14,8 @@ import { GameService } from '../services/game';
 import { TitleService } from '../services/title';
 import { SampleDatabase } from './sampledatabase';
 import { DebuggerResponse, toDebuggerResponse } from './debuggerresponse';
+import { getDBInstance } from '../models/db/database';
+import { reinitializeDummyData } from '..';
 
 export interface DebugAction {
   command: string;
@@ -210,6 +212,23 @@ export const actions: DebugAction[] = [
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),
+      };
+    },
+  },
+  {
+    command: 'drop database',
+    params: [],
+    action: async (_params: string[]) => {
+      info('About to drop and redo db');
+      const sq = await getDBInstance().sync({ force: true, match: /_dev$/ });
+      info('Sync done');
+      await sq.authenticate();
+      info('Auth done');
+      await reinitializeDummyData();
+      info('Dumme data done');
+      return {
+        code: 200,
+        message: 'DONE',
       };
     },
   },
