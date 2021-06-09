@@ -64,11 +64,11 @@ export class SampleDatabase {
 
   public static readonly creationData = {
     gameContentfulIds: [
-      '6sAfVxoGuShx9DV38DcFxI',
-      '5Apf8DiUW6dVyqmwjytKzf',
-      '6MjdXYJ6dk2kxSXh0C0H60',
-      '5r3Loln4BEezgXtidiCxHm',
-      'tz1zm9ktk7RtSTH6STkhG',
+      'fakeid_6sAfVxoGuShx9DV38DcFxI',
+      'fakeid_5Apf8DiUW6dVyqmwjytKzf',
+      'fakeid_6MjdXYJ6dk2kxSXh0C0H60',
+      'fakeid_5r3Loln4BEezgXtidiCxHm',
+      'fakeid_tz1zm9ktk7RtSTH6STkhG',
     ],
     debugAdminEmail: 'debug@admin',
     divisionName: 't2',
