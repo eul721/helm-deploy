@@ -12,10 +12,9 @@ import { BranchService } from '../services/branch';
 import { BuildService } from '../services/build';
 import { GameService } from '../services/game';
 import { TitleService } from '../services/title';
-import { SampleDatabase } from './sampledatabase';
+import { reinitializeDummyData, SampleDatabase } from './sampledatabase';
 import { DebuggerResponse, toDebuggerResponse } from './debuggerresponse';
 import { getDBInstance } from '../models/db/database';
-import { reinitializeDummyData } from '..';
 
 export interface DebugAction {
   command: string;

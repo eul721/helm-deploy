@@ -2,14 +2,7 @@ import { app } from './app';
 import { envConfig } from './configuration/envconfig';
 import { info, warn } from './logger';
 import { initializeDB } from './models/db/database';
-import { SampleDatabase } from './utils/sampledatabase';
-
-export async function reinitializeDummyData() {
-  info('====================================\n       Generating Test Data\n====================================');
-  const dbExample = new SampleDatabase();
-  dbExample.initAll();
-  info('====================================\n        Finished Test Data\n====================================');
-}
+import { reinitializeDummyData } from './utils/sampledatabase';
 
 initializeDB()
   .then(() => {

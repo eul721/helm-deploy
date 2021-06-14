@@ -12,7 +12,6 @@ import { AgreementDescription } from '../models/http/rbac/agreementdescription';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
-import { envConfig } from '../configuration/envconfig';
 import { GameDescription } from '../models/http/rbac/gamedescription';
 
 export class GameService {
@@ -54,18 +53,11 @@ export class GameService {
       return { code: response.code };
     }
 
-    let playerOwnedGames: GameModel[] = [];
-    if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
-      playerOwnedGames = await GameModel.findAll({
-        include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
-      });
-    } else {
-      const ownedTitles: string[] = response.payload ?? [];
-      playerOwnedGames = await GameModel.findAll({
-        include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
-        where: { contentfulId: { [Op.in]: ownedTitles } },
-      });
-    }
+    const ownedTitles: string[] = response.payload ?? [];
+    const playerOwnedGames = await GameModel.findAll({
+      include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
+      where: { contentfulId: { [Op.in]: ownedTitles } },
+    });
 
     const gameModelsJson: { [key: string]: DownloadData } = {};
 
