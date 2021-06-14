@@ -11,7 +11,7 @@ export const endpointServiceCallWrapper = (
     const response = await handler(req, res);
     sendServiceResponse(response, res);
   } catch (err) {
-    error(`Encountered error in ${handler.name}, error: ${err}`);
+    error(`Encountered error in endpoint, error: ${err}`);
     sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Exception while processing the request');
   }
 };

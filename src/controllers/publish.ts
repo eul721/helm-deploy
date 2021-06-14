@@ -5,11 +5,11 @@ import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublishe
 import { getAuthorizeForResourceMiddleware } from '../middleware/authorizeresource';
 import { AdminRequirements } from '../models/auth/adminrequirements';
 import { ResourceContext } from '../models/auth/resourcecontext';
+import { EulaEntry } from '../models/http/eulaentry';
 import { ModifyBranchRequest } from '../models/http/modifybranchrequest';
 import { ModifyTitleRequest } from '../models/http/modifytitlerequest';
 import { BranchService } from '../services/branch';
 import { GameService } from '../services/game';
-import { getQueryParamValue } from '../utils/http';
 import { endpointServiceCallWrapper } from '../utils/service';
 
 export const publishApiRouter = Router();
@@ -97,7 +97,7 @@ publishApiRouter.get(
 );
 
 /**
- * @api {POST} /api/publisher/games/:gameId/eulas/create Create Eula
+ * @api {POST} /api/publisher/games/:gameId/eulas Create Eula
  * @apiName CreateEula
  * @apiGroup Publisher
  * @apiVersion  0.0.1
@@ -110,16 +110,15 @@ publishApiRouter.get(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.post(
-  `/${Segment.games}/eulas/create`,
+  `/${Segment.games}/eulas`,
   getAuthorizeForResourceMiddleware('create', AdminRequirements.ReleasedGame),
-  endpointServiceCallWrapper(async (req, res) => {
-    const url = getQueryParamValue(req, 'url');
-    return GameService.createEula(ResourceContext.get(res), url);
+  endpointServiceCallWrapper(async (_req, res) => {
+    return GameService.createEula(ResourceContext.get(res));
   })
 );
 
 /**
- * @api {Delete} /api/publisher/games/:gameId/eulas/:eulaId/delete Remove Eula
+ * @api {Delete} /api/publisher/games/:gameId/eulas/:eulaId Remove Eula
  * @apiName RemoveEula
  * @apiGroup Publisher
  * @apiVersion  0.0.1
@@ -130,10 +129,31 @@ publishApiRouter.post(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.delete(
-  `/${Segment.games}/${Segment.eula}/delete`,
+  `/${Segment.games}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('delete', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
     const eulaId = Number.parseInt(req.params[PathParam.eulaId], 10);
     return GameService.removeEula(ResourceContext.get(res), eulaId);
+  })
+);
+
+/**
+ * @api {Patch} /api/publisher/games/:gameId/eulas/:eulaId Modify Eula
+ * @apiName ModifyEula
+ * @apiGroup Publisher
+ * @apiVersion  0.0.1
+ * @apiDescription Modify Eula
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+ * @apiUse AuthorizeResourceAccessMiddleware
+ */
+publishApiRouter.patch(
+  `/${Segment.games}/${Segment.eula}`,
+  getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
+  endpointServiceCallWrapper(async (req, res) => {
+    const eulaId = Number.parseInt(req.params[PathParam.eulaId], 10);
+    const body = req.body as EulaEntry[];
+    return GameService.updateEula(ResourceContext.get(res), eulaId, body);
   })
 );

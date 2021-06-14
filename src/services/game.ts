@@ -14,6 +14,9 @@ import { LicensingService } from './licensing';
 import { envConfig } from '../configuration/envconfig';
 import { GameDescription } from '../models/http/rbac/gamedescription';
 import { ModifyTitleRequest } from '../models/http/modifytitlerequest';
+import { EulaEntry } from '../models/http/eulaentry';
+import { debug } from '../logger';
+import { EulaResults } from '../models/http/eularesults';
 
 export class GameService {
   /**
@@ -157,7 +160,7 @@ export class GameService {
 
     if (request.defaultBranchBdsId === '-1' || request.defaultBranchPsId === '-1') {
       game.defaultBranch = null;
-    } else if (request.defaultBranchBdsId !== null) {
+    } else if (request.defaultBranchBdsId) {
       const branch = await BranchModel.findOne({ where: { bdsBranchId: request.defaultBranchBdsId } });
       if (!branch) {
         return {
@@ -166,7 +169,7 @@ export class GameService {
         };
       }
       game.defaultBranch = branch.id;
-    } else if (request.defaultBranchPsId !== null) {
+    } else if (request.defaultBranchPsId) {
       const branch = await BranchModel.findOne({ where: { id: request.defaultBranchPsId } });
       if (!branch) {
         return {
@@ -179,7 +182,7 @@ export class GameService {
 
     await game.save();
 
-    return { code: HttpCode.BAD_REQUEST, payload: game.toHttpModel() };
+    return { code: HttpCode.OK, payload: game.toHttpModel() };
   }
 
   /**
@@ -188,27 +191,13 @@ export class GameService {
    * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to assign
    */
-  public static async createEula(
-    resourceContext: ResourceContext,
-    eulaUrl?: string,
-    locale = Locale.en
-  ): Promise<ServiceResponse<AgreementDescription>> {
-    if (!eulaUrl) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Missing url query param' };
-    }
-
+  public static async createEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
-    await game.reload({ include: { all: true } });
-    if (game.agreements?.some(agreement => agreement.urls[locale] === eulaUrl)) {
-      return { code: HttpCode.CONFLICT, message: 'The game already contains an EULA with this url' };
-    }
-
     const agreement = await game.createAgreementEntry({});
-    await agreement.addUrl(eulaUrl, locale);
     return { code: HttpCode.OK, payload: agreement.toHttpModel() };
   }
 
@@ -218,7 +207,7 @@ export class GameService {
    * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to unassign
    */
-  public static async removeEula(resourceContext: ResourceContext, eulaId: number): Promise<ServiceResponse<void>> {
+  public static async removeEula(resourceContext: ResourceContext, eulaId: number): Promise<ServiceResponse> {
     if (Number.isNaN(eulaId)) {
       return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a number' };
     }
@@ -244,12 +233,68 @@ export class GameService {
   }
 
   /**
+   * Unassigns an EULA to a game
+   *
+   * @param resourceContext information about the requested resource
+   * @param eulaId id of the eula to modify
+   * @param eulaEntries description of entries to update
+   */
+  public static async updateEula(
+    resourceContext: ResourceContext,
+    eulaId: number,
+    eulaEntries: EulaEntry[]
+  ): Promise<ServiceResponse> {
+    debug(`updateEula with body ${JSON.stringify(eulaEntries)}`);
+    if (Number.isNaN(eulaId)) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a number' };
+    }
+
+    const game = await resourceContext.fetchGameModel();
+    if (!game) {
+      return malformedRequestPastValidation();
+    }
+
+    const eula = await AgreementModel.findOne({ where: { id: eulaId }, include: { all: true } });
+    if (!game || !eula) {
+      return { code: HttpCode.NOT_FOUND };
+    }
+
+    if (eula.ownerId !== game.id) {
+      return { code: HttpCode.BAD_REQUEST, message: 'The game does not contains this EULA' };
+    }
+
+    const promises: Promise<unknown>[] = [];
+    if (eulaEntries.some(entry => !entry.locale)) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Request contains an invalid locale' };
+    }
+
+    eulaEntries.forEach(entry => {
+      debug(`updateEula locale ${entry.locale})`);
+      if (!entry.name) {
+        promises.push(eula.removeName(entry.locale));
+      } else {
+        promises.push(eula.addName(entry.name, entry.locale));
+      }
+
+      if (!entry.url) {
+        promises.push(eula.removeUrl(entry.locale));
+      } else {
+        promises.push(eula.addUrl(entry.url, entry.locale));
+      }
+    });
+
+    await Promise.all(promises);
+
+    return { code: HttpCode.OK };
+  }
+
+  /**
    * Get EULA of a game
    *
    * @param resourceContext information about the requested resource
    *
    */
-  public static async getEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription[]>> {
+  public static async getEula(resourceContext: ResourceContext): Promise<ServiceResponse<EulaResults[]>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
@@ -258,7 +303,21 @@ export class GameService {
       where: { ownerId: game.id },
       include: { all: true },
     });
-    return { code: HttpCode.OK, payload: agreements.map(item => item.toHttpModel()) };
+
+    let payload: EulaResults[] = [];
+    agreements.forEach(item => {
+      const result: EulaResults = { id: item.id, entries: [] };
+      for (let loc in Locale) {
+        result.entries.push({
+          locale: loc as Locale,
+          name: item.getNameLoaded(loc as Locale),
+          url: item.getUrlLoaded(loc as Locale),
+        });
+      }
+      payload.push(result);
+    });
+
+    return { code: HttpCode.OK, payload };
   }
 
   private static async constructGameDownloadModel(

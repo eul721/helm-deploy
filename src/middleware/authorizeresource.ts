@@ -22,13 +22,13 @@ export function createResourceContext(req: Request, res: Response): ResourceCont
   let resourceContext: Maybe<ResourceContext> = null;
   if (getHeaderParamValue(req, 'useBdsIds')) {
     resourceContext = new ResourceContext(
-      Number.isNaN(gameId) ? undefined : { bdsTitleId: gameId },
-      Number.isNaN(branchId) ? undefined : { bdsBranchId: branchId }
+      !gameId || Number.isNaN(gameId) ? undefined : { bdsTitleId: gameId },
+      !branchId || Number.isNaN(branchId) ? undefined : { bdsBranchId: branchId }
     );
   } else {
     resourceContext = new ResourceContext(
-      Number.isNaN(gameId) ? undefined : { id: gameId },
-      Number.isNaN(branchId) ? undefined : { id: branchId }
+      !gameId || Number.isNaN(gameId) ? undefined : { id: gameId },
+      !branchId || Number.isNaN(branchId) ? undefined : { id: branchId }
     );
   }
   res.locals.resourceContext = resourceContext;
@@ -86,7 +86,9 @@ async function resourceAccessAuth(
   const hasPermission = await RbacService.hasResourcePermission(userId, { id: game.id }, requiredRights);
   if (hasPermission.code !== HttpCode.OK) {
     if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
-      info('resourceAccessAuth would have rejected the request here if rbac check was not disabled');
+      info(
+        `resourceAccessAuth would have rejected the request here if rbac check was not disabled, code: ${hasPermission.code}, user ${userId}, resource ${game.id}, rights: ${requiredRights}`
+      );
     } else {
       sendMessageResponse(res, HttpCode.FORBIDDEN, 'User does not have the required permissions');
       return;
