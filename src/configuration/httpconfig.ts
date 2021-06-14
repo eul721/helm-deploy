@@ -1,4 +1,4 @@
-export type HeaderParam = 'authorization' | 'webhookToken' | 'deviceId' | 'deviceName';
+export type HeaderParam = 'authorization' | 'webhookToken' | 'deviceId' | 'deviceName' | 'useBdsIds';
 
 export type QueryParam = 'userName' | 'roleName' | 'email' | 'password' | 'divisionId' | 'groupName' | 'url' | 'dnaId';
 
@@ -33,6 +33,7 @@ export const headerParamLookup: { [K in HeaderParam]: string } = {
   webhookToken: 'x-t2-shared-secret',
   deviceId: 'x-t2-device-id',
   deviceName: 'x-t2-device-name',
+  useBdsIds: 'x-bds-ids',
 };
 
 export const authBearerPrefix = 'Bearer '; // prefix of the authorization header value

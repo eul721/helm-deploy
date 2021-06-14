@@ -12,10 +12,9 @@ import { BranchService } from '../services/branch';
 import { BuildService } from '../services/build';
 import { GameService } from '../services/game';
 import { TitleService } from '../services/title';
-import { SampleDatabase } from './sampledatabase';
+import { reinitializeDummyData, SampleDatabase } from './sampledatabase';
 import { DebuggerResponse, toDebuggerResponse } from './debuggerresponse';
 import { getDBInstance } from '../models/db/database';
-import { reinitializeDummyData } from '..';
 
 export interface DebugAction {
   command: string;
@@ -31,7 +30,7 @@ export const actions: DebugAction[] = [
   {
     command: 'help',
     params: [],
-    action: async (_params: string[]) => {
+    action: async () => {
       return {
         code: 200,
         message: generateHelpText(actions),
@@ -41,7 +40,7 @@ export const actions: DebugAction[] = [
   {
     command: 'users list',
     params: [],
-    action: async (_params: string[]) => {
+    action: async () => {
       const items = (await UserModel.findAll()).map(item => item.toHttpModel());
       return {
         code: 200,
@@ -66,7 +65,7 @@ export const actions: DebugAction[] = [
   {
     command: 'title list',
     params: [],
-    action: async (_params: string[]) => {
+    action: async () => {
       const items = (await GameModel.findAll()).map(item => item.toHttpModel());
       return {
         code: 200,
@@ -78,16 +77,16 @@ export const actions: DebugAction[] = [
     command: 'title set default branch',
     params: ['GAME_PK', 'BRANCH_PK'],
     action: async (params: string[]) => {
-      const context = new ResourceContext(Number.parseInt(params[0], 10), Number.parseInt(params[1], 10));
-      return toDebuggerResponse(await GameService.setMainBranch(context));
+      const context = new ResourceContext({ id: Number.parseInt(params[0], 10) });
+      return toDebuggerResponse(await GameService.modifyGame(context, { defaultBranchPsId: params[1] }));
     },
   },
   {
     command: 'title set contentful id',
     params: ['GAME_PK', 'CONTENTFUL_ID'],
     action: async (params: string[]) => {
-      const context = new ResourceContext(Number.parseInt(params[0], 10));
-      return toDebuggerResponse(await GameService.setContentfulId(context, params[1]));
+      const context = new ResourceContext({ id: Number.parseInt(params[0], 10) });
+      return toDebuggerResponse(await GameService.modifyGame(context, { contentfulId: params[1] }));
     },
   },
   {
@@ -236,7 +235,7 @@ export const actions: DebugAction[] = [
   {
     command: 'branch list',
     params: [],
-    action: async (_params: string[]) => {
+    action: async () => {
       const items = (await BranchModel.findAll()).map(item => item.toHttpModel(Locale.en));
       return {
         code: 200,
@@ -284,7 +283,7 @@ export const actions: DebugAction[] = [
   {
     command: 'build list',
     params: [],
-    action: async (_params: string[]) => {
+    action: async () => {
       const items = (await BuildModel.findAll()).map(item => item.toHttpModel(Locale.en));
       return {
         code: 200,
@@ -295,7 +294,7 @@ export const actions: DebugAction[] = [
   {
     command: 'drop database',
     params: [],
-    action: async (_params: string[]) => {
+    action: async () => {
       info('About to drop and redo db');
       const sq = await getDBInstance().sync({ force: true, match: /_dev$/ });
       info('Sync done');

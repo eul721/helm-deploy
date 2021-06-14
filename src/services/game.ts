@@ -4,7 +4,6 @@ import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import { BranchDescription } from '../models/http/branchdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
-import { info } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { Locale } from '../models/db/localizedfield';
 import { AgreementModel } from '../models/db/agreement';
@@ -14,6 +13,7 @@ import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
 import { envConfig } from '../configuration/envconfig';
 import { GameDescription } from '../models/http/rbac/gamedescription';
+import { ModifyTitleRequest } from '../models/http/modifytitlerequest';
 
 export class GameService {
   /**
@@ -71,9 +71,10 @@ export class GameService {
 
     playerOwnedGames.forEach(gameModel => {
       const [publicBranch] = gameModel.branches?.filter(branch => branch.id === gameModel.defaultBranch) ?? [];
-      if (!publicBranch) {
+      if (!publicBranch || !gameModel.contentfulId) {
         return;
       }
+
       gameModelsJson[gameModel.contentfulId] = GameService.transformGameModelToDownloadModel(
         gameModel,
         publicBranch,
@@ -124,55 +125,61 @@ export class GameService {
   }
 
   /**
-   * Returns all branches of the specified game
-   * This can process both player and publisher requests
+   * Sets a branch to be the main/default one
    *
    * @param resourceContext information about the requested resource
-   * @param contentfulId contentful id to set for the game
+   * @param request json model with information about what to change
    */
-  public static async setContentfulId(
+  public static async modifyGame(
     resourceContext: ResourceContext,
-    contentfulId: string
-  ): Promise<ServiceResponse<GameModel>> {
+    request: ModifyTitleRequest
+  ): Promise<ServiceResponse<GameDescription>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
-    const gameWithOverlappingContentfulId = await GameModel.findOne({ where: { contentfulId } });
-    if (gameWithOverlappingContentfulId) {
-      return {
-        code: HttpCode.CONFLICT,
-        message: `Contentful id ${contentfulId} is already assigned to game ${gameWithOverlappingContentfulId.id}`,
-      };
+    if (request.contentfulId !== undefined) {
+      // do not check overlaps when clearing the id
+      if (request.contentfulId !== '' && request.contentfulId !== null) {
+        const gameWithOverlappingContentfulId = await GameModel.findOne({
+          where: { contentfulId: request.contentfulId },
+        });
+        if (gameWithOverlappingContentfulId) {
+          return {
+            code: HttpCode.CONFLICT,
+            message: `Contentful id ${request.contentfulId} is already assigned to game ${gameWithOverlappingContentfulId.id}`,
+          };
+        }
+      }
+      game.contentfulId = request.contentfulId;
     }
 
-    game.contentfulId = contentfulId;
-    await game.save();
-
-    info(`Set contentful id ${contentfulId} on game id ${game.id}`);
-
-    return { code: HttpCode.OK, payload: game };
-  }
-
-  /**
-   * Sets a branch to be the main/default one
-   *
-   * @param resourceContext information about the requested resource
-   */
-  public static async setMainBranch(resourceContext: ResourceContext): Promise<ServiceResponse> {
-    const game = await resourceContext.fetchGameModel();
-    const branch = await resourceContext.fetchBranchModel();
-
-    if (!game || !branch) {
-      return malformedRequestPastValidation();
+    if (request.defaultBranchBdsId === '-1' || request.defaultBranchPsId === '-1') {
+      game.defaultBranch = null;
+    } else if (request.defaultBranchBdsId !== null) {
+      const branch = await BranchModel.findOne({ where: { bdsBranchId: request.defaultBranchBdsId } });
+      if (!branch) {
+        return {
+          code: HttpCode.NOT_FOUND,
+          message: `Failed to find branch with bds id ${request.defaultBranchBdsId}, no data was modified`,
+        };
+      }
+      game.defaultBranch = branch.id;
+    } else if (request.defaultBranchPsId !== null) {
+      const branch = await BranchModel.findOne({ where: { id: request.defaultBranchPsId } });
+      if (!branch) {
+        return {
+          code: HttpCode.NOT_FOUND,
+          message: `Failed to find branch with bds id ${request.defaultBranchBdsId}, no data was modified`,
+        };
+      }
+      game.defaultBranch = branch.id;
     }
-    game.defaultBranch = branch.id;
+
     await game.save();
 
-    info(`Set default branch id ${branch.id} on game id ${game.id}`);
-
-    return { code: HttpCode.OK };
+    return { code: HttpCode.BAD_REQUEST, payload: game.toHttpModel() };
   }
 
   /**

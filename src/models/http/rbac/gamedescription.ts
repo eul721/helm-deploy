@@ -6,11 +6,14 @@ export interface GameDescription {
   id: number;
 
   /** Game id */
-  contentfulId: string;
+  contentfulId: string | null;
 
   /** Owning division id */
   divisionId: number;
 
   /** Game bds id */
   bdsTitleId: number;
+
+  /** Internal PS id of the default branch */
+  defaultBranch: number | null;
 }

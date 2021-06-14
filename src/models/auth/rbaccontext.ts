@@ -20,7 +20,7 @@ export class RbacContext extends ResourceContext {
     gameId?: number,
     permission?: string
   ) {
-    super(gameId);
+    super(gameId ? { id: gameId } : undefined);
     this.divisionId = Number.isNaN(divisionId) ? undefined : divisionId;
     this.groupId = Number.isNaN(groupId) ? undefined : groupId;
     this.roleId = Number.isNaN(roleId) ? undefined : roleId;

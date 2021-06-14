@@ -6,13 +6,6 @@ import { GameContext } from './base/gamecontext';
  * This context is publisher-facing
  */
 export class ResourceContext extends GameContext {
-  constructor(gameId?: number, branchId?: number) {
-    super(
-      gameId && !Number.isNaN(gameId) ? { id: gameId } : undefined,
-      branchId && !Number.isNaN(branchId) ? { id: branchId } : undefined
-    );
-  }
-
   public static get(res: Response): ResourceContext {
     return res.locals.resourceContext as ResourceContext;
   }

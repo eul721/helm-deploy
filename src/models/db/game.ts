@@ -38,8 +38,8 @@ export const GameDef: ModelAttributes = {
 
 export interface GameAttributes {
   bdsTitleId: number;
-  contentfulId: string;
-  defaultBranch: number;
+  contentfulId: string | null;
+  defaultBranch: number | null;
   id: number;
   ownerId: number;
   readonly branches?: BranchModel[];
@@ -57,9 +57,9 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public bdsTitleId!: number;
 
-  public contentfulId!: string;
+  public contentfulId!: string | null;
 
-  public defaultBranch!: number;
+  public defaultBranch!: number | null;
 
   public ownerId!: number;
 
@@ -189,6 +189,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
       contentfulId: this.contentfulId,
       divisionId: this.ownerId,
       bdsTitleId: this.bdsTitleId,
+      defaultBranch: this.defaultBranch,
     };
   }
 }

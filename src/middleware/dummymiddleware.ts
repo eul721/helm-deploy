@@ -30,8 +30,8 @@ export async function dummyAuthorizeForRbacMiddleware(req: Request, res: Respons
 
 export async function dummyAuthorizeResourceMiddleware(req: Request, res: Response, next: NextFunction) {
   const resourceContext = new ResourceContext(
-    Number.parseInt(req.params[PathParam.gameId], 10),
-    Number.parseInt(req.params[PathParam.branchId], 10)
+    { id: Number.parseInt(req.params[PathParam.gameId], 10) },
+    { id: Number.parseInt(req.params[PathParam.branchId], 10) }
   );
   res.locals.resourceContext = resourceContext;
   next();

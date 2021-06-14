@@ -1,4 +1,4 @@
-import { error } from '../logger';
+import { error, info } from '../logger';
 import { BranchModel } from '../models/db/branch';
 import { BuildModel } from '../models/db/build';
 import { DivisionModel } from '../models/db/division';
@@ -317,4 +317,11 @@ export class SampleDatabase {
     await civ6Agreement.addName('Example Agreement One', Locale.en);
     await civ6Agreement.addName('Example Agreement Uno', Locale.es);
   }
+}
+
+export async function reinitializeDummyData() {
+  info('====================================\n       Generating Test Data\n====================================');
+  const dbExample = new SampleDatabase();
+  dbExample.initAll();
+  info('====================================\n        Finished Test Data\n====================================');
 }
