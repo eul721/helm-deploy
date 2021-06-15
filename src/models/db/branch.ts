@@ -11,7 +11,7 @@ import {
   Optional,
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
-import { BranchDescription } from '../http/branchdescription';
+import { BranchDescription } from '../http/resources/branchdescription';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';

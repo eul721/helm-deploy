@@ -1,5 +1,5 @@
 import { PermissionType } from '../../db/permission';
-import { GameDescription } from './gamedescription';
+import { GameDescription } from '../resources/gamedescription';
 
 /**
  * Describes an RBAC role

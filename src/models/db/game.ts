@@ -18,7 +18,7 @@ import { DivisionModel } from './division';
 import { RoleModel } from './role';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
-import { GameDescription } from '../http/rbac/gamedescription';
+import { GameDescription } from '../http/resources/gamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -190,6 +190,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
       divisionId: this.ownerId,
       bdsTitleId: this.bdsTitleId,
       defaultBranch: this.defaultBranch,
+      names: this.names,
     };
   }
 }

@@ -9,7 +9,7 @@ import {
   Optional,
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
-import { BuildDescription } from '../http/builddescription';
+import { BuildDescription } from '../http/resources/builddescription';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
@@ -97,6 +97,8 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
       patchNotes: this.getNotesLoaded(locale),
       ownerId: this.ownerId,
       bdsBuildId: this.bdsBuildId,
+      releaseNotes: this.notes,
+      mandatory: this.mandatory,
     };
   }
 }

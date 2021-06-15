@@ -16,4 +16,7 @@ export interface GameDescription {
 
   /** Internal PS id of the default branch */
   defaultBranch: number | null;
+
+  /** Localized name entries */
+  names: Record<string, string>;
 }

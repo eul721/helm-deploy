@@ -5,9 +5,9 @@ import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublishe
 import { getAuthorizeForResourceMiddleware } from '../middleware/authorizeresource';
 import { AdminRequirements } from '../models/auth/adminrequirements';
 import { ResourceContext } from '../models/auth/resourcecontext';
-import { EulaEntry } from '../models/http/eulaentry';
-import { ModifyBranchRequest } from '../models/http/modifybranchrequest';
-import { ModifyTitleRequest } from '../models/http/modifytitlerequest';
+import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
+import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
+import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { BranchService } from '../services/branch';
 import { GameService } from '../services/game';
 import { endpointServiceCallWrapper } from '../utils/service';
@@ -153,7 +153,7 @@ publishApiRouter.patch(
   getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
     const eulaId = Number.parseInt(req.params[PathParam.eulaId], 10);
-    const body = req.body as EulaEntry[];
+    const body = req.body as ModifyAgreementRequest;
     return GameService.updateEula(ResourceContext.get(res), eulaId, body);
   })
 );

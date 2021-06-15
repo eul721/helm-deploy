@@ -1,6 +1,6 @@
 import { Association, BelongsToGetAssociationMixin, ModelAttributes, Optional } from 'sequelize';
 import { INTERNAL_ID } from '../defines/definitions';
-import { AgreementDescription } from '../http/rbac/agreementdescription';
+import { AgreementDescription } from '../http/resources/agreementdescription';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
@@ -114,8 +114,8 @@ export class AgreementModel
   public toHttpModel(): AgreementDescription {
     return {
       id: this.id,
-      urls: this.urls,
       names: this.names,
+      urls: this.urls,
     };
   }
 }

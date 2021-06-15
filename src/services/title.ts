@@ -2,7 +2,7 @@ import { GameModel } from '../models/db/game';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { DivisionModel } from '../models/db/division';
-import { GameDescription } from '../models/http/rbac/gamedescription';
+import { GameDescription } from '../models/http/resources/gamedescription';
 
 export class TitleService {
   /**

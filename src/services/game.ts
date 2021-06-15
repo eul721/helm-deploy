@@ -2,21 +2,20 @@ import { Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
-import { BranchDescription } from '../models/http/branchdescription';
+import { BranchDescription } from '../models/http/resources/branchdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { Locale } from '../models/db/localizedfield';
 import { AgreementModel } from '../models/db/agreement';
-import { AgreementDescription } from '../models/http/rbac/agreementdescription';
+import { AgreementDescription } from '../models/http/resources/agreementdescription';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
 import { envConfig } from '../configuration/envconfig';
-import { GameDescription } from '../models/http/rbac/gamedescription';
-import { ModifyTitleRequest } from '../models/http/modifytitlerequest';
-import { EulaEntry } from '../models/http/eulaentry';
+import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
+import { GameDescription } from '../models/http/resources/gamedescription';
+import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
-import { EulaResults } from '../models/http/eularesults';
 
 export class GameService {
   /**
@@ -217,7 +216,7 @@ export class GameService {
       return malformedRequestPastValidation();
     }
 
-    const eula = await AgreementModel.findOne({ where: { id: eulaId } });
+    const eula = await AgreementModel.findOne({ where: { id: eulaId }, include: { all: true } });
     if (!game || !eula) {
       return { code: HttpCode.NOT_FOUND };
     }
@@ -237,18 +236,18 @@ export class GameService {
    *
    * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to modify
-   * @param eulaEntries description of entries to update
+   * @param request description of entries to update
    */
   public static async updateEula(
     resourceContext: ResourceContext,
     eulaId: number,
-    eulaEntries: EulaEntry[]
+    request: ModifyAgreementRequest
   ): Promise<ServiceResponse> {
-    debug(`updateEula with body ${JSON.stringify(eulaEntries)}`);
+    debug(`updateEula with body ${JSON.stringify(request)}`);
     if (Number.isNaN(eulaId)) {
       return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a number' };
     }
-
+    debug('0');
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
@@ -264,24 +263,43 @@ export class GameService {
     }
 
     const promises: Promise<unknown>[] = [];
-    if (eulaEntries.some(entry => !entry.locale)) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Request contains an invalid locale' };
-    }
-
-    eulaEntries.forEach(entry => {
-      debug(`updateEula locale ${entry.locale})`);
-      if (!entry.name) {
-        promises.push(eula.removeName(entry.locale));
-      } else {
-        promises.push(eula.addName(entry.name, entry.locale));
+    let badLocale: string | null = null;
+    Object.values(request.names).forEach(entry => {
+      debug(`updateEula, check ${JSON.stringify(entry)})`);
+      const loc = entry.key as Locale;
+      if (!loc) {
+        badLocale = entry.key;
+        return;
       }
-
-      if (!entry.url) {
-        promises.push(eula.removeUrl(entry.locale));
+      if (!entry.value) {
+        debug(`updateEula, removing name for locale ${loc})`);
+        promises.push(eula.removeName(loc));
       } else {
-        promises.push(eula.addUrl(entry.url, entry.locale));
+        debug(`updateEula, setting name for locale ${loc} to ${entry.value})`);
+        promises.push(eula.addName(entry.value, loc));
       }
     });
+
+    Object.values(request.urls).forEach(entry => {
+      debug(`updateEula, check ${JSON.stringify(entry)})`);
+      const loc = entry.key as Locale;
+      if (!loc) {
+        badLocale = entry.key;
+        return;
+      }
+
+      if (!entry.value) {
+        debug(`updateEula, removing url for locale ${loc})`);
+        promises.push(eula.removeUrl(loc));
+      } else {
+        debug(`updateEula, setting url for locale ${loc} to ${entry.value})`);
+        promises.push(eula.addUrl(entry.value, loc));
+      }
+    });
+
+    if (badLocale !== null) {
+      return { code: HttpCode.BAD_REQUEST, message: `Request contains an invalid locale: ${badLocale}` };
+    }
 
     await Promise.all(promises);
 
@@ -294,7 +312,7 @@ export class GameService {
    * @param resourceContext information about the requested resource
    *
    */
-  public static async getEula(resourceContext: ResourceContext): Promise<ServiceResponse<EulaResults[]>> {
+  public static async getEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription[]>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
@@ -304,20 +322,7 @@ export class GameService {
       include: { all: true },
     });
 
-    let payload: EulaResults[] = [];
-    agreements.forEach(item => {
-      const result: EulaResults = { id: item.id, entries: [] };
-      for (let loc in Locale) {
-        result.entries.push({
-          locale: loc as Locale,
-          name: item.getNameLoaded(loc as Locale),
-          url: item.getUrlLoaded(loc as Locale),
-        });
-      }
-      payload.push(result);
-    });
-
-    return { code: HttpCode.OK, payload };
+    return { code: HttpCode.OK, payload: agreements.map(item => item.toHttpModel()) };
   }
 
   private static async constructGameDownloadModel(
@@ -350,7 +355,7 @@ export class GameService {
       names: game.names,
       agreements:
         game.agreements?.map(agreementData => ({
-          id: agreementData.id.toString(),
+          id: agreementData.id,
           titles: agreementData.names,
           urls: agreementData.urls,
         })) ?? [],
