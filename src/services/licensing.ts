@@ -3,6 +3,7 @@ import fetch from 'cross-fetch';
 import { envConfig } from '../configuration/envconfig';
 import { debug, error, warn } from '../logger';
 import { PlayerContext } from '../models/auth/playercontext';
+import { GameModel } from '../models/db/game';
 import { DeviceRegistrationData } from '../models/http/dna/deviceregistrationdata';
 import { DnaErrorResponse } from '../models/http/dna/dnaerrorresponse';
 import { DnaLicenseResponse } from '../models/http/dna/dnalicenseresponse';
@@ -24,6 +25,11 @@ export class LicensingService {
   public static async fetchLicenses(playerContext: PlayerContext): Promise<ServiceResponse<string[]>> {
     if (!playerContext.deviceId || !playerContext.deviceName) {
       return { code: HttpCode.BAD_REQUEST, message: 'Missing deviceId or deviceName on player context' };
+    }
+
+    if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
+      const allGames = await GameModel.findAll();
+      return { code: HttpCode.OK, payload: allGames.flatMap(game => (game.contentfulId ? [game.contentfulId] : [])) };
     }
 
     const deviceRegistrationData: DeviceRegistrationData = {
