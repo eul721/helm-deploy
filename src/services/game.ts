@@ -285,7 +285,7 @@ export class GameService {
       versions:
         game.builds?.map(branchData => ({
           buildId: branchData.bdsBuildId,
-          mandatory: branchData.mandatory,
+          mandatory: branchData.mandatory ?? false,
           releaseNotes: branchData.notes[locale],
           version: branchData.id.toString(),
         })) ?? [],
