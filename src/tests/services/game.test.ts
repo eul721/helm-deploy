@@ -1,4 +1,5 @@
 import { mocked } from 'ts-jest/utils';
+import { AuthenticateContext } from '../../models/auth/authenticatecontext';
 import { PlayerContext } from '../../models/auth/playercontext';
 import { getDBInstance } from '../../models/db/database';
 import { HttpCode } from '../../models/http/httpcode';
@@ -108,6 +109,29 @@ describe('src/services/game', () => {
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
       expect(serviceResponse.payload?.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('GameService.getGames', () => {
+    it('should return UNAUTHORIZED for an invalid/missing user', async () => {
+      const ctx = new AuthenticateContext('', '', 'dev-login', {});
+      expect(await GameService.getGamesPublisher(ctx)).toHaveProperty('code', 401);
+    });
+
+    it('should return a list of GameDescriptions that the publisher user has access to', async () => {
+      const ctx = new AuthenticateContext('', SampleDatabase.creationData.debugAdminEmail, 'dev-login', {});
+      const result = await GameService.getGamesPublisher(ctx);
+      // This will likely change once we implement proper authentication
+      expect(result).toHaveProperty('payload');
+      expect(result.payload).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: 1 }),
+          expect.objectContaining({ id: 2 }),
+          expect.objectContaining({ id: 3 }),
+          expect.objectContaining({ id: 4 }),
+          expect.objectContaining({ id: 5 }),
+        ])
+      );
     });
   });
 });
