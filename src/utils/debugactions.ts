@@ -5,7 +5,6 @@ import { BranchModel } from '../models/db/branch';
 import { BuildModel } from '../models/db/build';
 import { DivisionModel } from '../models/db/division';
 import { GameModel } from '../models/db/game';
-import { Locale, LocaleFromString } from '../models/db/localizedfield';
 import { UserModel } from '../models/db/user';
 import { HttpCode } from '../models/http/httpcode';
 import { BranchService } from '../services/branch';
@@ -15,6 +14,8 @@ import { TitleService } from '../services/title';
 import { reinitializeDummyData, SampleDatabase } from './sampledatabase';
 import { DebuggerResponse, toDebuggerResponse } from './debuggerresponse';
 import { getDBInstance } from '../models/db/database';
+import { localeFromString } from '../models/defines/locale';
+import { toIntRequired } from './service';
 
 export interface DebugAction {
   command: string;
@@ -53,7 +54,7 @@ export const actions: DebugAction[] = [
     params: ['BDS_TITLE'],
     action: async (params: string[]) => {
       const division = await DivisionModel.findOne({ where: { name: SampleDatabase.creationData.divisionName } });
-      const response = await TitleService.onCreated(division ?? new DivisionModel(), Number.parseInt(params[0], 10));
+      const response = await TitleService.onCreated(division ?? new DivisionModel(), toIntRequired(params[0]));
       return {
         code: response.code,
         message: response.payload
@@ -77,7 +78,11 @@ export const actions: DebugAction[] = [
     command: 'title set default branch',
     params: ['GAME_PK', 'BRANCH_PK'],
     action: async (params: string[]) => {
-      const context = new ResourceContext({ id: Number.parseInt(params[0], 10) });
+      const game = await GameModel.findOne({ where: { id: toIntRequired(params[0]) } });
+      if (!game) {
+        return { code: HttpCode.NOT_FOUND, message: 'Failed to find the game' };
+      }
+      const context = new ResourceContext(game);
       return toDebuggerResponse(await GameService.modifyGame(context, { defaultBranchPsId: params[1] }));
     },
   },
@@ -85,7 +90,11 @@ export const actions: DebugAction[] = [
     command: 'title set contentful id',
     params: ['GAME_PK', 'CONTENTFUL_ID'],
     action: async (params: string[]) => {
-      const context = new ResourceContext({ id: Number.parseInt(params[0], 10) });
+      const game = await GameModel.findOne({ where: { id: toIntRequired(params[0]) } });
+      if (!game) {
+        return { code: HttpCode.NOT_FOUND, message: 'Failed to find the game' };
+      }
+      const context = new ResourceContext(game);
       return toDebuggerResponse(await GameService.modifyGame(context, { contentfulId: params[1] }));
     },
   },
@@ -98,7 +107,13 @@ export const actions: DebugAction[] = [
       if (!game) {
         return { code: HttpCode.NOT_FOUND, message: 'Failed to find the game' };
       }
-      const locale = LocaleFromString(localeStr) ?? Locale.en;
+      const locale = localeFromString(localeStr);
+      if (!locale) {
+        return {
+          code: 400,
+          message: `Bad locale value=${localeStr}`,
+        };
+      }
       await game.addName(name, locale);
       return {
         code: 200,
@@ -144,7 +159,13 @@ export const actions: DebugAction[] = [
       if (!game) {
         return { code: 404, message: `No title found with pk=${gameId}` };
       }
-      const locale = LocaleFromString(localeStr) || Locale.en;
+      const locale = localeFromString(localeStr);
+      if (!locale) {
+        return {
+          code: 400,
+          message: `Bad locale value=${localeStr}`,
+        };
+      }
       const newAgreement = await game.createAgreementEntry({});
       await newAgreement.addName(title, locale);
       await newAgreement.addUrl(url, locale);
@@ -180,7 +201,13 @@ export const actions: DebugAction[] = [
           message: `Title=${game.id} does not own agreement=${agreement.id}`,
         };
       }
-      const locale = LocaleFromString(localeStr) ?? Locale.en;
+      const locale = localeFromString(localeStr);
+      if (!locale) {
+        return {
+          code: 400,
+          message: `Bad locale value=${localeStr}`,
+        };
+      }
       await agreement.addName(title, locale);
       await agreement.addUrl(url, locale);
       await agreement.reload({ include: { all: true } });
@@ -228,7 +255,7 @@ export const actions: DebugAction[] = [
     command: 'branch register',
     params: ['BDS_TITLE', 'BDS_BRANCH'],
     action: async (params: string[]) => {
-      const response = await BranchService.onCreated(Number.parseInt(params[0], 10), Number.parseInt(params[1], 10));
+      const response = await BranchService.onCreated(toIntRequired(params[0]), toIntRequired(params[1]));
       return toDebuggerResponse(response);
     },
   },
@@ -236,7 +263,7 @@ export const actions: DebugAction[] = [
     command: 'branch list',
     params: [],
     action: async () => {
-      const items = (await BranchModel.findAll()).map(item => item.toHttpModel(Locale.en));
+      const items = (await BranchModel.findAll()).map(item => item.toHttpModel());
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),
@@ -264,11 +291,7 @@ export const actions: DebugAction[] = [
     command: 'branch set build',
     params: ['BDS_BRANCH', 'BDS_BUILD'],
     action: async (params: string[]) => {
-      const response = await BranchService.onModified(
-        undefined,
-        Number.parseInt(params[0], 10),
-        Number.parseInt(params[1], 10)
-      );
+      const response = await BranchService.onModified(undefined, toIntRequired(params[0]), toIntRequired(params[1]));
       return { code: response.code, message: response.code === 200 ? 'OK' : 'Failed' };
     },
   },
@@ -276,7 +299,7 @@ export const actions: DebugAction[] = [
     command: 'build register',
     params: ['BDS_TITLE', 'BDS_BUILD'],
     action: async (params: string[]) => {
-      const response = await BuildService.onCreated(Number.parseInt(params[0], 10), Number.parseInt(params[1], 10));
+      const response = await BuildService.onCreated(toIntRequired(params[0]), toIntRequired(params[1]));
       return toDebuggerResponse(response);
     },
   },
@@ -284,7 +307,7 @@ export const actions: DebugAction[] = [
     command: 'build list',
     params: [],
     action: async () => {
-      const items = (await BuildModel.findAll()).map(item => item.toHttpModel(Locale.en));
+      const items = (await BuildModel.findAll()).map(item => item.toHttpModel());
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),

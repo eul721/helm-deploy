@@ -16,9 +16,10 @@ import { BuildCreationAttributes, BuildModel } from './build';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { DivisionModel } from './division';
 import { RoleModel } from './role';
-import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
+import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 import { GameDescription } from '../http/resources/gamedescription';
+import { Locale, LocalizedHashmap } from '../defines/locale';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -128,9 +129,9 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   // #region association: localizedfields
 
-  public get names(): Record<string, string> {
+  public get names(): LocalizedHashmap {
     return (
-      this.fields?.reduce<Record<string, string>>((acc, fieldData) => {
+      this.fields?.reduce<LocalizedHashmap>((acc, fieldData) => {
         if (Fields.name === fieldData.field) {
           acc[fieldData.locale] = fieldData.value;
         }

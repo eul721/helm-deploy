@@ -1,6 +1,6 @@
 import { getDBInstance } from '../../models/db/database';
 import { GameModel } from '../../models/db/game';
-import { Locale } from '../../models/db/localizedfield';
+import { Locale } from '../../models/defines/locale';
 import { SampleDatabase } from '../../utils/sampledatabase';
 
 describe('src/models/game', () => {

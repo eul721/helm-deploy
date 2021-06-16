@@ -3,8 +3,6 @@ export type HeaderParam = 'authorization' | 'webhookToken' | 'deviceId' | 'devic
 export type QueryParam = 'userName' | 'roleName' | 'email' | 'password' | 'divisionId' | 'groupName' | 'url' | 'dnaId';
 
 export enum PathParam {
-  bdsTitle = 'bdsTitle',
-  bdsBranch = 'bdsBranch',
   userId = 'userId',
   groupId = 'groupId',
   divisionId = 'divisionId',

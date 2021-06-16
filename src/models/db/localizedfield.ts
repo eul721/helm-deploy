@@ -1,6 +1,7 @@
 import { DataTypes, Model, ModelAttributes, Optional } from 'sequelize';
 import { envConfig } from '../../configuration/envconfig';
 import { INTERNAL_ID } from '../defines/definitions';
+import { Locale } from '../defines/locale';
 
 const TEXT_TYPE = () => DataTypes.TEXT(envConfig.isTest() ? undefined : { length: 'long' });
 
@@ -43,42 +44,6 @@ export enum Fields {
   description = 'description',
   patchnotes = 'patchnotes',
   url = 'url',
-}
-
-/**
- * All supported locales
- */
-export enum Locale {
-  ar = 'ar',
-  cs = 'cs',
-  da = 'da',
-  de = 'de',
-  en = 'en',
-  'es-419' = 'es-419',
-  es = 'es',
-  fi = 'fi',
-  'fr-CA' = 'fr-CA',
-  fr = 'fr',
-  hu = 'hu',
-  it = 'it',
-  ja = 'ja',
-  ko = 'ko',
-  nb = 'nb',
-  nl = 'nl',
-  pl = 'pl',
-  'pt-BR' = 'pt-BR',
-  pt = 'pt',
-  ru = 'ru',
-  sv = 'sv',
-  th = 'th',
-  tr = 'tr',
-  vi = 'vi',
-  'zh-CN' = 'zh-CN',
-  'zh-Hant' = 'zh-Hant',
-}
-
-export function LocaleFromString(input: string): Locale | undefined {
-  return Locale[input as keyof typeof Locale];
 }
 
 export type LocalizedFieldCreationAttributes = Optional<LocalizedFieldAttributes, 'id'>;

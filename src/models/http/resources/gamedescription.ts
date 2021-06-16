@@ -1,3 +1,5 @@
+import { LocalizedHashmap } from '../../defines/locale';
+
 /**
  * Describes an RBAC game
  */
@@ -18,5 +20,5 @@ export interface GameDescription {
   defaultBranch: number | null;
 
   /** Localized name entries */
-  names: Record<string, string>;
+  names: LocalizedHashmap;
 }

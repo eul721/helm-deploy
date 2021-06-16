@@ -10,7 +10,7 @@ import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest
 import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { BranchService } from '../services/branch';
 import { GameService } from '../services/game';
-import { endpointServiceCallWrapper } from '../utils/service';
+import { endpointServiceCallWrapper, toIntRequired } from '../utils/service';
 
 export const publishApiRouter = Router();
 
@@ -132,7 +132,7 @@ publishApiRouter.delete(
   `/${Segment.games}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('delete', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
-    const eulaId = Number.parseInt(req.params[PathParam.eulaId], 10);
+    const eulaId = toIntRequired(req.params[PathParam.eulaId]);
     return GameService.removeEula(ResourceContext.get(res), eulaId);
   })
 );
@@ -152,7 +152,7 @@ publishApiRouter.patch(
   `/${Segment.games}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
-    const eulaId = Number.parseInt(req.params[PathParam.eulaId], 10);
+    const eulaId = toIntRequired(req.params[PathParam.eulaId]);
     const body = req.body as ModifyAgreementRequest;
     return GameService.updateEula(ResourceContext.get(res), eulaId, body);
   })

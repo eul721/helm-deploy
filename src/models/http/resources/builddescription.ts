@@ -1,8 +1,8 @@
+import { LocalizedHashmap } from '../../defines/locale';
+
 export interface BuildDescription {
   /** Internal PS id */
   id: number;
-
-  patchNotes: string;
 
   ownerId: number;
 
@@ -10,7 +10,7 @@ export interface BuildDescription {
   bdsBuildId: number;
 
   /** Localized release notes entries */
-  releaseNotes: Record<string, string>;
+  releaseNotes: LocalizedHashmap;
 
   /** whether the update is mandatory and the game should not be allowed to start without getting it */
   mandatory: boolean;

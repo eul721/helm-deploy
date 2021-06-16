@@ -1,8 +1,10 @@
+import { LocalizedHashmap } from '../../defines/locale';
+
 export interface BranchDescription {
   /** Internal PS id */
   id: number;
 
-  name: string;
+  names: LocalizedHashmap;
 
   passwordProtected: boolean;
 

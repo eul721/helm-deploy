@@ -1,8 +1,9 @@
 import { Association, BelongsToGetAssociationMixin, ModelAttributes, Optional } from 'sequelize';
 import { INTERNAL_ID } from '../defines/definitions';
+import { Locale, LocalizedHashmap } from '../defines/locale';
 import { AgreementDescription } from '../http/resources/agreementdescription';
 import { GameModel } from './game';
-import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
+import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 
 export const AgreementDef: ModelAttributes = {
@@ -34,9 +35,9 @@ export class AgreementModel
 
   // #region association: localizedfields
 
-  public get names(): Record<string, string> {
+  public get names(): LocalizedHashmap {
     return (
-      this.fields?.reduce<Record<string, string>>((acc, fieldData) => {
+      this.fields?.reduce<LocalizedHashmap>((acc, fieldData) => {
         if (Fields.name === fieldData.field) {
           acc[fieldData.locale] = fieldData.value;
         }
@@ -45,9 +46,9 @@ export class AgreementModel
     );
   }
 
-  public get urls(): Record<string, string> {
+  public get urls(): LocalizedHashmap {
     return (
-      this.fields?.reduce<Record<string, string>>((acc, fieldData) => {
+      this.fields?.reduce<LocalizedHashmap>((acc, fieldData) => {
         if (Fields.url === fieldData.field) {
           acc[fieldData.locale] = fieldData.value;
         }

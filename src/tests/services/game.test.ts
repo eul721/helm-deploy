@@ -1,6 +1,7 @@
 import { mocked } from 'ts-jest/utils';
 import { PlayerContext } from '../../models/auth/playercontext';
 import { getDBInstance } from '../../models/db/database';
+import { GameModel } from '../../models/db/game';
 import { HttpCode } from '../../models/http/httpcode';
 import { GameService } from '../../services/game';
 import { LicensingService } from '../../services/licensing';
@@ -18,29 +19,9 @@ describe('src/services/game', () => {
     await sampleDb.initAll();
   });
 
-  describe('GameService.getGameDownloadModel', () => {
-    describe('when the user owns the game', () => {
-      it('should return not found if a private or invalid branch is requested for an owned game', async () => {
-        const playerContext = new PlayerContext(
-          '',
-          '',
-          '',
-          {
-            contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
-          },
-          { id: 12345134 }
-        );
-        const serviceResponse = await GameService.getGameDownloadModel(playerContext);
-        expect(serviceResponse.code).toBe(HttpCode.NOT_FOUND);
-      });
-    });
-  });
-
   describe('when the request is invalid', () => {
-    it('should return not found for invalid contentful id', async () => {
-      const playerContext = new PlayerContext('', '', '', {
-        contentfulId: 'random invalid value',
-      });
+    it('should return not found without valid game', async () => {
+      const playerContext = new PlayerContext('', '', '', null);
 
       const serviceResponse = await GameService.getGameDownloadModel(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.NOT_FOUND);
@@ -94,16 +75,17 @@ describe('src/services/game', () => {
   });
 
   describe('GameService.getBranches', () => {
-    it('should return server error for invalid id', async () => {
-      const playerContext = new PlayerContext('', '', '', { contentfulId: 'random bad id' });
+    it('should return server error when missing game', async () => {
+      const playerContext = new PlayerContext('', '', '', undefined);
       const serviceResponse = await GameService.getBranches(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.INTERNAL_SERVER_ERROR);
     });
 
     it('should return at least one branch for a game', async () => {
-      const playerContext = new PlayerContext('', '', '', {
-        contentfulId: SampleDatabase.creationData.gameContentfulIds[0],
+      const game = await GameModel.findOne({
+        where: { contentfulId: SampleDatabase.creationData.gameContentfulIds[0] },
       });
+      const playerContext = new PlayerContext('', '', '', game);
       const serviceResponse = await GameService.getBranches(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();

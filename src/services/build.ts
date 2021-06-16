@@ -11,6 +11,10 @@ export class BuildService {
    * @param bdsTitleId id of the created build
    */
   public static async onCreated(bdsTitleId: number, bdsBuildId: number): Promise<ServiceResponse> {
+    if (bdsTitleId === undefined || bdsBuildId === undefined) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Passed in ids are not valid numbers' };
+    }
+
     const gameModel = await GameModel.findOne({ where: { bdsTitleId }, include: GameModel.associations.branches });
     if (!gameModel) {
       return { code: HttpCode.NOT_FOUND, message: 'Cannot find the game that owns newly created build' };
@@ -27,6 +31,10 @@ export class BuildService {
    * @param bdsBranchId id of the removed build
    */
   public static async onDeleted(bdsTitleId: number, bdsBuildId: number): Promise<ServiceResponse> {
+    if (bdsTitleId === undefined || bdsBuildId === undefined) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a valid number' };
+    }
+
     const gameModel = await GameModel.findOne({ where: { bdsTitleId }, include: GameModel.associations.branches });
     const buildModel = await BuildModel.findOne({ where: { bdsBuildId } });
 
@@ -50,9 +58,4 @@ export class BuildService {
 
     return { code: HttpCode.OK };
   }
-
-  /* not implemented on BDS
-  public static async onModified (titleId: number, buildId: number): Promise<ServiceResponse> {
-    return {HttpCode.OK}
-  } */
 }

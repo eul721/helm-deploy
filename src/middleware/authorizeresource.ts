@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express';
-import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { PathParam } from '../configuration/httpconfig';
 import { info, warn } from '../logger';
 import { AdminRequirements } from '../models/auth/adminrequirements';
@@ -9,31 +8,11 @@ import { ResourcePermissionType } from '../models/db/permission';
 import { HttpCode } from '../models/http/httpcode';
 import { RbacService } from '../services/rbac/basic';
 import { checkRequiredPermission } from '../utils/auth';
-import { getHeaderParamValue, sendMessageResponse, sendServiceResponse } from '../utils/http';
-import { Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
+import { sendMessageResponse, sendServiceResponse } from '../utils/http';
+import { createResourceContext, Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
 import { dummyAuthorizeResourceMiddleware } from './dummymiddleware';
 import { envConfig } from '../configuration/envconfig';
 import { malformedRequestPastValidation } from '../models/http/serviceresponse';
-
-export function createResourceContext(req: Request, res: Response): ResourceContext {
-  const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
-  const branchId = Number.parseInt(req.params[PathParam.branchId], 10);
-
-  let resourceContext: Maybe<ResourceContext> = null;
-  if (getHeaderParamValue(req, 'useBdsIds')) {
-    resourceContext = new ResourceContext(
-      !gameId || Number.isNaN(gameId) ? undefined : { bdsTitleId: gameId },
-      !branchId || Number.isNaN(branchId) ? undefined : { bdsBranchId: branchId }
-    );
-  } else {
-    resourceContext = new ResourceContext(
-      !gameId || Number.isNaN(gameId) ? undefined : { id: gameId },
-      !branchId || Number.isNaN(branchId) ? undefined : { id: branchId }
-    );
-  }
-  res.locals.resourceContext = resourceContext;
-  return resourceContext;
-}
 
 /**
  * @apiDefine AuthorizeResourceAccessMiddleware
@@ -48,16 +27,7 @@ async function resourceAccessAuth(
   basePermission: ResourcePermissionType,
   adminRequirements?: AdminRequirements
 ) {
-  const resourceContext = createResourceContext(req, res);
-  if (!resourceContext.gameUid) {
-    sendMessageResponse(
-      res,
-      HttpCode.BAD_REQUEST,
-      `Passed in game id is not a number: ${req.params[PathParam.gameId]}`
-    );
-    return;
-  }
-
+  const resourceContext = await createResourceContext(req, res);
   const game = await ResourceContext.get(res).fetchGameModel();
   if (!game) {
     sendMessageResponse(res, HttpCode.NOT_FOUND, `Cannot find game with given id ${req.params[PathParam.gameId]}`);

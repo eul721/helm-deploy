@@ -1,3 +1,5 @@
+import { LocalizedHashmap } from '../../defines/locale';
+
 /**
  * Describes an agreement/eula
  */
@@ -6,8 +8,8 @@ export interface AgreementDescription {
   id: number;
 
   // localized name entries
-  names: Record<string, string>;
+  names: LocalizedHashmap;
 
   // localized url entries
-  urls: Record<string, string>;
+  urls: LocalizedHashmap;
 }

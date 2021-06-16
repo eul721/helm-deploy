@@ -11,10 +11,11 @@ import {
   Optional,
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { Locale, LocalizedHashmap } from '../defines/locale';
 import { BranchDescription } from '../http/resources/branchdescription';
 import { BuildModel } from './build';
 import { GameModel } from './game';
-import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
+import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 
 export const BranchDef: ModelAttributes = {
@@ -71,7 +72,7 @@ export class BranchModel
 
   // #region association: localizedfields
 
-  public get names(): Record<string, string> {
+  public get names(): LocalizedHashmap {
     return this.reduceFields(Fields.name);
   }
 
@@ -117,10 +118,10 @@ export class BranchModel
     owner: Association<BranchModel, GameModel>;
   };
 
-  public toHttpModel(locale: Locale): BranchDescription {
+  public toHttpModel(): BranchDescription {
     return {
       id: this.id,
-      name: this.getNameLoaded(locale),
+      names: this.names,
       passwordProtected: this.password !== null,
       ownerId: this.ownerId,
       bdsBranchId: this.bdsBranchId,

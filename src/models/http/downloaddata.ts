@@ -1,4 +1,4 @@
-import { Version } from './versionmodel';
+import { LocalizedHashmap } from '../defines/locale';
 
 export interface DownloadDataRoot {
   model: Model;
@@ -10,14 +10,19 @@ export interface Model {
 }
 
 export interface DownloadData {
-  names?: Record<string, string>;
+  names?: LocalizedHashmap;
   titleId: number;
   branchId: number;
-  versions: Version[];
+  versions: {
+    buildId: number;
+    releaseNotes?: string;
+    mandatory: boolean;
+    version: string;
+  }[];
   agreements: {
     id: number;
-    urls?: Record<string, string>;
-    names?: Record<string, string>;
+    urls?: LocalizedHashmap;
+    names?: LocalizedHashmap;
   }[];
   supportedLanguages: string[];
 }

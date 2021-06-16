@@ -19,7 +19,7 @@ import { envConfig } from '../configuration/envconfig';
  * @apiParam (Query) {String} password Password for the branch, if applicable
  */
 async function authorizePlayerMiddleware(req: Request, res: Response, next: NextFunction) {
-  const playerContext = createPlayerContext(req, res);
+  const playerContext = await createPlayerContext(req, res);
   const response = await LicensingService.fetchLicenses(playerContext);
   if (response.code !== HttpCode.OK) {
     sendServiceResponse(response, res);

@@ -4,6 +4,16 @@ import { HttpCode } from '../models/http/httpcode';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { sendMessageResponse, sendServiceResponse } from './http';
 
+export class ErrorServiceResponseException extends Error {
+  constructor(response: ServiceResponse<unknown>) {
+    super(response.message);
+    this.name = 'Exception';
+    this.response = response;
+  }
+
+  response: ServiceResponse<unknown>;
+}
+
 export const endpointServiceCallWrapper = (
   handler: (req: Request, res: Response) => Promise<ServiceResponse<unknown>>
 ) => async (req: Request, res: Response) => {
@@ -11,7 +21,30 @@ export const endpointServiceCallWrapper = (
     const response = await handler(req, res);
     sendServiceResponse(response, res);
   } catch (err) {
-    error(`Encountered error in endpoint, error: ${err}`);
-    sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Exception while processing the request');
+    if (err instanceof ErrorServiceResponseException) {
+      const exception = err as ErrorServiceResponseException;
+      sendServiceResponse(exception.response, res);
+    } else {
+      error(`Encountered error in endpoint, error: ${err}`);
+      sendMessageResponse(res, HttpCode.INTERNAL_SERVER_ERROR, 'Exception while processing the request');
+    }
   }
 };
+
+/** Return a valid (non-nan) number or undefined */
+export function toIntOptional(input: string): number | undefined {
+  const value = Number.parseInt(input, 10);
+  return Number.isNaN(value) ? undefined : value;
+}
+
+/** Return a valid (non-nan) number or throws */
+export function toIntRequired(input: string): number {
+  const value = Number.parseInt(input, 10);
+  if (Number.isNaN(value)) {
+    throw new ErrorServiceResponseException({
+      code: HttpCode.BAD_REQUEST,
+      message: 'Required numerical parameter is not a number',
+    });
+  }
+  return value;
+}

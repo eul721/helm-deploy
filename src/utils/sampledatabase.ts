@@ -4,10 +4,10 @@ import { BuildModel } from '../models/db/build';
 import { DivisionModel } from '../models/db/division';
 import { GameModel } from '../models/db/game';
 import { GroupModel } from '../models/db/group';
-import { Locale } from '../models/db/localizedfield';
 import { DivisionPermissions, PermissionModel, ResourcePermissions } from '../models/db/permission';
 import { RoleModel } from '../models/db/role';
 import { UserModel } from '../models/db/user';
+import { Locale } from '../models/defines/locale';
 
 export class SampleDatabase {
   public division!: DivisionModel;

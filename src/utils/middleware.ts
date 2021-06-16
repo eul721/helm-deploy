@@ -7,10 +7,12 @@ import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { RbacContext } from '../models/auth/rbaccontext';
 import { RbacResource } from '../models/auth/rbacresource';
-import { BranchUniqueIdentifier } from '../models/db/branch';
-import { GameUniqueIdentifier } from '../models/db/game';
+import { ResourceContext } from '../models/auth/resourcecontext';
+import { BranchModel } from '../models/db/branch';
+import { GameModel } from '../models/db/game';
 import { HttpCode } from '../models/http/httpcode';
 import { getHeaderParamValue, sendMessageResponse } from './http';
+import { toIntOptional } from './service';
 
 /**
  * Type defining middleware
@@ -49,39 +51,54 @@ export async function getResourceOwnerId(rbacContext: RbacContext, resource: Rba
   }
 }
 
-export function createRbacContext(req: Request, res: Response): RbacContext {
+export async function createRbacContext(req: Request, res: Response): Promise<RbacContext> {
+  const resources = await getGameResourcesFromRequest(req);
   const rbacContext = new RbacContext(
-    Number.parseInt(req.params[PathParam.divisionId], 10),
-    Number.parseInt(req.params[PathParam.groupId], 10),
-    Number.parseInt(req.params[PathParam.roleId], 10),
-    Number.parseInt(req.params[PathParam.userId], 10),
-    Number.parseInt(req.params[PathParam.gameId], 10),
+    toIntOptional(req.params[PathParam.divisionId]),
+    toIntOptional(req.params[PathParam.groupId]),
+    toIntOptional(req.params[PathParam.roleId]),
+    toIntOptional(req.params[PathParam.userId]),
+    resources.game,
     req.params[PathParam.permissionId]
   );
   RbacContext.set(res, rbacContext);
   return rbacContext;
 }
 
-export function createPlayerContext(req: Request, res: Response): PlayerContext {
+export async function getGameResourcesFromRequest(
+  req: Request
+): Promise<{ game: Maybe<GameModel>; branch: Maybe<BranchModel> }> {
+  const gameId = toIntOptional(req.params[PathParam.gameId]);
+  const branchId = toIntOptional(req.params[PathParam.branchId]);
+  if (getHeaderParamValue(req, 'useBdsIds')) {
+    const game = gameId ? await GameModel.findOne({ where: { bdsTitleId: gameId } }) : undefined;
+    const branch = branchId ? await BranchModel.findOne({ where: { bdsBranchId: branchId } }) : undefined;
+    return { game, branch };
+  }
+
+  const game = gameId ? await GameModel.findOne({ where: { id: gameId } }) : undefined;
+  const branch = branchId ? await BranchModel.findOne({ where: { id: branchId } }) : undefined;
+  return { game, branch };
+}
+
+export async function createPlayerContext(req: Request, res: Response): Promise<PlayerContext> {
   const deviceId = getHeaderParamValue(req, 'deviceId');
   const deviceName = getHeaderParamValue(req, 'deviceName');
-  const bdsGameId = Number.parseInt(req.params[PathParam.bdsTitle], 10);
-  const gameId = Number.parseInt(req.params[PathParam.gameId], 10);
-  let gameUid: Maybe<GameUniqueIdentifier> = !Number.isNaN(bdsGameId) ? { bdsTitleId: bdsGameId } : undefined;
-  gameUid = gameUid ?? !Number.isNaN(gameId) ? { id: gameId } : undefined;
-
-  const bdsbranchId = Number.parseInt(req.params[PathParam.bdsBranch], 10);
-  const branchId = Number.parseInt(req.params[PathParam.branchId], 10);
-  let branchUid: Maybe<BranchUniqueIdentifier> = !Number.isNaN(bdsbranchId) ? { bdsBranchId: bdsbranchId } : undefined;
-  branchUid = branchUid ?? !Number.isNaN(branchId) ? { id: branchId } : undefined;
-
+  const resources = await getGameResourcesFromRequest(req);
   const playerContext = new PlayerContext(
     AuthenticateContext.get(res).bearerToken,
     deviceId,
     deviceName,
-    gameUid,
-    branchUid
+    resources.game,
+    resources.branch
   );
   PlayerContext.set(res, playerContext);
   return playerContext;
+}
+
+export async function createResourceContext(req: Request, res: Response): Promise<ResourceContext> {
+  const resources = await getGameResourcesFromRequest(req);
+  const resourceContext = new ResourceContext(resources.game, resources.branch);
+  res.locals.resourceContext = resourceContext;
+  return resourceContext;
 }

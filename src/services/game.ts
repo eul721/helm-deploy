@@ -5,7 +5,6 @@ import { BranchModel } from '../models/db/branch';
 import { BranchDescription } from '../models/http/resources/branchdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
-import { Locale } from '../models/db/localizedfield';
 import { AgreementModel } from '../models/db/agreement';
 import { AgreementDescription } from '../models/http/resources/agreementdescription';
 import { ResourceContext } from '../models/auth/resourcecontext';
@@ -15,6 +14,7 @@ import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { GameDescription } from '../models/http/resources/gamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
+import { Locale, localeFromString } from '../models/defines/locale';
 
 export class GameService {
   /**
@@ -95,8 +95,8 @@ export class GameService {
       if (!branch) {
         return;
       }
-      // TODO: Add locale parameter to UserContext or by other means
-      branches.push(branch.toHttpModel(Locale.en));
+
+      branches.push(branch.toHttpModel());
     });
 
     return { code: HttpCode.OK, payload: branches };
@@ -110,10 +110,9 @@ export class GameService {
   public static async getBranchesPublisher(
     resourceContext: ResourceContext
   ): Promise<ServiceResponse<BranchDescription[]>> {
-    // TODO: Add locale parameter to UserContext or by other means
     const game = await resourceContext.fetchGameModel();
     const branchModels = await game?.getBranches();
-    const branches: BranchDescription[] = branchModels?.map(branch => branch.toHttpModel(Locale.en)) ?? [];
+    const branches: BranchDescription[] = branchModels?.map(branch => branch.toHttpModel()) ?? [];
 
     return { code: HttpCode.OK, payload: branches };
   }
@@ -199,10 +198,6 @@ export class GameService {
    * @param eulaId id of the eula to unassign
    */
   public static async removeEula(resourceContext: ResourceContext, eulaId: number): Promise<ServiceResponse> {
-    if (Number.isNaN(eulaId)) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a number' };
-    }
-
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
@@ -236,10 +231,7 @@ export class GameService {
     request: ModifyAgreementRequest
   ): Promise<ServiceResponse> {
     debug(`updateEula with body ${JSON.stringify(request)}`);
-    if (Number.isNaN(eulaId)) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a number' };
-    }
-    debug('0');
+
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
@@ -256,9 +248,10 @@ export class GameService {
 
     const promises: Promise<unknown>[] = [];
     let badLocale: string | null = null;
+
     Object.values(request.names).forEach(entry => {
       debug(`updateEula, check ${JSON.stringify(entry)})`);
-      const loc = entry.key as Locale;
+      const loc = localeFromString(entry.key);
       if (!loc) {
         badLocale = entry.key;
         return;
@@ -274,7 +267,7 @@ export class GameService {
 
     Object.values(request.urls).forEach(entry => {
       debug(`updateEula, check ${JSON.stringify(entry)})`);
-      const loc = entry.key as Locale;
+      const loc = localeFromString(entry.key);
       if (!loc) {
         badLocale = entry.key;
         return;
