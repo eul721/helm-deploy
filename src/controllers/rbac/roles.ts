@@ -115,7 +115,7 @@ rbacApiRouter.get(
  * @apiUse AuthorizeForRbacMiddleware
  */
 rbacApiRouter.post(
-  `/${Segment.roles}/${Segment.games}`,
+  `/${Segment.roles}/${Segment.gameById}`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE, {
     resource: RbacResource.GAME,
     allowDifferentOwner: false,
@@ -137,7 +137,7 @@ rbacApiRouter.post(
  * @apiUse AuthorizeForRbacMiddleware
  */
 rbacApiRouter.delete(
-  `/${Segment.roles}/${Segment.games}`,
+  `/${Segment.roles}/${Segment.gameById}`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE, {
     resource: RbacResource.GAME,
     allowDifferentOwner: false,

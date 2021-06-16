@@ -185,10 +185,11 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public toHttpModel(): GameDescription {
     return {
-      id: this.id,
+      bdsTitleId: this.bdsTitleId,
       contentfulId: this.contentfulId,
       divisionId: this.ownerId,
-      bdsTitleId: this.bdsTitleId,
+      id: this.id,
+      names: this.names,
     };
   }
 }

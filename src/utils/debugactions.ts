@@ -6,7 +6,7 @@ import { BuildModel } from '../models/db/build';
 import { DivisionModel } from '../models/db/division';
 import { GameModel } from '../models/db/game';
 import { Locale, LocaleFromString } from '../models/db/localizedfield';
-import { UserModel } from '../models/db/user';
+import { AccountType, isOfAccountType, UserModel } from '../models/db/user';
 import { HttpCode } from '../models/http/httpcode';
 import { BranchService } from '../services/branch';
 import { BuildService } from '../services/build';
@@ -17,9 +17,9 @@ import { DebuggerResponse, toDebuggerResponse } from './debuggerresponse';
 import { getDBInstance } from '../models/db/database';
 
 export interface DebugAction {
+  action: (params: string[]) => Promise<DebuggerResponse>;
   command: string;
   params: string[];
-  action: (params: string[]) => Promise<DebuggerResponse>;
 }
 
 export function generateHelpText(actions: DebugAction[]): string[] {
@@ -45,6 +45,60 @@ export const actions: DebugAction[] = [
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),
+      };
+    },
+  },
+  {
+    command: 'users create',
+    params: ['externalId', 'type'],
+    action: async (params: string[]) => {
+      const [externalId, typeInput] = params;
+      const existing = await UserModel.findAll({ where: { externalId } });
+      if (existing.length) {
+        return {
+          code: 400,
+          message: `user(s) with externalId=${externalId} already exist. ids=${existing.map(user => user.id)}`,
+        };
+      }
+      const accountType = typeInput as AccountType;
+      if (!isOfAccountType(accountType)) {
+        return {
+          code: 400,
+          message: `Provided account type=[${typeInput}] is invalid, must be one of: ['dev-login', '2K-dna']}`,
+        };
+      }
+      const newUser = await UserModel.create({
+        accountType,
+        externalId,
+      });
+      if (!newUser) {
+        return {
+          code: 500,
+          message: 'unhandled error creating user',
+        };
+      }
+      return {
+        code: 200,
+        message: `user created: ${JSON.stringify(newUser.toHttpModel())}`,
+      };
+    },
+  },
+  {
+    command: 'users delete',
+    params: ['userId'],
+    action: async (params: string[]) => {
+      const [userId] = params;
+      const user = await UserModel.findByPk(userId);
+      if (!user) {
+        return {
+          code: 404,
+          message: `user with pk=${userId} not found`,
+        };
+      }
+      await user.destroy();
+      return {
+        code: 200,
+        message: `user with pk=${userId} successfully deleted`,
       };
     },
   },

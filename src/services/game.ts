@@ -13,6 +13,7 @@ import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
 import { GameDescription } from '../models/http/rbac/gamedescription';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
 
 export class GameService {
   /**
@@ -38,8 +39,29 @@ export class GameService {
    * This method doesn't care about player/publisher distinction
    */
   public static async getAllGames(): Promise<ServiceResponse<GameDescription[]>> {
-    const items: GameDescription[] = (await GameModel.findAll()).map(item => item.toHttpModel());
+    const items: GameDescription[] = (await GameModel.findAll({ include: { all: true } })).map(item =>
+      item.toHttpModel()
+    );
     return { code: HttpCode.OK, payload: items };
+  }
+
+  /**
+   * Returns a complete games list for the given authentication context
+   * @param authenticationContext Publisher authentication context
+   */
+  public static async getGamesPublisher(
+    authenticationContext: AuthenticateContext
+  ): Promise<ServiceResponse<GameDescription[]>> {
+    const ident = await authenticationContext.fetchStudioUserModel();
+    if (!ident) {
+      return { code: HttpCode.UNAUTHORIZED };
+    }
+    const games = await GameService.getAllGames();
+    // TODO: fitler by permission level
+    return {
+      code: HttpCode.OK,
+      payload: games.payload,
+    };
   }
 
   /**

@@ -32,6 +32,13 @@ export const UserDef: ModelAttributes = {
 
 export type AccountType = 'dev-login' | '2K-dna';
 
+/**
+ * Helper to confirm if the given input string is of type: AccountType
+ */
+export function isOfAccountType(input: string): input is AccountType {
+  return ['dev-login', '2K-dna'].includes(input);
+}
+
 export interface UserAttributes {
   id: number;
   externalId: string;
