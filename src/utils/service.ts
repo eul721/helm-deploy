@@ -2,17 +2,8 @@ import { Request, Response } from 'express';
 import { error } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { ServiceResponse } from '../models/http/serviceresponse';
+import { ErrorServiceResponse } from './errors';
 import { sendMessageResponse, sendServiceResponse } from './http';
-
-export class ErrorServiceResponseException extends Error {
-  constructor(response: ServiceResponse<unknown>) {
-    super(response.message);
-    this.name = 'Exception';
-    this.response = response;
-  }
-
-  response: ServiceResponse<unknown>;
-}
 
 export const endpointServiceCallWrapper = (
   handler: (req: Request, res: Response) => Promise<ServiceResponse<unknown>>
@@ -21,8 +12,8 @@ export const endpointServiceCallWrapper = (
     const response = await handler(req, res);
     sendServiceResponse(response, res);
   } catch (err) {
-    if (err instanceof ErrorServiceResponseException) {
-      const exception = err as ErrorServiceResponseException;
+    if (err instanceof ErrorServiceResponse) {
+      const exception = err as ErrorServiceResponse;
       sendServiceResponse(exception.response, res);
     } else {
       error(`Encountered error in endpoint, error: ${err}`);
@@ -41,7 +32,7 @@ export function toIntOptional(input: string): number | undefined {
 export function toIntRequired(input: string): number {
   const value = Number.parseInt(input, 10);
   if (Number.isNaN(value)) {
-    throw new ErrorServiceResponseException({
+    throw new ErrorServiceResponse({
       code: HttpCode.BAD_REQUEST,
       message: 'Required numerical parameter is not a number',
     });

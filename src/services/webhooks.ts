@@ -9,6 +9,7 @@ import { WebhookAction } from '../models/http/webhook/webhookaction';
 import { WebhookPayload } from '../models/http/webhook/webhookpayload';
 import { WebhookTarget } from '../models/http/webhook/webhooktarget';
 import { checkRequiredPermission } from '../utils/auth';
+import { ErrorReason } from '../utils/errors';
 import { BranchService } from './branch';
 import { BuildService } from './build';
 import { RbacService } from './rbac/basic';
@@ -57,7 +58,7 @@ export class WebhooksService {
     const userModel = await authenticateContext.fetchStudioUserModel();
     const userId = userModel?.id;
     if (!userModel || !userId) {
-      return { code: HttpCode.INTERNAL_SERVER_ERROR, message: 'Malformed request made it past validation' };
+      return { code: HttpCode.INTERNAL_SERVER_ERROR, message: ErrorReason.MalformedPastValidation };
     }
 
     switch (payload.target) {

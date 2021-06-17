@@ -1,3 +1,4 @@
+import { ErrorReason } from '../../utils/errors';
 import { HttpCode } from './httpcode';
 
 /**
@@ -10,5 +11,5 @@ export interface ServiceResponse<T = void> {
 }
 
 export function malformedRequestPastValidation<T>(): ServiceResponse<T> {
-  return { code: HttpCode.INTERNAL_SERVER_ERROR, message: 'Malformed request made it past validation' };
+  return { code: HttpCode.INTERNAL_SERVER_ERROR, message: ErrorReason.MalformedPastValidation };
 }

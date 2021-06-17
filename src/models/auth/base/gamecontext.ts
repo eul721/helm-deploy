@@ -1,5 +1,6 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { debug } from '../../../logger';
+import { ErrorReason, InternalServerErrorResponse } from '../../../utils/errors';
 import { BranchModel } from '../../db/branch';
 import { GameModel } from '../../db/game';
 
@@ -24,7 +25,22 @@ export class GameContext {
     return this.branch;
   }
 
+  public async fetchBranchModelValidated(): Promise<BranchModel> {
+    const branch = await this.fetchBranchModel();
+    if (!branch) {
+      throw new InternalServerErrorResponse(ErrorReason.MalformedPastValidation);
+    }
+    return branch;
+  }
+
   public async fetchGameModel(): Promise<Maybe<GameModel>> {
+    return this.game;
+  }
+
+  public async fetchGameModelValidated(): Promise<GameModel> {
+    if (!this.game) {
+      throw new InternalServerErrorResponse(ErrorReason.MalformedPastValidation);
+    }
     return this.game;
   }
 

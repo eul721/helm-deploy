@@ -15,6 +15,7 @@ import { GameDescription } from '../models/http/resources/gamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
 import { Locale, localeFromString } from '../utils/language';
+import { BadRequestResponse } from '../utils/errors';
 
 export class GameService {
   /**
@@ -232,10 +233,7 @@ export class GameService {
   ): Promise<ServiceResponse> {
     debug(`updateEula with body ${JSON.stringify(request)}`);
 
-    const game = await resourceContext.fetchGameModel();
-    if (!game) {
-      return malformedRequestPastValidation();
-    }
+    const game = await resourceContext.fetchGameModelValidated();
 
     const eula = await AgreementModel.findOne({ where: { id: eulaId }, include: { all: true } });
     if (!game || !eula) {
@@ -247,44 +245,42 @@ export class GameService {
     }
 
     const promises: Promise<unknown>[] = [];
-    let badLocale: string | null = null;
 
     Object.values(request.names).forEach(entry => {
-      debug(`updateEula, check ${JSON.stringify(entry)})`);
       const loc = localeFromString(entry.key);
       if (!loc) {
-        badLocale = entry.key;
-        return;
+        throw new BadRequestResponse(`Request contains an invalid locale: ${entry.key}`);
       }
-      if (!entry.value) {
-        debug(`updateEula, removing name for locale ${loc})`);
+      if (entry.value == null) {
+        throw new BadRequestResponse(
+          `Invalid name for locale: ${loc}, use an empty string to delete instead of null or undefined`
+        );
+      }
+
+      if (entry.value === '') {
         promises.push(eula.removeName(loc));
       } else {
-        debug(`updateEula, setting name for locale ${loc} to ${entry.value})`);
         promises.push(eula.addName(entry.value, loc));
       }
     });
 
     Object.values(request.urls).forEach(entry => {
-      debug(`updateEula, check ${JSON.stringify(entry)})`);
       const loc = localeFromString(entry.key);
       if (!loc) {
-        badLocale = entry.key;
-        return;
+        throw new BadRequestResponse(`Request contains an invalid locale: ${entry.key}`);
+      }
+      if (entry.value == null) {
+        throw new BadRequestResponse(
+          `Invalid url for locale: ${loc}, use an empty string to delete instead of null or undefined`
+        );
       }
 
       if (!entry.value) {
-        debug(`updateEula, removing url for locale ${loc})`);
         promises.push(eula.removeUrl(loc));
-      } else {
-        debug(`updateEula, setting url for locale ${loc} to ${entry.value})`);
+      } else if (!entry.value) {
         promises.push(eula.addUrl(entry.value, loc));
       }
     });
-
-    if (badLocale !== null) {
-      return { code: HttpCode.BAD_REQUEST, message: `Request contains an invalid locale: ${badLocale}` };
-    }
 
     await Promise.all(promises);
 
@@ -298,10 +294,7 @@ export class GameService {
    *
    */
   public static async getEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription[]>> {
-    const game = await resourceContext.fetchGameModel();
-    if (!game) {
-      return malformedRequestPastValidation();
-    }
+    const game = await resourceContext.fetchGameModelValidated();
     const agreements = await AgreementModel.findAll({
       where: { ownerId: game.id },
       include: { all: true },
