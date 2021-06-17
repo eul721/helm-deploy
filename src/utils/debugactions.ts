@@ -120,7 +120,7 @@ export const actions: DebugAction[] = [
     command: 'title list',
     params: [],
     action: async (_params: string[]) => {
-      const items = (await GameModel.findAll()).map(item => item.toHttpModel());
+      const items = (await GameModel.findAll()).map(item => item.toPublicHttpModel());
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),
@@ -290,7 +290,7 @@ export const actions: DebugAction[] = [
     command: 'branch list',
     params: [],
     action: async (_params: string[]) => {
-      const items = (await BranchModel.findAll()).map(item => item.toHttpModel(Locale.en));
+      const items = (await BranchModel.findAll()).map(item => item.toPublicHttpModel());
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),
@@ -338,7 +338,7 @@ export const actions: DebugAction[] = [
     command: 'build list',
     params: [],
     action: async (_params: string[]) => {
-      const items = (await BuildModel.findAll()).map(item => item.toHttpModel(Locale.en));
+      const items = (await BuildModel.findAll()).map(item => item.toHttpModel());
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),

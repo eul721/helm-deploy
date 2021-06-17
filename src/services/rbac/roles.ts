@@ -32,7 +32,7 @@ export class RbacRolesService {
     }
 
     const role = await division?.createRoleEntry({ name: roleName });
-    return { code: HttpCode.CREATED, payload: role.toHttpModel() };
+    return { code: HttpCode.CREATED, payload: role.toPublisherHttpModel() };
   }
 
   /**
@@ -47,7 +47,7 @@ export class RbacRolesService {
     }
 
     const roles = await division.getRoles();
-    return { code: HttpCode.OK, payload: roles.map(role => role.toHttpModel()) };
+    return { code: HttpCode.OK, payload: roles.map(role => role.toPublisherHttpModel()) };
   }
 
   /**
@@ -151,6 +151,6 @@ export class RbacRolesService {
     if (!role || !games) {
       return malformedRequestPastValidation();
     }
-    return { code: HttpCode.OK, payload: games.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: games.map(item => item.toPublisherHttpModel()) };
   }
 }

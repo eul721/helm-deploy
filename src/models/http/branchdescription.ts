@@ -1,8 +1,11 @@
-export interface BranchDescription {
+/**
+ * Describes a Download (public Download) branch model
+ */
+export interface PublicBranchDescription {
   /** Internal PS id */
   id: number;
 
-  name: string;
+  names: Record<string, string>;
 
   passwordProtected: boolean;
 

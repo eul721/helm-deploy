@@ -48,17 +48,37 @@ describe('src/services/game', () => {
     });
   });
 
-  describe('GameService.getAllGames', () => {
+  describe('GameService.getAllPublicGames', () => {
     it('should return all games from sample database', async () => {
-      const serviceResponse = await GameService.getAllGames();
+      const serviceResponse = await GameService.getAllPublicGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
       expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
+      // Ensuring it provides the Public http model
+      expect(serviceResponse.payload).not.toHaveProperty([0, 'defaultBranchId']);
     });
 
     it('should return no games if database is empty', async () => {
       await getDBInstance().sync({ force: true });
-      const serviceResponse = await GameService.getAllGames();
+      const serviceResponse = await GameService.getAllPublicGames();
+      expect(serviceResponse.code).toBe(HttpCode.OK);
+      expect(serviceResponse.payload).toHaveLength(0);
+    });
+  });
+
+  describe('GameService.getAllPublisherGames', () => {
+    it('should return all games from sample database', async () => {
+      const serviceResponse = await GameService.getAllPublisherGames();
+      expect(serviceResponse.code).toBe(HttpCode.OK);
+      expect(serviceResponse.payload).toBeTruthy();
+      expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
+      // Ensuring it provides the Publisher http model
+      expect(serviceResponse.payload).toHaveProperty([0, 'defaultBranchId']);
+    });
+
+    it('should return no games if database is empty', async () => {
+      await getDBInstance().sync({ force: true });
+      const serviceResponse = await GameService.getAllPublisherGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toHaveLength(0);
     });

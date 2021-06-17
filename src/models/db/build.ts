@@ -91,10 +91,10 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
     branches: Association<GameModel, BranchModel>;
   };
 
-  public toHttpModel(locale: Locale): BuildDescription {
+  public toHttpModel(): BuildDescription {
     return {
       id: this.id,
-      patchNotes: this.getNotesLoaded(locale),
+      patchNotes: this.notes,
       ownerId: this.ownerId,
       bdsBuildId: this.bdsBuildId,
     };

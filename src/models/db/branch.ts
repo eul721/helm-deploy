@@ -11,7 +11,8 @@ import {
   Optional,
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
-import { BranchDescription } from '../http/branchdescription';
+import { PublicBranchDescription } from '../http/branchdescription';
+import { BranchDescription } from '../http/rbac/branchdescription';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
@@ -117,13 +118,23 @@ export class BranchModel
     owner: Association<BranchModel, GameModel>;
   };
 
-  public toHttpModel(locale: Locale): BranchDescription {
+  public toPublicHttpModel(): PublicBranchDescription {
     return {
-      id: this.id,
-      name: this.getNameLoaded(locale),
-      passwordProtected: this.password !== null,
-      ownerId: this.ownerId,
       bdsBranchId: this.bdsBranchId,
+      id: this.id,
+      names: this.names,
+      ownerId: this.ownerId,
+      passwordProtected: this.password !== null,
+    };
+  }
+
+  public toPublisherHttpModel(): BranchDescription {
+    return {
+      bdsBranchId: this.bdsBranchId,
+      id: this.id,
+      names: this.names,
+      ownerId: this.ownerId,
+      password: this.password,
     };
   }
 }

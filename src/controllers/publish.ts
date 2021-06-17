@@ -37,6 +37,27 @@ publishApiRouter.get(
 );
 
 /**
+ * @api {GET} /api/publisher/games/:gameId Get Game
+ * @apiName GetGame
+ * @apiGroup Publisher
+ * @apiDescription Get a single game by ID
+ * @apiVersion  0.0.1
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+ *
+ * @apiUse PublisherGameModel
+ */
+publishApiRouter.get(
+  `/${Segment.gameById}`,
+  getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
+  endpointServiceCallWrapper(async (_req, res) => {
+    const publisherContext = AuthenticateContext.get(res);
+    return GameService.getGamePublisher(ResourceContext.get(res), publisherContext);
+  })
+);
+
+/**
  * @api {GET} /api/publisher/games/:gameId/branches Get branches
  * @apiName GetBranches
  * @apiGroup Publisher

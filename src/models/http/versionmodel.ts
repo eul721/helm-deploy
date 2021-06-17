@@ -5,7 +5,7 @@ export interface Version {
   version: string;
 
   // release notes for the patch
-  releaseNotes: string;
+  releaseNotes: Record<string, string>;
 
   // whether the update is mandatory and the game should not be allowed to start without getting it
   mandatory: boolean;
