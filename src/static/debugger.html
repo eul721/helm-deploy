@@ -132,6 +132,9 @@
 
 <script>
 
+  const isLocalDev = window.location.toString().split('?').filter(item => item.match(/test=true/)).length !== 0;
+  const baseUrl = isLocalDev ? 'http://localhost:3000' : window.location.origin;
+  document.getElementById('input-host').value = baseUrl;
   const commandInput = document.getElementById('input');
 
   // history[0] is the latest, history[n] is always before history[n-1]
