@@ -8,8 +8,8 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
-import { Locale, LocalizedHashmap } from '../defines/locale';
+import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
+import { Locale, LocalizedHashmap } from '../../utils/language';
 import { BuildDescription } from '../http/resources/builddescription';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';

@@ -1,7 +1,7 @@
 import { DataTypes, Model, ModelAttributes, Optional } from 'sequelize';
 import { envConfig } from '../../configuration/envconfig';
-import { INTERNAL_ID } from '../defines/definitions';
-import { Locale } from '../defines/locale';
+import { INTERNAL_ID } from '../../utils/database';
+import { Locale } from '../../utils/language';
 
 const TEXT_TYPE = () => DataTypes.TEXT(envConfig.isTest() ? undefined : { length: 'long' });
 

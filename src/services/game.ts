@@ -14,7 +14,7 @@ import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { GameDescription } from '../models/http/resources/gamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
-import { Locale, localeFromString } from '../models/defines/locale';
+import { Locale, localeFromString } from '../utils/language';
 
 export class GameService {
   /**

@@ -14,7 +14,7 @@ import { TitleService } from '../services/title';
 import { reinitializeDummyData, SampleDatabase } from './sampledatabase';
 import { DebuggerResponse, toDebuggerResponse } from './debuggerresponse';
 import { getDBInstance } from '../models/db/database';
-import { localeFromString } from '../models/defines/locale';
+import { localeFromString } from './language';
 import { toIntRequired } from './service';
 
 export interface DebugAction {

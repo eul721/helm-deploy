@@ -1,4 +1,4 @@
-import { LocalizedHashmap } from '../defines/locale';
+import { LocalizedHashmap } from '../../utils/language';
 
 export interface DownloadDataRoot {
   model: Model;

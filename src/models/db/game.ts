@@ -10,7 +10,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID, INTERNAL_ID_REFERENCE, AtLeastOne } from '../defines/definitions';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE, AtLeastOne } from '../../utils/database';
 import { AgreementCreationAttributes, AgreementModel } from './agreement';
 import { BuildCreationAttributes, BuildModel } from './build';
 import { BranchCreationAttributes, BranchModel } from './branch';
@@ -19,7 +19,7 @@ import { RoleModel } from './role';
 import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 import { GameDescription } from '../http/resources/gamedescription';
-import { Locale, LocalizedHashmap } from '../defines/locale';
+import { Locale, LocalizedHashmap } from '../../utils/language';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),

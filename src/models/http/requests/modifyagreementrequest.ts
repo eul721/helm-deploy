@@ -1,4 +1,4 @@
-import { Locale } from '../../defines/locale';
+import { Locale } from '../../../utils/language';
 
 export interface ModifyAgreementRequest {
   // localized name entries

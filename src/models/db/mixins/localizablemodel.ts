@@ -4,7 +4,7 @@ import {
   HasManyRemoveAssociationMixin,
   Model,
 } from 'sequelize';
-import { Locale, LocalizedHashmap } from '../../defines/locale';
+import { Locale, LocalizedHashmap } from '../../../utils/language';
 import { Fields, LocalizedFieldModel } from '../localizedfield';
 
 /**

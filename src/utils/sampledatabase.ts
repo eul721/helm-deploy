@@ -7,7 +7,7 @@ import { GroupModel } from '../models/db/group';
 import { DivisionPermissions, PermissionModel, ResourcePermissions } from '../models/db/permission';
 import { RoleModel } from '../models/db/role';
 import { UserModel } from '../models/db/user';
-import { Locale } from '../models/defines/locale';
+import { Locale } from './language';
 
 export class SampleDatabase {
   public division!: DivisionModel;

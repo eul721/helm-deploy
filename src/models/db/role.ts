@@ -13,7 +13,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { RoleDescription } from '../http/rbac/roledescription';
 import { DivisionModel } from './division';
 import { GameModel } from './game';
