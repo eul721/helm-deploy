@@ -1,4 +1,4 @@
-import { LocalizedHashmap } from '../../defines/locale';
+import { LocalizedHashmap } from '../../../utils/language';
 
 /**
  * Describes an agreement/eula
