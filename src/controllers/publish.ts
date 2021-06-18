@@ -70,7 +70,7 @@ publishApiRouter.get(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.patch(
-  `/${Segment.games}`,
+  `/${Segment.gameById}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
   endpointServiceCallWrapper(async (req, res) => {
     const payload: ModifyTitleRequest = req.body as ModifyTitleRequest;
@@ -90,7 +90,7 @@ publishApiRouter.patch(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.patch(
-  `/${Segment.games}/${Segment.branches}`,
+  `/${Segment.gameById}/${Segment.branches}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
   endpointServiceCallWrapper(async (req, res) => {
     const payload: ModifyBranchRequest = req.body as ModifyBranchRequest;
@@ -110,9 +110,11 @@ publishApiRouter.patch(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse PublisherBranchModelArray
  */
 publishApiRouter.get(
-  `/${Segment.games}/branches`,
+  `/${Segment.gameById}/branches`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
   endpointServiceCallWrapper(async (_req, res) => {
     return GameService.getBranchesPublisher(ResourceContext.get(res));
@@ -131,7 +133,7 @@ publishApiRouter.get(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.get(
-  `/${Segment.games}/eulas`,
+  `/${Segment.gameById}/eulas`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
   endpointServiceCallWrapper(async (_req, res) => {
     return GameService.getEula(ResourceContext.get(res));
@@ -152,7 +154,7 @@ publishApiRouter.get(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.post(
-  `/${Segment.games}/eulas`,
+  `/${Segment.gameById}/eulas`,
   getAuthorizeForResourceMiddleware('create', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (_req, res) => {
     return GameService.createEula(ResourceContext.get(res));
@@ -160,7 +162,7 @@ publishApiRouter.post(
 );
 
 /**
- * @api {Delete} /api/publisher/games/:gameId/eulas/:eulaId Remove Eula
+ * @api {DELETE} /api/publisher/games/:gameId/eulas/:eulaId Remove Eula
  * @apiName RemoveEula
  * @apiGroup Publisher
  * @apiVersion  0.0.1
@@ -171,7 +173,7 @@ publishApiRouter.post(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.delete(
-  `/${Segment.games}/${Segment.eula}`,
+  `/${Segment.gameById}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('delete', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
     const eulaId = toIntRequired(req.params[PathParam.eulaId]);
@@ -191,7 +193,7 @@ publishApiRouter.delete(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.patch(
-  `/${Segment.games}/${Segment.eula}`,
+  `/${Segment.gameById}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
     const eulaId = toIntRequired(req.params[PathParam.eulaId]);

@@ -12,9 +12,8 @@ import {
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { Locale, LocalizedHashmap } from '../../utils/language';
-import { BranchDescription } from '../http/resources/branchdescription';
-import { PublicBranchDescription } from '../http/branchdescription';
 import { BranchDescription } from '../http/rbac/branchdescription';
+import { PublicBranchDescription } from '../http/resources/branchdescription';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, LocalizedFieldModel } from './localizedfield';

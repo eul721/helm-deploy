@@ -10,11 +10,11 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { UserModel } from './user';
 import { RoleModel } from './role';
 import { DivisionModel } from './division';
 import { GroupDescription } from '../http/rbac/groupdescription';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 
 export const GroupDef: ModelAttributes = {
   id: INTERNAL_ID(),

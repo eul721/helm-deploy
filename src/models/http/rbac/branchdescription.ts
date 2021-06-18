@@ -20,6 +20,8 @@
  *  }
  */
 
+import { LocalizedHashmap } from '../../../utils/language';
+
 /**
  * @apiDefine PublisherBranchModelArray Array of Branch Description Models
  *  REST response model for Publisher APIs
@@ -62,7 +64,7 @@ export interface BranchDescription {
   /** Internal PS id */
   id: number;
 
-  names: Record<string, string>;
+  names: LocalizedHashmap;
 
   ownerId: number;
 

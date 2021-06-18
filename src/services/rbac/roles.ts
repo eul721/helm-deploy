@@ -3,7 +3,7 @@ import { RoleModel } from '../../models/db/role';
 import { HttpCode } from '../../models/http/httpcode';
 import { PermissionDescription } from '../../models/http/rbac/permissiondescription';
 import { RoleDescription } from '../../models/http/rbac/roledescription';
-import { GameDescription } from '../../models/http/resources/gamedescription';
+import { GameDescription } from '../../models/http/rbac/gamedescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
 
 export class RbacRolesService {

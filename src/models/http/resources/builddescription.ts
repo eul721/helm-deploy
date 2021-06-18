@@ -10,7 +10,7 @@ export interface BuildDescription {
   bdsBuildId: number;
 
   /** Localized release notes entries */
-  releaseNotes: LocalizedHashmap;
+  patchNotes: LocalizedHashmap;
 
   /** whether the update is mandatory and the game should not be allowed to start without getting it */
   mandatory: boolean;

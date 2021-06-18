@@ -18,9 +18,9 @@ import { DivisionModel } from './division';
 import { RoleModel } from './role';
 import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
-import { GameDescription } from '../http/resources/gamedescription';
+import { GameDescription } from '../http/rbac/gamedescription';
 import { Locale, LocalizedHashmap } from '../../utils/language';
-import { PublicGameDescription } from '../http/publicgamedescription';
+import { PublicGameDescription } from '../http/resources/publicgamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -188,7 +188,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
   public toPublicHttpModel(): PublicGameDescription {
     return {
       bdsTitleId: this.bdsTitleId,
-      contentfulId: this.contentfulId,
+      contentfulId: this.contentfulId ?? '',
       divisionId: this.ownerId,
       id: this.id,
       names: this.names,

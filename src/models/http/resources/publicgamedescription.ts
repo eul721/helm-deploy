@@ -1,3 +1,5 @@
+import { LocalizedHashmap } from '../../../utils/language';
+
 /**
  * @apiDefine PublicGameModel Public Game Description Model
  *  REST response model for Download APIs
@@ -9,7 +11,6 @@
  * @apiSuccess (200) {Number} id Unique ID of this title
  * @apiSuccess (200) {Object} names Hashmap of names for this game, keyed by Locale
  */
-
 /**
  * @apiDefine PublicGameModelsArray Array of Game Description Models
  *  REST response model for Download APIs
@@ -61,5 +62,5 @@ export interface PublicGameDescription {
   bdsTitleId: number;
 
   /** Game names */
-  names: Record<string, string>;
+  names: LocalizedHashmap;
 }

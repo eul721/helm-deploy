@@ -15,7 +15,7 @@ export interface DownloadData {
   branchId: number;
   versions: {
     buildId: number;
-    releaseNotes?: string;
+    releaseNotes: LocalizedHashmap;
     mandatory: boolean;
     version: string;
   }[];

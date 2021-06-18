@@ -11,10 +11,15 @@ import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
 import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
-import { PublicGameDescription } from '../models/http/publicgamedescription';
+import { PublicGameDescription } from '../models/http/resources/publicgamedescription';
 import { GameContext } from '../models/auth/base/gamecontext';
 import { BranchDescription } from '../models/http/rbac/branchdescription';
 import { BadRequestResponse } from '../utils/errors';
+import { GameDescription } from '../models/http/rbac/gamedescription';
+import { PublicBranchDescription } from '../models/http/resources/branchdescription';
+import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
+import { debug } from '../logger';
+import { localeFromString } from '../utils/language';
 
 export class GameService {
   /**
@@ -85,11 +90,13 @@ export class GameService {
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
     }
-    // TODO: ensure user can access this game
-    const game = await gameContext.fetchGameModel(true);
+    // TODO: ensure user can access this game //PK: TODO, make it used a Resource context and corresponding middleware to validate access
+    const game = await gameContext.fetchGameModel();
     if (!game) {
       return { code: HttpCode.NOT_FOUND };
     }
+
+    await game?.reload({ include: { all: true } });
 
     return {
       code: HttpCode.OK,
@@ -219,7 +226,7 @@ export class GameService {
 
     await game.save();
 
-    return { code: HttpCode.OK, payload: game.toHttpModel() };
+    return { code: HttpCode.OK, payload: game.toPublisherHttpModel() };
   }
 
   /**
