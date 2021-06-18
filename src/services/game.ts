@@ -2,7 +2,6 @@ import { Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
-import { BranchDescription } from '../models/http/resources/branchdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { AgreementModel } from '../models/db/agreement';
@@ -11,10 +10,10 @@ import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
 import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
-import { GameDescription } from '../models/http/resources/gamedescription';
-import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
-import { debug } from '../logger';
-import { Locale, localeFromString } from '../utils/language';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
+import { PublicGameDescription } from '../models/http/publicgamedescription';
+import { GameContext } from '../models/auth/base/gamecontext';
+import { BranchDescription } from '../models/http/rbac/branchdescription';
 import { BadRequestResponse } from '../utils/errors';
 
 export class GameService {
@@ -40,9 +39,62 @@ export class GameService {
    * Returns download data of all games, returns only publicly released branches
    * This method doesn't care about player/publisher distinction
    */
-  public static async getAllGames(): Promise<ServiceResponse<GameDescription[]>> {
-    const items: GameDescription[] = (await GameModel.findAll()).map(item => item.toHttpModel());
+  public static async getAllPublicGames(): Promise<ServiceResponse<PublicGameDescription[]>> {
+    const items: PublicGameDescription[] = (await GameModel.findAll({ include: { all: true } })).map(item =>
+      item.toPublicHttpModel()
+    );
     return { code: HttpCode.OK, payload: items };
+  }
+
+  public static async getAllPublisherGames(): Promise<ServiceResponse<GameDescription[]>> {
+    const items: GameDescription[] = (await GameModel.findAll({ include: { all: true } })).map(item =>
+      item.toPublisherHttpModel()
+    );
+    return { code: HttpCode.OK, payload: items };
+  }
+
+  /**
+   * Returns a complete games list for the given authentication context
+   * @param authenticationContext Publisher authentication context
+   */
+  public static async getGamesPublisher(
+    authenticationContext: AuthenticateContext
+  ): Promise<ServiceResponse<GameDescription[]>> {
+    const ident = await authenticationContext.fetchStudioUserModel();
+    if (!ident) {
+      return { code: HttpCode.UNAUTHORIZED };
+    }
+    const games = await GameService.getAllPublisherGames();
+    // TODO: fitler by permission level
+    return {
+      code: HttpCode.OK,
+      payload: games.payload,
+    };
+  }
+
+  /**
+   * Get one game, as a publisher model
+   * @param gameContext Game context object
+   * @param authenticationContext user authentication context
+   */
+  public static async getGamePublisher(
+    gameContext: GameContext,
+    authenticationContext: AuthenticateContext
+  ): Promise<ServiceResponse<GameDescription>> {
+    const ident = await authenticationContext.fetchStudioUserModel();
+    if (!ident) {
+      return { code: HttpCode.UNAUTHORIZED };
+    }
+    // TODO: ensure user can access this game
+    const game = await gameContext.fetchGameModel(true);
+    if (!game) {
+      return { code: HttpCode.NOT_FOUND };
+    }
+
+    return {
+      code: HttpCode.OK,
+      payload: game.toPublisherHttpModel(),
+    };
   }
 
   /**
@@ -69,12 +121,7 @@ export class GameService {
       if (!publicBranch || !gameModel.contentfulId) {
         return;
       }
-
-      gameModelsJson[gameModel.contentfulId] = GameService.transformGameModelToDownloadModel(
-        gameModel,
-        publicBranch,
-        Locale.en
-      );
+      gameModelsJson[gameModel.contentfulId] = GameService.transformGameModelToDownloadModel(gameModel, publicBranch);
     });
 
     return { code: HttpCode.OK, payload: { model: { downloadData: gameModelsJson } } };
@@ -85,19 +132,18 @@ export class GameService {
    *
    * @param playerContext request context
    */
-  public static async getBranches(playerContext: PlayerContext): Promise<ServiceResponse<BranchDescription[]>> {
+  public static async getBranches(playerContext: PlayerContext): Promise<ServiceResponse<PublicBranchDescription[]>> {
     const game = await playerContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
-    const branches: BranchDescription[] = [];
+    const branches: PublicBranchDescription[] = [];
     (await game.getBranches())?.forEach(branch => {
       if (!branch) {
         return;
       }
-
-      branches.push(branch.toHttpModel());
+      branches.push(branch.toPublicHttpModel());
     });
 
     return { code: HttpCode.OK, payload: branches };
@@ -113,7 +159,7 @@ export class GameService {
   ): Promise<ServiceResponse<BranchDescription[]>> {
     const game = await resourceContext.fetchGameModel();
     const branchModels = await game?.getBranches();
-    const branches: BranchDescription[] = branchModels?.map(branch => branch.toHttpModel()) ?? [];
+    const branches: BranchDescription[] = branchModels?.map(branch => branch.toPublisherHttpModel()) ?? [];
 
     return { code: HttpCode.OK, payload: branches };
   }
@@ -306,7 +352,6 @@ export class GameService {
   private static async constructGameDownloadModel(
     game: GameModel,
     branch: BranchModel,
-    locale = Locale.en,
     reloadModels = true
   ): Promise<DownloadData> {
     // refetch latest data if not specified
@@ -314,7 +359,7 @@ export class GameService {
       await game.reload({ include: { all: true } });
       await branch.reload({ include: { all: true } });
     }
-    return GameService.transformGameModelToDownloadModel(game, branch, locale);
+    return GameService.transformGameModelToDownloadModel(game, branch);
   }
 
   /**
@@ -324,11 +369,7 @@ export class GameService {
    * @param locale Locale to decorate
    * @returns A decorated DownloadData payload, used to display to the user
    */
-  private static transformGameModelToDownloadModel(
-    game: GameModel,
-    branch: BranchModel,
-    locale = Locale.en
-  ): DownloadData {
+  private static transformGameModelToDownloadModel(game: GameModel, branch: BranchModel): DownloadData {
     return {
       names: game.names,
       agreements:
@@ -343,7 +384,7 @@ export class GameService {
         game.builds?.map(branchData => ({
           buildId: branchData.bdsBuildId,
           mandatory: branchData.mandatory ?? false,
-          releaseNotes: branchData.notes[locale],
+          releaseNotes: branchData.notes,
           version: branchData.id.toString(),
         })) ?? [],
       // TODO: transfer former contentful spec to SQL

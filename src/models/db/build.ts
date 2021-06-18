@@ -95,6 +95,7 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
   public toHttpModel(): BuildDescription {
     return {
       id: this.id,
+      patchNotes: this.notes,
       ownerId: this.ownerId,
       bdsBuildId: this.bdsBuildId,
       releaseNotes: this.notes,

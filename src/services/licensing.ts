@@ -96,7 +96,7 @@ export class LicensingService {
   }
 
   private static async fetchLicenseRequest(urlBase: string, deviceId: string, userToken: string): Promise<LicenseData> {
-    const type = 20; // type -> will always be '20', representing pre-release licenses
+    const type = 10; // type -> 10 is vortex, will be updated to fetch all in TGP-5737
     const urlFetch = `${urlBase}/grantedlicenses/me?deviceId=${deviceId}&type=${type}`;
     try {
       const dnaResponse = await fetch(urlFetch, {

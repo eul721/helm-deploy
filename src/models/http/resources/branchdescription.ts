@@ -1,6 +1,9 @@
 import { LocalizedHashmap } from '../../../utils/language';
 
-export interface BranchDescription {
+/**
+ * Describes a Download (public Download) branch model
+ */
+export interface PublicBranchDescription {
   /** Internal PS id */
   id: number;
 

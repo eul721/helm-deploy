@@ -4,6 +4,7 @@ import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
 import { getAuthorizeForResourceMiddleware } from '../middleware/authorizeresource';
 import { AdminRequirements } from '../models/auth/adminrequirements';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
@@ -15,6 +16,47 @@ import { endpointServiceCallWrapper, toIntRequired } from '../utils/service';
 export const publishApiRouter = Router();
 
 publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
+
+/** * @api {GET} /api/publisher/games Get Games
+ * @apiName GetGames
+ * @apiGroup Publisher
+ * @apiDescription Get a list of games the authenticated user is allowed to see
+ * @apiVersion 0.0.1
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+ *
+ * @apiUse PublisherGameModelsArray
+ */
+publishApiRouter.get(
+  `/${Segment.games}`,
+  getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
+  endpointServiceCallWrapper(async (_req, res) => {
+    const publisherContext = AuthenticateContext.get(res);
+    return GameService.getGamesPublisher(publisherContext);
+  })
+);
+
+/**
+ * @api {GET} /api/publisher/games/:gameId Get Game
+ * @apiName GetGame
+ * @apiGroup Publisher
+ * @apiDescription Get a single game by ID
+ * @apiVersion  0.0.1
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+ *
+ * @apiUse PublisherGameModel
+ */
+publishApiRouter.get(
+  `/${Segment.gameById}`,
+  getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
+  endpointServiceCallWrapper(async (_req, res) => {
+    const publisherContext = AuthenticateContext.get(res);
+    return GameService.getGamePublisher(ResourceContext.get(res), publisherContext);
+  })
+);
 
 /**
  * @api {PATCH} /api/publisher/games/:gameId Modify a game

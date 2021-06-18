@@ -24,7 +24,7 @@ downloadApiRouter.get(
   '/',
   getAuthorizePlayerMiddleware(),
   endpointServiceCallWrapper(async () => {
-    return GameService.getAllGames();
+    return GameService.getAllPublicGames();
   })
 );
 

@@ -13,6 +13,8 @@ import {
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { Locale, LocalizedHashmap } from '../../utils/language';
 import { BranchDescription } from '../http/resources/branchdescription';
+import { PublicBranchDescription } from '../http/branchdescription';
+import { BranchDescription } from '../http/rbac/branchdescription';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, LocalizedFieldModel } from './localizedfield';
@@ -118,13 +120,23 @@ export class BranchModel
     owner: Association<BranchModel, GameModel>;
   };
 
-  public toHttpModel(): BranchDescription {
+  public toPublicHttpModel(): PublicBranchDescription {
     return {
+      bdsBranchId: this.bdsBranchId,
       id: this.id,
       names: this.names,
-      passwordProtected: this.password !== null,
       ownerId: this.ownerId,
+      passwordProtected: this.password !== null,
+    };
+  }
+
+  public toPublisherHttpModel(): BranchDescription {
+    return {
       bdsBranchId: this.bdsBranchId,
+      id: this.id,
+      names: this.names,
+      ownerId: this.ownerId,
+      password: this.password,
     };
   }
 }

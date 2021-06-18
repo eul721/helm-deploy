@@ -99,12 +99,12 @@ export class RoleModel extends Model<RoleAttributes, RoleCreationAttributes> imp
     groupsWithRole: Association<RoleModel, GroupModel>;
   };
 
-  public toHttpModel(): RoleDescription {
+  public toPublisherHttpModel(): RoleDescription {
     return {
       id: this.id,
       name: this.name,
       assignedPermissions: this.assignedPermissions?.map(role => role.id),
-      assignedGames: this.assignedGames?.map(game => game.toHttpModel()),
+      assignedGames: this.assignedGames?.map(game => game.toPublisherHttpModel()),
     };
   }
 }
