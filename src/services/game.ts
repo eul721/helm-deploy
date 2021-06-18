@@ -2,21 +2,24 @@ import { Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
-import { PublicBranchDescription } from '../models/http/branchdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
-import { info } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
-import { Locale } from '../models/db/localizedfield';
 import { AgreementModel } from '../models/db/agreement';
-import { AgreementDescription } from '../models/http/rbac/agreementdescription';
+import { AgreementDescription } from '../models/http/resources/agreementdescription';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
-import { GameDescription } from '../models/http/rbac/gamedescription';
+import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
-import { PublicGameDescription } from '../models/http/publicgamedescription';
+import { PublicGameDescription } from '../models/http/resources/publicgamedescription';
 import { GameContext } from '../models/auth/base/gamecontext';
 import { BranchDescription } from '../models/http/rbac/branchdescription';
+import { BadRequestResponse } from '../utils/errors';
+import { GameDescription } from '../models/http/rbac/gamedescription';
+import { PublicBranchDescription } from '../models/http/resources/branchdescription';
+import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
+import { debug } from '../logger';
+import { localeFromString } from '../utils/language';
 
 export class GameService {
   /**
@@ -87,11 +90,13 @@ export class GameService {
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
     }
-    // TODO: ensure user can access this game
-    const game = await gameContext.fetchGameModel(true);
+    // TODO: ensure user can access this game //PK: TODO, make it used a Resource context and corresponding middleware to validate access
+    const game = await gameContext.fetchGameModel();
     if (!game) {
       return { code: HttpCode.NOT_FOUND };
     }
+
+    await game?.reload({ include: { all: true } });
 
     return {
       code: HttpCode.OK,
@@ -120,7 +125,7 @@ export class GameService {
 
     playerOwnedGames.forEach(gameModel => {
       const [publicBranch] = gameModel.branches?.filter(branch => branch.id === gameModel.defaultBranch) ?? [];
-      if (!publicBranch) {
+      if (!publicBranch || !gameModel.contentfulId) {
         return;
       }
       gameModelsJson[gameModel.contentfulId] = GameService.transformGameModelToDownloadModel(gameModel, publicBranch);
@@ -167,55 +172,61 @@ export class GameService {
   }
 
   /**
-   * Returns all branches of the specified game
-   * This can process both player and publisher requests
+   * Sets a branch to be the main/default one
    *
    * @param resourceContext information about the requested resource
-   * @param contentfulId contentful id to set for the game
+   * @param request json model with information about what to change
    */
-  public static async setContentfulId(
+  public static async modifyGame(
     resourceContext: ResourceContext,
-    contentfulId: string
-  ): Promise<ServiceResponse<GameModel>> {
+    request: ModifyTitleRequest
+  ): Promise<ServiceResponse<GameDescription>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
-    const gameWithOverlappingContentfulId = await GameModel.findOne({ where: { contentfulId } });
-    if (gameWithOverlappingContentfulId) {
-      return {
-        code: HttpCode.CONFLICT,
-        message: `Contentful id ${contentfulId} is already assigned to game ${gameWithOverlappingContentfulId.id}`,
-      };
+    if (request.contentfulId !== undefined) {
+      // do not check overlaps when clearing the id
+      if (request.contentfulId !== '' && request.contentfulId !== null) {
+        const gameWithOverlappingContentfulId = await GameModel.findOne({
+          where: { contentfulId: request.contentfulId },
+        });
+        if (gameWithOverlappingContentfulId) {
+          return {
+            code: HttpCode.CONFLICT,
+            message: `Contentful id ${request.contentfulId} is already assigned to game ${gameWithOverlappingContentfulId.id}`,
+          };
+        }
+      }
+      game.contentfulId = request.contentfulId;
     }
 
-    game.contentfulId = contentfulId;
-    await game.save();
-
-    info(`Set contentful id ${contentfulId} on game id ${game.id}`);
-
-    return { code: HttpCode.OK, payload: game };
-  }
-
-  /**
-   * Sets a branch to be the main/default one
-   *
-   * @param resourceContext information about the requested resource
-   */
-  public static async setMainBranch(resourceContext: ResourceContext): Promise<ServiceResponse> {
-    const game = await resourceContext.fetchGameModel();
-    const branch = await resourceContext.fetchBranchModel();
-
-    if (!game || !branch) {
-      return malformedRequestPastValidation();
+    if (request.defaultBranchBdsId === '-1' || request.defaultBranchPsId === '-1') {
+      game.defaultBranch = null;
+    } else if (request.defaultBranchBdsId) {
+      const branch = await BranchModel.findOne({ where: { bdsBranchId: request.defaultBranchBdsId } });
+      if (!branch) {
+        return {
+          code: HttpCode.NOT_FOUND,
+          message: `Failed to find branch with bds id ${request.defaultBranchBdsId}, no data was modified`,
+        };
+      }
+      game.defaultBranch = branch.id;
+    } else if (request.defaultBranchPsId) {
+      const branch = await BranchModel.findOne({ where: { id: request.defaultBranchPsId } });
+      if (!branch) {
+        return {
+          code: HttpCode.NOT_FOUND,
+          message: `Failed to find branch with bds id ${request.defaultBranchBdsId}, no data was modified`,
+        };
+      }
+      game.defaultBranch = branch.id;
     }
-    game.defaultBranch = branch.id;
+
     await game.save();
 
-    info(`Set default branch id ${branch.id} on game id ${game.id}`);
-
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: game.toPublisherHttpModel() };
   }
 
   /**
@@ -224,27 +235,13 @@ export class GameService {
    * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to assign
    */
-  public static async createEula(
-    resourceContext: ResourceContext,
-    eulaUrl?: string,
-    locale = Locale.en
-  ): Promise<ServiceResponse<AgreementDescription>> {
-    if (!eulaUrl) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Missing url query param' };
-    }
-
+  public static async createEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
-    await game.reload({ include: { all: true } });
-    if (game.agreements?.some(agreement => agreement.urls[locale] === eulaUrl)) {
-      return { code: HttpCode.CONFLICT, message: 'The game already contains an EULA with this url' };
-    }
-
     const agreement = await game.createAgreementEntry({});
-    await agreement.addUrl(eulaUrl, locale);
     return { code: HttpCode.OK, payload: agreement.toHttpModel() };
   }
 
@@ -254,17 +251,13 @@ export class GameService {
    * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to unassign
    */
-  public static async removeEula(resourceContext: ResourceContext, eulaId: number): Promise<ServiceResponse<void>> {
-    if (Number.isNaN(eulaId)) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Passed in id is not a number' };
-    }
-
+  public static async removeEula(resourceContext: ResourceContext, eulaId: number): Promise<ServiceResponse> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
-    const eula = await AgreementModel.findOne({ where: { id: eulaId } });
+    const eula = await AgreementModel.findOne({ where: { id: eulaId }, include: { all: true } });
     if (!game || !eula) {
       return { code: HttpCode.NOT_FOUND };
     }
@@ -280,20 +273,86 @@ export class GameService {
   }
 
   /**
+   * Unassigns an EULA to a game
+   *
+   * @param resourceContext information about the requested resource
+   * @param eulaId id of the eula to modify
+   * @param request description of entries to update
+   */
+  public static async updateEula(
+    resourceContext: ResourceContext,
+    eulaId: number,
+    request: ModifyAgreementRequest
+  ): Promise<ServiceResponse> {
+    debug(`updateEula with body ${JSON.stringify(request)}`);
+
+    const game = await resourceContext.fetchGameModelValidated();
+
+    const eula = await AgreementModel.findOne({ where: { id: eulaId }, include: { all: true } });
+    if (!game || !eula) {
+      return { code: HttpCode.NOT_FOUND };
+    }
+
+    if (eula.ownerId !== game.id) {
+      return { code: HttpCode.BAD_REQUEST, message: 'The game does not contains this EULA' };
+    }
+
+    const promises: Promise<unknown>[] = [];
+
+    Object.values(request.names).forEach(entry => {
+      const loc = localeFromString(entry.key);
+      if (!loc) {
+        throw new BadRequestResponse(`Request contains an invalid locale: ${entry.key}`);
+      }
+      if (entry.value == null) {
+        throw new BadRequestResponse(
+          `Invalid name for locale: ${loc}, use an empty string to delete instead of null or undefined`
+        );
+      }
+
+      if (entry.value === '') {
+        promises.push(eula.removeName(loc));
+      } else {
+        promises.push(eula.addName(entry.value, loc));
+      }
+    });
+
+    Object.values(request.urls).forEach(entry => {
+      const loc = localeFromString(entry.key);
+      if (!loc) {
+        throw new BadRequestResponse(`Request contains an invalid locale: ${entry.key}`);
+      }
+      if (entry.value == null) {
+        throw new BadRequestResponse(
+          `Invalid url for locale: ${loc}, use an empty string to delete instead of null or undefined`
+        );
+      }
+
+      if (!entry.value) {
+        promises.push(eula.removeUrl(loc));
+      } else if (!entry.value) {
+        promises.push(eula.addUrl(entry.value, loc));
+      }
+    });
+
+    await Promise.all(promises);
+
+    return { code: HttpCode.OK };
+  }
+
+  /**
    * Get EULA of a game
    *
    * @param resourceContext information about the requested resource
    *
    */
   public static async getEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription[]>> {
-    const game = await resourceContext.fetchGameModel();
-    if (!game) {
-      return malformedRequestPastValidation();
-    }
+    const game = await resourceContext.fetchGameModelValidated();
     const agreements = await AgreementModel.findAll({
       where: { ownerId: game.id },
       include: { all: true },
     });
+
     return { code: HttpCode.OK, payload: agreements.map(item => item.toHttpModel()) };
   }
 
@@ -322,7 +381,7 @@ export class GameService {
       names: game.names,
       agreements:
         game.agreements?.map(agreementData => ({
-          id: agreementData.id.toString(),
+          id: agreementData.id,
           titles: agreementData.names,
           urls: agreementData.urls,
         })) ?? [],

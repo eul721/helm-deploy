@@ -1,12 +1,14 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
-import { FindOptions } from 'sequelize/types';
-import { BranchModel, BranchUniqueIdentifier } from '../../db/branch';
-import { GameAttributes, GameModel, GameUniqueIdentifier } from '../../db/game';
+import { debug } from '../../../logger';
+import { ErrorReason, InternalServerErrorResponse } from '../../../utils/errors';
+import { BranchModel } from '../../db/branch';
+import { GameModel } from '../../db/game';
 
 export class GameContext {
-  constructor(gameUid?: GameUniqueIdentifier, branchUid?: BranchUniqueIdentifier) {
-    this.gameUid = gameUid;
-    this.branchUid = branchUid;
+  constructor(game?: Maybe<GameModel>, branch?: Maybe<BranchModel>) {
+    debug(`creating GameContext, game: ${game?.id ?? 'n/a'}, branch: ${branch?.id ?? 'n/a'}`);
+    this.game = game;
+    this.branch = branch;
   }
 
   public async fetchBranchModel(): Promise<Maybe<BranchModel>> {
@@ -14,40 +16,36 @@ export class GameContext {
       return this.branch;
     }
 
-    if (this.branchUid) {
-      this.branch = (await BranchModel.findOne({ where: this.branchUid })) ?? undefined;
-    } else {
-      const title = await this.fetchGameModel();
-      if (title && title.defaultBranch) {
-        this.branch = (await BranchModel.findOne({ where: { id: title?.defaultBranch } })) ?? undefined;
-      }
+    debug('fetchBranchModel, nothing set, assuming default if it exists');
+    const title = await this.fetchGameModel();
+    if (title && title.defaultBranch) {
+      this.branch = (await BranchModel.findOne({ where: { id: title?.defaultBranch } })) ?? undefined;
     }
+
     return this.branch;
   }
 
-  public async fetchGameModel(full = false): Promise<Maybe<GameModel>> {
-    if (this.game) {
-      return this.game;
+  public async fetchBranchModelValidated(): Promise<BranchModel> {
+    const branch = await this.fetchBranchModel();
+    if (!branch) {
+      throw new InternalServerErrorResponse(ErrorReason.MalformedPastValidation);
     }
+    return branch;
+  }
 
-    if (this.gameUid) {
-      const query: FindOptions<GameAttributes> = {
-        where: this.gameUid,
-      };
-      if (full) {
-        query.include = { all: true };
-      }
-      this.game = (await GameModel.findOne(query)) ?? undefined;
+  public async fetchGameModel(): Promise<Maybe<GameModel>> {
+    return this.game;
+  }
+
+  public async fetchGameModelValidated(): Promise<GameModel> {
+    if (!this.game) {
+      throw new InternalServerErrorResponse(ErrorReason.MalformedPastValidation);
     }
     return this.game;
   }
 
-  public readonly gameUid?: GameUniqueIdentifier;
-
-  public readonly branchUid?: BranchUniqueIdentifier;
-
   // cached data
-  private game?: GameModel;
+  private game: Maybe<GameModel>;
 
-  private branch?: BranchModel;
+  private branch: Maybe<BranchModel>;
 }

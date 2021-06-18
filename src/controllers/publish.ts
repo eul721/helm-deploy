@@ -6,17 +6,18 @@ import { getAuthorizeForResourceMiddleware } from '../middleware/authorizeresour
 import { AdminRequirements } from '../models/auth/adminrequirements';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { ResourceContext } from '../models/auth/resourcecontext';
+import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
+import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
+import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { BranchService } from '../services/branch';
 import { GameService } from '../services/game';
-import { getQueryParamValue } from '../utils/http';
-import { endpointServiceCallWrapper } from '../utils/service';
+import { endpointServiceCallWrapper, toIntRequired } from '../utils/service';
 
 export const publishApiRouter = Router();
 
 publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
 
-/**
- * @api {GET} /api/publisher/games Get Games
+/** * @api {GET} /api/publisher/games Get Games
  * @apiName GetGames
  * @apiGroup Publisher
  * @apiDescription Get a list of games the authenticated user is allowed to see
@@ -58,7 +59,47 @@ publishApiRouter.get(
 );
 
 /**
- * @api {GET} /api/publisher/games/:gameId/branches Get Branches
+ * @api {PATCH} /api/publisher/games/:gameId Modify a game
+ * @apiName ModifyGame
+ * @apiGroup Publisher
+ * @apiVersion  0.0.1
+ * @apiDescription Modify a game
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+ * @apiUse AuthorizeResourceAccessMiddleware
+ */
+publishApiRouter.patch(
+  `/${Segment.gameById}`,
+  getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
+  endpointServiceCallWrapper(async (req, res) => {
+    const payload: ModifyTitleRequest = req.body as ModifyTitleRequest;
+    return GameService.modifyGame(ResourceContext.get(res), payload);
+  })
+);
+
+/**
+ * @api {PATCH} /api/publisher/games/:gameId/branches/:branchId Modify a branch
+ * @apiName ModifyGame
+ * @apiGroup Publisher
+ * @apiVersion  0.0.1
+ * @apiDescription Modify a game
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+ * @apiUse AuthorizeResourceAccessMiddleware
+ */
+publishApiRouter.patch(
+  `/${Segment.gameById}/${Segment.branches}`,
+  getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
+  endpointServiceCallWrapper(async (req, res) => {
+    const payload: ModifyBranchRequest = req.body as ModifyBranchRequest;
+    return BranchService.setPassword(ResourceContext.get(res), payload.password);
+  })
+);
+
+/**
+ * @api {GET} /api/publisher/games/:gameId/branches Get branches
  * @apiName GetBranches
  * @apiGroup Publisher
  * @apiVersion  0.0.1
@@ -77,67 +118,6 @@ publishApiRouter.get(
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
   endpointServiceCallWrapper(async (_req, res) => {
     return GameService.getBranchesPublisher(ResourceContext.get(res));
-  })
-);
-
-/**
- * @api {POST} /api/publisher/games/:gameId/contentful/:contentfulId Set contentfulId on a game
- * @apiName SetContentfulId
- * @apiGroup Publisher
- * @apiVersion  0.0.1
- * @apiDescription Set contentful id for a game
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePublisherMiddleware
- * @apiUse AuthorizeResourceAccessMiddleware
- */
-publishApiRouter.post(
-  `/${Segment.gameById}/${Segment.contentful}`,
-  getAuthorizeForResourceMiddleware('update', AdminRequirements.Always),
-  endpointServiceCallWrapper(async (req, res) => {
-    const contentfulId = req.params[PathParam.contentfulId];
-    return GameService.setContentfulId(ResourceContext.get(res), contentfulId);
-  })
-);
-
-/**
- * @api {POST} /api/publisher/games/:gameId/branches/:branchId Set main branch of a game
- * @apiName SetContentfulId
- * @apiGroup Publisher
- * @apiVersion  0.0.1
- * @apiDescription Set contentful id for a game
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePublisherMiddleware
- * @apiUse AuthorizeResourceAccessMiddleware
- */
-publishApiRouter.post(
-  `/${Segment.gameById}/${Segment.branches}`,
-  getAuthorizeForResourceMiddleware('update', AdminRequirements.Always),
-  endpointServiceCallWrapper(async (_req, res) => {
-    return GameService.setMainBranch(ResourceContext.get(res));
-  })
-);
-
-/**
- * @api {PATCH} /api/publisher/games/:gameId/branches/:branchId Update a branch
- * @apiName UpdateBranch
- * @apiGroup Publisher
- * @apiVersion  0.0.1
- * @apiDescription Update a branch
- *
- * @apiParam (Query) {String} password Password to set on the branch, can be empty to remove it
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePublisherMiddleware
- * @apiUse AuthorizeResourceAccessMiddleware
- */
-publishApiRouter.patch(
-  `/${Segment.gameById}/${Segment.branches}`,
-  getAuthorizeForResourceMiddleware('update', AdminRequirements.Always),
-  endpointServiceCallWrapper(async (req, res) => {
-    const password = getQueryParamValue(req, 'password');
-    return BranchService.setPassword(ResourceContext.get(res), password);
   })
 );
 
@@ -176,9 +156,8 @@ publishApiRouter.get(
 publishApiRouter.post(
   `/${Segment.gameById}/eulas`,
   getAuthorizeForResourceMiddleware('create', AdminRequirements.ReleasedGame),
-  endpointServiceCallWrapper(async (req, res) => {
-    const url = getQueryParamValue(req, 'url');
-    return GameService.createEula(ResourceContext.get(res), url);
+  endpointServiceCallWrapper(async (_req, res) => {
+    return GameService.createEula(ResourceContext.get(res));
   })
 );
 
@@ -194,10 +173,31 @@ publishApiRouter.post(
  * @apiUse AuthorizeResourceAccessMiddleware
  */
 publishApiRouter.delete(
-  `/${Segment.gameById}/${Segment.eula}/`,
+  `/${Segment.gameById}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('delete', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
-    const eulaId = Number.parseInt(req.params[PathParam.eulaId], 10);
+    const eulaId = toIntRequired(req.params[PathParam.eulaId]);
     return GameService.removeEula(ResourceContext.get(res), eulaId);
+  })
+);
+
+/**
+ * @api {Patch} /api/publisher/games/:gameId/eulas/:eulaId Modify Eula
+ * @apiName ModifyEula
+ * @apiGroup Publisher
+ * @apiVersion  0.0.1
+ * @apiDescription Modify Eula
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+ * @apiUse AuthorizeResourceAccessMiddleware
+ */
+publishApiRouter.patch(
+  `/${Segment.gameById}/${Segment.eula}`,
+  getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
+  endpointServiceCallWrapper(async (req, res) => {
+    const eulaId = toIntRequired(req.params[PathParam.eulaId]);
+    const body = req.body as ModifyAgreementRequest;
+    return GameService.updateEula(ResourceContext.get(res), eulaId, body);
   })
 );

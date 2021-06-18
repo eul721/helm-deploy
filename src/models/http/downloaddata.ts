@@ -1,5 +1,4 @@
-import { Agreement } from './agreement';
-import { Version } from './versionmodel';
+import { LocalizedHashmap } from '../../utils/language';
 
 export interface DownloadDataRoot {
   model: Model;
@@ -11,10 +10,19 @@ export interface Model {
 }
 
 export interface DownloadData {
-  names?: Record<string, string>;
+  names?: LocalizedHashmap;
   titleId: number;
   branchId: number;
-  versions: Version[];
-  agreements: Agreement[];
+  versions: {
+    buildId: number;
+    releaseNotes: LocalizedHashmap;
+    mandatory: boolean;
+    version: string;
+  }[];
+  agreements: {
+    id: number;
+    urls?: LocalizedHashmap;
+    names?: LocalizedHashmap;
+  }[];
   supportedLanguages: string[];
 }

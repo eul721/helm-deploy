@@ -33,7 +33,7 @@ describe('src/controllers/publish', () => {
       fakeUserToken = responseFake.payload;
 
       validUrl = `${urlBase}/games/${sampleDb.gameCiv6.id}/branches`;
-      badUrl = `${urlBase}/games/fakeId/branches`;
+      badUrl = `${urlBase}/games/notanumber/branches`;
     });
 
     it('should have token values', async () => {
@@ -60,7 +60,7 @@ describe('src/controllers/publish', () => {
         const result = await request(app)
           .get(badUrl ?? '')
           .set('Authorization', `Bearer ${realUserToken}`);
-        expect(result.status).toBe(HttpCode.BAD_REQUEST);
+        expect(result.status).toBe(HttpCode.NOT_FOUND);
       });
 
       it('should accept if valid bearer token and url', async () => {

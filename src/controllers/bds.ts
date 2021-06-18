@@ -71,7 +71,7 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-bdsApiRouter.get(`/titles/:${PathParam.bdsTitle}`, async (req, res) => {
+bdsApiRouter.get(`/titles/:${PathParam.gameId}`, async (req, res) => {
   await bdsGet(req, res);
 });
 
@@ -85,7 +85,7 @@ bdsApiRouter.get(`/titles/:${PathParam.bdsTitle}`, async (req, res) => {
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-bdsApiRouter.get(`/:${PathParam.bdsTitle}/branches*`, async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.gameId}/branches*`, async (req, res) => {
   await bdsGet(req, res);
 });
 
@@ -99,7 +99,7 @@ bdsApiRouter.get(`/:${PathParam.bdsTitle}/branches*`, async (req, res) => {
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-bdsApiRouter.get(`/:${PathParam.bdsTitle}/builds*`, async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.gameId}/builds*`, async (req, res) => {
   await bdsGet(req, res);
 });
 
@@ -113,7 +113,7 @@ bdsApiRouter.get(`/:${PathParam.bdsTitle}/builds*`, async (req, res) => {
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-bdsApiRouter.get(`/:${PathParam.bdsTitle}/depots*`, async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.gameId}/depots*`, async (req, res) => {
   await bdsGet(req, res);
 });
 
@@ -127,7 +127,7 @@ bdsApiRouter.get(`/:${PathParam.bdsTitle}/depots*`, async (req, res) => {
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  */
-bdsApiRouter.get(`/:${PathParam.bdsTitle}/launchOptions*`, async (req, res) => {
+bdsApiRouter.get(`/:${PathParam.gameId}/launchOptions*`, async (req, res) => {
   // TODO we might be removing this enpoint entirely as a matchmaker remnant
   await bdsGet(req, res);
 });

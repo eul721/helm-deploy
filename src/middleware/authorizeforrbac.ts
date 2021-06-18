@@ -30,7 +30,7 @@ async function rbacRequiredPermissionAuth(
   primaryResource: RbacResource,
   secondaryResource?: { resource: RbacResource; allowDifferentOwner: boolean }
 ) {
-  const rbacContext = createRbacContext(req, res);
+  const rbacContext = await createRbacContext(req, res);
   const targetDivisionId: Maybe<number> = await getResourceOwnerId(rbacContext, primaryResource);
 
   if (secondaryResource) {

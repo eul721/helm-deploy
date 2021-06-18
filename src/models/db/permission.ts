@@ -6,7 +6,7 @@ import {
   Model,
   ModelAttributes,
 } from 'sequelize';
-import { INTERNAL_STRING_ID } from '../defines/definitions';
+import { INTERNAL_STRING_ID } from '../../utils/database';
 import { PermissionDescription } from '../http/rbac/permissiondescription';
 import { RoleModel } from './role';
 

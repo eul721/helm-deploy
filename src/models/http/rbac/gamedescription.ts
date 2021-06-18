@@ -27,10 +27,6 @@
  *   }
  * }
  */
-
-import { BuildDescription } from '../builddescription';
-import { BranchDescription } from './branchdescription';
-
 /**
  * @apiDefine PublisherGameModelsArray Array of Game Description Models
  *  REST response model for Publisher APIs
@@ -74,6 +70,11 @@ import { BranchDescription } from './branchdescription';
  * ]
  */
 
+import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
+import { LocalizedHashmap } from '../../../utils/language';
+import { BranchDescription } from './branchdescription';
+import { BuildDescription } from '../resources/builddescription';
+
 /**
  * Describes an RBAC (private Publisher) game model
  */
@@ -86,10 +87,10 @@ export interface GameDescription {
   builds: BuildDescription[];
 
   /** Game id */
-  contentfulId: string;
+  contentfulId: Maybe<string>;
 
   /** Default branch ID */
-  defaultBranchId: number;
+  defaultBranchId: Maybe<number>;
 
   /** Owning division id */
   divisionId: number;
@@ -98,5 +99,5 @@ export interface GameDescription {
   bdsTitleId: number;
 
   /** Game names */
-  names: Record<string, string>;
+  names: LocalizedHashmap;
 }

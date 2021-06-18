@@ -8,11 +8,12 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
-import { BuildDescription } from '../http/builddescription';
+import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
+import { Locale, LocalizedHashmap } from '../../utils/language';
+import { BuildDescription } from '../http/resources/builddescription';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
-import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
+import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 
 export const BuildDef: ModelAttributes = {
@@ -73,7 +74,7 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
 
   // #region association: localized fields
 
-  public get notes(): Record<string, string> {
+  public get notes(): LocalizedHashmap {
     return this.reduceFields(Fields.patchnotes);
   }
 
@@ -97,6 +98,7 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
       patchNotes: this.notes,
       ownerId: this.ownerId,
       bdsBuildId: this.bdsBuildId,
+      mandatory: this.mandatory,
     };
   }
 }

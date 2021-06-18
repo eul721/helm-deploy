@@ -10,16 +10,17 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID, INTERNAL_ID_REFERENCE, AtLeastOne } from '../defines/definitions';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE, AtLeastOne } from '../../utils/database';
 import { AgreementCreationAttributes, AgreementModel } from './agreement';
 import { BuildCreationAttributes, BuildModel } from './build';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { DivisionModel } from './division';
 import { RoleModel } from './role';
-import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
+import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 import { GameDescription } from '../http/rbac/gamedescription';
-import { PublicGameDescription } from '../http/publicgamedescription';
+import { Locale, LocalizedHashmap } from '../../utils/language';
+import { PublicGameDescription } from '../http/resources/publicgamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -39,8 +40,8 @@ export const GameDef: ModelAttributes = {
 
 export interface GameAttributes {
   bdsTitleId: number;
-  contentfulId: string;
-  defaultBranch: number;
+  contentfulId: string | null;
+  defaultBranch: number | null;
   id: number;
   ownerId: number;
   readonly branches?: BranchModel[];
@@ -58,9 +59,9 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public bdsTitleId!: number;
 
-  public contentfulId!: string;
+  public contentfulId!: string | null;
 
-  public defaultBranch!: number;
+  public defaultBranch!: number | null;
 
   public ownerId!: number;
 
@@ -129,9 +130,9 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   // #region association: localizedfields
 
-  public get names(): Record<string, string> {
+  public get names(): LocalizedHashmap {
     return (
-      this.fields?.reduce<Record<string, string>>((acc, fieldData) => {
+      this.fields?.reduce<LocalizedHashmap>((acc, fieldData) => {
         if (Fields.name === fieldData.field) {
           acc[fieldData.locale] = fieldData.value;
         }
@@ -187,7 +188,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
   public toPublicHttpModel(): PublicGameDescription {
     return {
       bdsTitleId: this.bdsTitleId,
-      contentfulId: this.contentfulId,
+      contentfulId: this.contentfulId ?? '',
       divisionId: this.ownerId,
       id: this.id,
       names: this.names,

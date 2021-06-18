@@ -23,7 +23,7 @@ downloadApiRouter.use(getAuthenticateMiddleware());
 downloadApiRouter.get(
   '/',
   getAuthorizePlayerMiddleware(),
-  endpointServiceCallWrapper(async (_req, _res) => {
+  endpointServiceCallWrapper(async () => {
     return GameService.getAllPublicGames();
   })
 );

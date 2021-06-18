@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import { envConfig } from '../../configuration/envconfig';
+import { envConfig } from '../configuration/envconfig';
 
 export const INTERNAL_ID_TYPE = () =>
   DataTypes.BIGINT({

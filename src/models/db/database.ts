@@ -8,9 +8,8 @@ import { UserDef, UserModel } from './user';
 import { DivisionDef, DivisionModel } from './division';
 import { PermissionDef, PermissionModel } from './permission';
 import { RoleDef, RoleModel } from './role';
-import { TableNames } from '../defines/tablenames';
 import { GroupDef, GroupModel } from './group';
-import { MODEL_ID_DEFAULTS } from '../defines/definitions';
+import { MODEL_ID_DEFAULTS } from '../../utils/database';
 import { LocalizedFieldDef, LocalizedFieldModel } from './localizedfield';
 import { envConfig } from '../../configuration/envconfig';
 
@@ -84,6 +83,29 @@ export async function initializeDB() {
   } catch (exc) {
     error(exc);
   }
+}
+/**
+ * To avoid table names conflicting with potential real application table names,
+ * manually specify each tablename
+ */
+enum TableNames {
+  Agreement = 'agreements',
+  Branch = 'branches',
+  Build = 'builds',
+  Division = 'divisions',
+  Game = 'games',
+  LocalizedFields = 'localized_fields',
+
+  User = 'rbac_users',
+  Permission = 'rbac_permissions',
+
+  Role = 'rbac_roles',
+  RolePermissions = 'rbac_role_permissions',
+  RoleGames = 'rbac_role_games',
+
+  Group = 'rbac_groups',
+  GroupRole = 'rbac_group_roles',
+  GroupUsers = 'rbac_group_users',
 }
 
 function initModels() {

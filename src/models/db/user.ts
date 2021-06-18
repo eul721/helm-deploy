@@ -9,7 +9,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { UserDescription } from '../http/rbac/userdescription';
 import { DivisionModel } from './division';
 import { GroupModel } from './group';

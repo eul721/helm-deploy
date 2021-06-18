@@ -8,7 +8,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID } from '../defines/definitions';
+import { INTERNAL_ID } from '../../utils/database';
 import { GameCreationAttributes, GameModel } from './game';
 import { UserCreationAttributes, UserModel } from './user';
 import { RoleCreationAttributes, RoleModel } from './role';

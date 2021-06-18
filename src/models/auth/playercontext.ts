@@ -1,6 +1,7 @@
+import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { Response } from 'express';
-import { BranchUniqueIdentifier } from '../db/branch';
-import { GameUniqueIdentifier } from '../db/game';
+import { BranchModel } from '../db/branch';
+import { GameModel } from '../db/game';
 import { GameContext } from './base/gamecontext';
 
 export type Title = { contentfulId: string };
@@ -16,17 +17,17 @@ export class PlayerContext extends GameContext {
    * @param bearerToken authentication token
    * @param deviceId caller device id
    * @param deviceName caller device name
-   * @param gameUid requested game, optional
-   * @param branchUid requested branch, optional
+   * @param game requested game, optional
+   * @param branch requested branch, optional
    */
   constructor(
     bearerToken: string,
     deviceId?: string,
     deviceName?: string,
-    gameUid?: GameUniqueIdentifier,
-    branchUid?: BranchUniqueIdentifier
+    game?: Maybe<GameModel>,
+    branch?: Maybe<BranchModel>
   ) {
-    super(gameUid, branchUid);
+    super(game, branch);
     this.bearerToken = bearerToken;
     this.deviceId = deviceId;
     this.deviceName = deviceName;

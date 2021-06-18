@@ -1,6 +1,7 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { Response } from 'express';
 import { DivisionModel } from '../db/division';
+import { GameModel } from '../db/game';
 import { GroupModel } from '../db/group';
 import { PermissionModel } from '../db/permission';
 import { RoleModel } from '../db/role';
@@ -13,18 +14,18 @@ import { ResourceContext } from './resourcecontext';
  */
 export class RbacContext extends ResourceContext {
   constructor(
-    divisionId: number,
-    groupId: number,
-    roleId: number,
-    userId: number,
-    gameId?: number,
+    divisionId?: number,
+    groupId?: number,
+    roleId?: number,
+    userId?: number,
+    game?: Maybe<GameModel>,
     permission?: string
   ) {
-    super(gameId);
-    this.divisionId = Number.isNaN(divisionId) ? undefined : divisionId;
-    this.groupId = Number.isNaN(groupId) ? undefined : groupId;
-    this.roleId = Number.isNaN(roleId) ? undefined : roleId;
-    this.userId = Number.isNaN(userId) ? undefined : userId;
+    super(game);
+    this.divisionId = divisionId;
+    this.groupId = groupId;
+    this.roleId = roleId;
+    this.userId = userId;
     this.permission = permission;
   }
 

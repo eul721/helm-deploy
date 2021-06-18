@@ -4,7 +4,8 @@ import {
   HasManyRemoveAssociationMixin,
   Model,
 } from 'sequelize';
-import { Fields, Locale, LocalizedFieldModel } from '../localizedfield';
+import { Locale, LocalizedHashmap } from '../../../utils/language';
+import { Fields, LocalizedFieldModel } from '../localizedfield';
 
 /**
  * Helper class to enable code de-duplication among Models that use LocalizedField
@@ -35,9 +36,9 @@ export class LocalizableModel<T1, T2> extends Model<T1, T2> {
    * @param field Field to select
    * @returns Hashmap of locale:value
    */
-  protected reduceFields(field: Fields): Record<string, string> {
+  protected reduceFields(field: Fields): LocalizedHashmap {
     return (
-      this.fields?.reduce<Record<string, string>>((acc, fieldData) => {
+      this.fields?.reduce<LocalizedHashmap>((acc, fieldData) => {
         if (field === fieldData.field) {
           acc[fieldData.locale] = fieldData.value;
         }
@@ -46,7 +47,7 @@ export class LocalizableModel<T1, T2> extends Model<T1, T2> {
     );
   }
 
-  protected async getLocalizedFields(field: Fields): Promise<Record<string, string>> {
+  protected async getLocalizedFields(field: Fields): Promise<LocalizedHashmap> {
     const fields = await this.getLocalizedFieldModels(field);
     return Object.keys(fields).reduce<Record<string, string>>((acc, locale) => {
       acc[locale] = fields[locale].value;
