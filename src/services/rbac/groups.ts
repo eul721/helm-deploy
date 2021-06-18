@@ -156,6 +156,6 @@ export class RbacGroupsService {
     }
 
     const roles = await group.getAssignedRoles();
-    return { code: HttpCode.OK, payload: roles.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: roles.map(item => item.toPublisherHttpModel()) };
   }
 }

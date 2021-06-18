@@ -13,6 +13,7 @@
     "doc": "apidoc -i src/ -o docs/",
     "lint:dev": "nodemon --ignore dist/ -e ts --exec \"npm run lint\"",
     "lint": "eslint .",
+    "precommit": "npm run build && npm run doc && npm run lint && npm run test",
     "serve": "node dist/index.cjs.js",
     "serve:dev": "nodemon -r dotenv/config --inspect dist/index.cjs.js --delay 2",
     "test:dev": "jest --watch --verbose",

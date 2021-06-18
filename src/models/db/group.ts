@@ -86,7 +86,7 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
       name: this.name,
       divisionId: this.ownerId,
       users: this.assignedUsers?.map(user => user.toHttpModel()),
-      roles: this.assignedRoles?.map(role => role.toHttpModel()),
+      roles: this.assignedRoles?.map(role => role.toPublisherHttpModel()),
     };
   }
 }

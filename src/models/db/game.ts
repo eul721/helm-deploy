@@ -19,6 +19,7 @@ import { RoleModel } from './role';
 import { Fields, Locale, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
 import { GameDescription } from '../http/rbac/gamedescription';
+import { PublicGameDescription } from '../http/publicgamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -183,12 +184,26 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
     rolesWithGame: Association<GameModel, RoleModel>;
   };
 
-  public toHttpModel(): GameDescription {
+  public toPublicHttpModel(): PublicGameDescription {
     return {
-      id: this.id,
+      bdsTitleId: this.bdsTitleId,
       contentfulId: this.contentfulId,
       divisionId: this.ownerId,
+      id: this.id,
+      names: this.names,
+    };
+  }
+
+  public toPublisherHttpModel(): GameDescription {
+    return {
       bdsTitleId: this.bdsTitleId,
+      branches: this.branches?.map(branch => branch.toPublisherHttpModel()) ?? [],
+      builds: this.builds?.map(build => build.toHttpModel()) ?? [],
+      contentfulId: this.contentfulId,
+      defaultBranchId: this.defaultBranch,
+      divisionId: this.ownerId,
+      id: this.id,
+      names: this.names,
     };
   }
 }

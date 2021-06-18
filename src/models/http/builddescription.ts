@@ -2,7 +2,7 @@ export interface BuildDescription {
   /** Internal PS id */
   id: number;
 
-  patchNotes: string;
+  patchNotes: Record<string, string>;
 
   ownerId: number;
 
