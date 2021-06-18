@@ -44,6 +44,12 @@
  *
  * @apiSuccessExample {json} Success-Response:
  * {
+ *   "page": {
+ *      "from": 0,
+ *      "size": 2,
+ *      "sort": "id",
+ *      "total": 5
+ *   },
  *   "items": [
  *   {
  *     "bdsTitleId": 1000000,

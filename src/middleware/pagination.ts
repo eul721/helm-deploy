@@ -14,7 +14,8 @@ import { toIntOptional } from '../utils/service';
  * @apiSuccess (200) {PaginationDetail} page Pagination details object
  * @apiSuccess (200) {Number} page.from provided "from" value that generated this paged result
  * @apiSuccess (200) {Number} page.size provided "size" value that generated this paged result
- * @apiSuccess (200) {Number} page.total total number of values that exist for these parameters
+ * @apiSuccess (200) {String=id} page.sort field to sort by. Currently only "id" is implemented, so this is to be ignored
+ * @apiSuccess (200) {Number} page.total total number of values that exist for these parameters. Use to infer if more pages are available
  */
 /**
  * Pagination wrapper interface for a generic items list
