@@ -58,7 +58,7 @@ publishApiRouter.get(
 );
 
 /**
- * @api {GET} /api/publisher/games/:gameId/branches Get branches
+ * @api {GET} /api/publisher/games/:gameId/branches Get Branches
  * @apiName GetBranches
  * @apiGroup Publisher
  * @apiVersion  0.0.1
@@ -69,6 +69,8 @@ publishApiRouter.get(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse PublisherBranchModelArray
  */
 publishApiRouter.get(
   `/${Segment.gameById}/branches`,

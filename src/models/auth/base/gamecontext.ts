@@ -1,6 +1,7 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
+import { FindOptions } from 'sequelize/types';
 import { BranchModel, BranchUniqueIdentifier } from '../../db/branch';
-import { GameModel, GameUniqueIdentifier } from '../../db/game';
+import { GameAttributes, GameModel, GameUniqueIdentifier } from '../../db/game';
 
 export class GameContext {
   constructor(gameUid?: GameUniqueIdentifier, branchUid?: BranchUniqueIdentifier) {
@@ -24,13 +25,19 @@ export class GameContext {
     return this.branch;
   }
 
-  public async fetchGameModel(): Promise<Maybe<GameModel>> {
+  public async fetchGameModel(full = false): Promise<Maybe<GameModel>> {
     if (this.game) {
       return this.game;
     }
 
     if (this.gameUid) {
-      this.game = (await GameModel.findOne({ where: this.gameUid })) ?? undefined;
+      const query: FindOptions<GameAttributes> = {
+        where: this.gameUid,
+      };
+      if (full) {
+        query.include = { all: true };
+      }
+      this.game = (await GameModel.findOne(query)) ?? undefined;
     }
     return this.game;
   }

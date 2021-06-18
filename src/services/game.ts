@@ -16,6 +16,7 @@ import { GameDescription } from '../models/http/rbac/gamedescription';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { PublicGameDescription } from '../models/http/publicgamedescription';
 import { GameContext } from '../models/auth/base/gamecontext';
+import { BranchDescription } from '../models/http/rbac/branchdescription';
 
 export class GameService {
   /**
@@ -87,7 +88,7 @@ export class GameService {
       return { code: HttpCode.UNAUTHORIZED };
     }
     // TODO: ensure user can access this game
-    const game = await gameContext.fetchGameModel();
+    const game = await gameContext.fetchGameModel(true);
     if (!game) {
       return { code: HttpCode.NOT_FOUND };
     }
@@ -157,10 +158,10 @@ export class GameService {
    */
   public static async getBranchesPublisher(
     resourceContext: ResourceContext
-  ): Promise<ServiceResponse<PublicBranchDescription[]>> {
+  ): Promise<ServiceResponse<BranchDescription[]>> {
     const game = await resourceContext.fetchGameModel();
     const branchModels = await game?.getBranches();
-    const branches: PublicBranchDescription[] = branchModels?.map(branch => branch.toPublicHttpModel()) ?? [];
+    const branches: BranchDescription[] = branchModels?.map(branch => branch.toPublisherHttpModel()) ?? [];
 
     return { code: HttpCode.OK, payload: branches };
   }
