@@ -1,6 +1,6 @@
-import { Op } from 'sequelize';
+import { FindOptions, Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
-import { GameModel } from '../models/db/game';
+import { GameAttributes, GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
@@ -20,6 +20,8 @@ import { PublicBranchDescription } from '../models/http/resources/branchdescript
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
 import { localeFromString } from '../utils/language';
+import { defaultPagination, PaginationContext } from '../utils/pagination';
+import { PaginatedItemsResponse } from '../middleware/pagination';
 
 export class GameService {
   /**
@@ -51,11 +53,31 @@ export class GameService {
     return { code: HttpCode.OK, payload: items };
   }
 
-  public static async getAllPublisherGames(): Promise<ServiceResponse<GameDescription[]>> {
-    const items: GameDescription[] = (await GameModel.findAll({ include: { all: true } })).map(item =>
-      item.toPublisherHttpModel()
-    );
-    return { code: HttpCode.OK, payload: items };
+  public static async getAllPublisherGames(
+    paginationContext?: PaginationContext
+  ): Promise<ServiceResponse<PaginatedItemsResponse<GameDescription>>> {
+    const pageCtx = paginationContext ?? defaultPagination();
+    const query: FindOptions<GameAttributes> = {
+      limit: pageCtx.size,
+      offset: pageCtx.from,
+      order: [pageCtx.sort],
+    };
+    const rows = await GameModel.findAll({
+      ...query,
+      include: { all: true },
+    });
+    const count = await GameModel.count(query);
+    const items: GameDescription[] = rows.map(row => row.toPublisherHttpModel());
+    return {
+      code: HttpCode.OK,
+      payload: {
+        page: {
+          ...pageCtx,
+          total: count,
+        },
+        items,
+      },
+    };
   }
 
   /**
@@ -63,13 +85,14 @@ export class GameService {
    * @param authenticationContext Publisher authentication context
    */
   public static async getGamesPublisher(
-    authenticationContext: AuthenticateContext
-  ): Promise<ServiceResponse<GameDescription[]>> {
+    authenticationContext: AuthenticateContext,
+    paginationContext?: PaginationContext
+  ): Promise<ServiceResponse<PaginatedItemsResponse<GameDescription>>> {
     const ident = await authenticationContext.fetchStudioUserModel();
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
     }
-    const games = await GameService.getAllPublisherGames();
+    const games = await GameService.getAllPublisherGames(paginationContext ?? defaultPagination());
     // TODO: fitler by permission level
     return {
       code: HttpCode.OK,
