@@ -27,11 +27,6 @@ export class LicensingService {
       return { code: HttpCode.BAD_REQUEST, message: 'Missing deviceId or deviceName on player context' };
     }
 
-    if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
-      const allGames = await GameModel.findAll();
-      return { code: HttpCode.OK, payload: allGames.flatMap(game => (game.contentfulId ? [game.contentfulId] : [])) };
-    }
-
     const deviceRegistrationData: DeviceRegistrationData = {
       deviceId: playerContext.deviceId,
       name: playerContext.deviceName,
