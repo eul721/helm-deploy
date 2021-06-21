@@ -2,7 +2,11 @@ import { FindOptions, Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { GameAttributes, GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
-import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
+import {
+  malformedRequestPastValidation,
+  PaginatedServiceResponse,
+  ServiceResponse,
+} from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { AgreementModel } from '../models/db/agreement';
 import { AgreementDescription } from '../models/http/resources/agreementdescription';
@@ -21,7 +25,6 @@ import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementr
 import { debug } from '../logger';
 import { localeFromString } from '../utils/language';
 import { defaultPagination, PaginationContext } from '../utils/pagination';
-import { PaginatedItemsResponse } from '../middleware/pagination';
 
 export class GameService {
   /**
@@ -55,7 +58,7 @@ export class GameService {
 
   public static async getAllPublisherGames(
     paginationContext?: PaginationContext
-  ): Promise<ServiceResponse<PaginatedItemsResponse<GameDescription>>> {
+  ): Promise<PaginatedServiceResponse<GameDescription>> {
     const pageCtx = paginationContext ?? defaultPagination();
     const query: FindOptions<GameAttributes> = {
       limit: pageCtx.size,
@@ -87,16 +90,21 @@ export class GameService {
   public static async getGamesPublisher(
     authenticationContext: AuthenticateContext,
     paginationContext?: PaginationContext
-  ): Promise<ServiceResponse<PaginatedItemsResponse<GameDescription>>> {
+  ): Promise<PaginatedServiceResponse<GameDescription>> {
     const ident = await authenticationContext.fetchStudioUserModel();
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
     }
-    const games = await GameService.getAllPublisherGames(paginationContext ?? defaultPagination());
+    const { payload: { page, items: games } = {} } = await GameService.getAllPublisherGames(
+      paginationContext ?? defaultPagination()
+    );
     // TODO: fitler by permission level
     return {
       code: HttpCode.OK,
-      payload: games.payload,
+      payload: {
+        page,
+        items: games ?? [],
+      },
     };
   }
 

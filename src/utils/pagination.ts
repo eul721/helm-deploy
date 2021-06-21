@@ -31,11 +31,19 @@ export function defaultPagination(): PaginationContext {
   };
 }
 
+/**
+ * @param input User-generated input collected from request query params or other means meant to specify pagination
+ * @throws BadInputError
+ */
 export function buildPaginationContext(input: PaginationInput): PaginationContext {
   const from = input.from ?? 0;
   const size = input.size ?? DEFAULT_PAGE_SIZE;
   // Default always sort by ID for now
   const sort: SortParam = 'id';
+
+  if (from < 0 || size < 0 || size > 1000) {
+    throw new Error('BadInput');
+  }
 
   return {
     from,

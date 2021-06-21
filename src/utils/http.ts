@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { QueryParam, HeaderParam, headerParamLookup } from '../configuration/httpconfig';
 import { debug, error, warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
-import { ServiceResponse } from '../models/http/serviceresponse';
+import { BaseResponse } from '../models/http/serviceresponse';
 
 export function getHeaderParamValue(req: Request, key: HeaderParam) {
   const headerKey = headerParamLookup[key];
@@ -28,7 +28,7 @@ export function sendMessageResponse(res: Response, code: HttpCode = HttpCode.OK,
   res.status(code).json(message ? { message } : {});
 }
 
-export function sendServiceResponse<T = unknown>(serviceResponse: ServiceResponse<T>, res: Response) {
+export function sendServiceResponse(serviceResponse: BaseResponse, res: Response) {
   logMessage(
     serviceResponse.code,
     'sendServiceResponse',

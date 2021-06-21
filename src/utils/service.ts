@@ -1,12 +1,12 @@
 import { Request, Response } from 'express';
 import { error } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
-import { ServiceResponse } from '../models/http/serviceresponse';
+import { BaseResponse } from '../models/http/serviceresponse';
 import { ErrorServiceResponse } from './errors';
 import { sendMessageResponse, sendServiceResponse } from './http';
 
-export function endpointServiceCallWrapper<T = unknown>(
-  handler: (req: Request, res: Response) => Promise<ServiceResponse<T>>
+export function endpointServiceCallWrapper<T extends BaseResponse>(
+  handler: (req: Request, res: Response) => Promise<T>
 ) {
   return async (req: Request, res: Response) => {
     try {

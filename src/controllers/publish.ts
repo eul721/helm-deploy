@@ -3,7 +3,7 @@ import { PathParam, Segment } from '../configuration/httpconfig';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
 import { getAuthorizeForResourceMiddleware } from '../middleware/authorizeresource';
-import { getPagination, PaginatedItemsResponse, paginationMiddleware } from '../middleware/pagination';
+import { getPagination, paginationMiddleware } from '../middleware/pagination';
 import { AdminRequirements } from '../models/auth/adminrequirements';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { ResourceContext } from '../models/auth/resourcecontext';
@@ -11,6 +11,7 @@ import { GameDescription } from '../models/http/rbac/gamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
 import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
+import { PaginatedServiceResponse } from '../models/http/serviceresponse';
 import { BranchService } from '../services/branch';
 import { GameService } from '../services/game';
 import { endpointServiceCallWrapper, toIntRequired } from '../utils/service';
@@ -35,7 +36,7 @@ publishApiRouter.get(
   `/${Segment.games}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
   paginationMiddleware(),
-  endpointServiceCallWrapper<PaginatedItemsResponse<GameDescription>>(async (_req, res) => {
+  endpointServiceCallWrapper<PaginatedServiceResponse<GameDescription>>((_req, res) => {
     const publisherContext = AuthenticateContext.get(res);
     const paginationContext = getPagination(res);
     return GameService.getGamesPublisher(publisherContext, paginationContext);
