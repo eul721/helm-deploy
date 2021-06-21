@@ -1,15 +1,15 @@
 import { LocalizedHashmap } from '../../utils/language';
 
-export interface LEGACY_DownloadDataRoot {
+export interface LegacyDownloadDataRoot {
   model: Model;
 }
 
 // the key is the contentful id
 export interface Model {
-  downloadData: { [key: string]: LEGACY_DownloadData };
+  downloadData: { [key: string]: LegacyDownloadData };
 }
 
-export interface LEGACY_DownloadData {
+export interface LegacyDownloadData {
   names?: LocalizedHashmap;
   titleId: number;
   branchId: number;

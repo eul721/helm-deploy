@@ -20,7 +20,7 @@ import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementr
 import { debug } from '../logger';
 import { localeFromString } from '../utils/language';
 import { PublicBranchDescription } from '../models/http/public/publicbranchdescription';
-import { LEGACY_DownloadData, LEGACY_DownloadDataRoot } from '../models/http/legacy_downloaddata';
+import { LegacyDownloadData, LegacyDownloadDataRoot } from '../models/http/legacy_downloaddata';
 
 export class GameService {
   /**
@@ -113,9 +113,9 @@ export class GameService {
    *
    * @param playerContext request context
    */
-  public static async LEGACY_getOwnedGames(
+  public static async LegacyGetOwnedGames(
     playerContext: PlayerContext
-  ): Promise<ServiceResponse<LEGACY_DownloadDataRoot>> {
+  ): Promise<ServiceResponse<LegacyDownloadDataRoot>> {
     const response = await LicensingService.fetchLicenses(playerContext);
     if (response.code !== HttpCode.OK) {
       return { code: response.code };
@@ -127,14 +127,14 @@ export class GameService {
       where: { contentfulId: { [Op.in]: ownedTitles } },
     });
 
-    const gameModelsJson: { [key: string]: LEGACY_DownloadData } = {};
+    const gameModelsJson: { [key: string]: LegacyDownloadData } = {};
 
     playerOwnedGames.forEach(gameModel => {
       const [publicBranch] = gameModel.branches?.filter(branch => branch.id === gameModel.defaultBranch) ?? [];
       if (!publicBranch || !gameModel.contentfulId) {
         return;
       }
-      gameModelsJson[gameModel.contentfulId] = GameService.LEGACY_transformGameModelToDownloadModel(
+      gameModelsJson[gameModel.contentfulId] = GameService.LegacyTransformGameModelToDownloadModel(
         gameModel,
         publicBranch
       );
@@ -394,7 +394,7 @@ export class GameService {
     return { code: HttpCode.OK, payload: agreements.map(item => item.toHttpModel()) };
   }
 
-  private static LEGACY_transformGameModelToDownloadModel(game: GameModel, branch: BranchModel): LEGACY_DownloadData {
+  private static LegacyTransformGameModelToDownloadModel(game: GameModel, branch: BranchModel): LegacyDownloadData {
     return {
       names: game.names,
       agreements:
