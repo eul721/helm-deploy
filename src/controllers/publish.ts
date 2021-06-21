@@ -26,7 +26,7 @@ publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddlewar
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  *
- * @apiUse PublisherGameModelsArray
+ * @apiUse PublisherGameDescriptionArray
  */
 publishApiRouter.get(
   `/${Segment.games}`,
@@ -42,12 +42,12 @@ publishApiRouter.get(
  * @apiName GetGame
  * @apiGroup Publisher
  * @apiDescription Get a single game by ID
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  *
- * @apiUse PublisherGameModel
+ * @apiUse PublisherGameDescription
  */
 publishApiRouter.get(
   `/${Segment.gameById}`,
@@ -62,12 +62,14 @@ publishApiRouter.get(
  * @api {PATCH} /api/publisher/games/:gameId Modify a game
  * @apiName ModifyGame
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Modify a game
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse PublisherGameDescription
  */
 publishApiRouter.patch(
   `/${Segment.gameById}`,
@@ -82,12 +84,14 @@ publishApiRouter.patch(
  * @api {PATCH} /api/publisher/games/:gameId/branches/:branchId Modify a branch
  * @apiName ModifyGame
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Modify a game
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse PublisherBranchDescription
  */
 publishApiRouter.patch(
   `/${Segment.gameById}/${Segment.branches}`,
@@ -102,7 +106,7 @@ publishApiRouter.patch(
  * @api {GET} /api/publisher/games/:gameId/branches Get branches
  * @apiName GetBranches
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get branch list for a specified title, includes private branches
  *
  * @apiParam (Query) {String} title game contentful id
@@ -111,7 +115,7 @@ publishApiRouter.patch(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
  *
- * @apiUse PublisherBranchModelArray
+ * @apiUse PublisherBranchDescriptionArray
  */
 publishApiRouter.get(
   `/${Segment.gameById}/branches`,
@@ -125,12 +129,14 @@ publishApiRouter.get(
  * @api {GET} /api/publisher/games/:gameId/eulas Get Eula
  * @apiName GetEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get eula assigned to a given game
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse AgreementDescriptionArray
  */
 publishApiRouter.get(
   `/${Segment.gameById}/eulas`,
@@ -144,7 +150,7 @@ publishApiRouter.get(
  * @api {POST} /api/publisher/games/:gameId/eulas Create Eula
  * @apiName CreateEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Create Eula
  *
  * @apiParam (Query) {String} url Url with fill EULA text
@@ -152,6 +158,8 @@ publishApiRouter.get(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse AgreementDescription
  */
 publishApiRouter.post(
   `/${Segment.gameById}/eulas`,
@@ -165,7 +173,7 @@ publishApiRouter.post(
  * @api {DELETE} /api/publisher/games/:gameId/eulas/:eulaId Remove Eula
  * @apiName RemoveEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove Eula
  *
  * @apiUse AuthenticateMiddleware
@@ -185,7 +193,7 @@ publishApiRouter.delete(
  * @api {Patch} /api/publisher/games/:gameId/eulas/:eulaId Modify Eula
  * @apiName ModifyEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Modify Eula
  *
  * @apiUse AuthenticateMiddleware

@@ -1,8 +1,12 @@
+import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
+import { LocalizedHashmap } from '../../../utils/language';
+import { BranchDescription } from './branchdescription';
+import { BuildDescription } from './builddescription';
+
 /**
- * @apiDefine PublisherGameModel Game Description Model
- *  REST response model for Publisher APIs
- *
+ * @apiDefine PublisherGameDescription Game Description Model
  * @apiVersion 0.0.1
+ *
  * @apiSuccess (200) {Number} bdsTitleId Unique ID of title in BDS
  * @apiSuccess (200) {Branch[]} -.branches Array of Branch objects that belong to this game
  * @apiSuccess (200) {Build[]} -.builds Array of Build objects that belong to this game
@@ -27,11 +31,11 @@
  *   }
  * }
  */
+
 /**
- * @apiDefine PublisherGameModelsArray Array of Game Description Models
- *  REST response model for Publisher APIs
- *
+ * @apiDefine PublisherGameDescriptionArray Array of Game Description Models
  * @apiVersion 0.0.1
+ *
  * @apiSuccess (200) {Game[]} - List of Game Descriptions. This response is an array of Game Models
  * @apiSuccess (200) {Number} -.bdsTitleId Unique ID of title in BDS
  * @apiSuccess (200) {Branch[]} -.branches Array of Branch objects that belong to this game
@@ -70,14 +74,6 @@
  * ]
  */
 
-import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
-import { LocalizedHashmap } from '../../../utils/language';
-import { BranchDescription } from './branchdescription';
-import { BuildDescription } from '../resources/builddescription';
-
-/**
- * Describes an RBAC (private Publisher) game model
- */
 export interface GameDescription {
   /** Internal PS id */
   id: number;

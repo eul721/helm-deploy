@@ -76,8 +76,7 @@ describe('src/services/game', () => {
 
       const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
-      expect(serviceResponse.payload?.model.downloadData).toBeTruthy();
-      expect(Object.keys(serviceResponse.payload?.model.downloadData ?? {})).toHaveLength(0);
+      expect(serviceResponse.payload).toHaveLength(0);
     });
 
     it('should return all games the user owns', async () => {
@@ -89,9 +88,7 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(Object.keys(serviceResponse.payload?.model.downloadData ?? {})).toHaveLength(
-        SampleDatabase.creationData.gameContentfulIds.length
-      );
+      expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
     });
   });
 

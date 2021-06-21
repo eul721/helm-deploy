@@ -10,7 +10,7 @@ import { rbacApiRouter } from './basic';
  * @api {POST} /api/division/:divisionId/users Create role
  * @apiName CreateRole
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get roles
  *
  * @apiParam (Query) {String} roleName Name of the group to create
@@ -18,6 +18,8 @@ import { rbacApiRouter } from './basic';
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse RoleDescription
  */
 rbacApiRouter.post(
   `/${Segment.division}/roles`,
@@ -31,12 +33,14 @@ rbacApiRouter.post(
  * @api {GET} /api/division/:divisionId/roles Get roles
  * @apiName GetRoles
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get roles
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse RoleDescriptionArray
  */
 rbacApiRouter.get(
   `/${Segment.division}/roles`,
@@ -50,12 +54,14 @@ rbacApiRouter.get(
  * @api {POST} /api/roles/:roleId/permissions/:permissionId Add permission to role
  * @apiName AddPermissionToRole
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Add permission to role
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse RoleDescription
  */
 rbacApiRouter.post(
   `/${Segment.roles}/${Segment.permissions}`,
@@ -69,12 +75,14 @@ rbacApiRouter.post(
  * @api {DELETE} /api/roles/:roleId/permissions/:permissionId Remove permission from role
  * @apiName RemovePermissionFromRole
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove permission from role
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse RoleDescription
  */
 rbacApiRouter.delete(
   `/${Segment.roles}/${Segment.permissions}`,
@@ -88,12 +96,14 @@ rbacApiRouter.delete(
  * @api {GET} /api/roles/:roleId/permissions Get permissions in role
  * @apiName GetPermissionsInRole
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get permissions in role
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse PermissionDescriptionArray
  */
 rbacApiRouter.get(
   `/${Segment.roles}/permissions`,
@@ -107,12 +117,14 @@ rbacApiRouter.get(
  * @api {POST} /api/roles/:roleId/games/:gameId Add game to role
  * @apiName AddGameToRole
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Add game to role
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse RoleDescription
  */
 rbacApiRouter.post(
   `/${Segment.roles}/${Segment.gameById}`,
@@ -129,12 +141,14 @@ rbacApiRouter.post(
  * @api {DELETE} /api/roles/:roleId/games/:gameId Remove game from role
  * @apiName RemoveGameFromRole
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove game from role
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse RoleDescription
  */
 rbacApiRouter.delete(
   `/${Segment.roles}/${Segment.gameById}`,
@@ -151,12 +165,14 @@ rbacApiRouter.delete(
  * @api {GET} /api/roles/:roleId/games Get games in role
  * @apiName GetGamesInRole
  * @apiGroup RbacRoles
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get games in role
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse PublisherGameDescriptionArray
  */
 rbacApiRouter.get(
   `/${Segment.roles}/games`,

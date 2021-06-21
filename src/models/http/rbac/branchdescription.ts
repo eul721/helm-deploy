@@ -1,7 +1,7 @@
+import { LocalizedHashmap } from '../../../utils/language';
+
 /**
- * @apiDefine PublisherBranchModel Branch Description Model
- *  REST response model for Publisher APIs
- *
+ * @apiDefine PublisherBranchDescription
  * @apiVersion 0.0.1
  *
  * @apiSuccess (200) {Number} bdsBranchId Unique ID of branch in BDS
@@ -20,12 +20,8 @@
  *  }
  */
 
-import { LocalizedHashmap } from '../../../utils/language';
-
 /**
- * @apiDefine PublisherBranchModelArray Array of Branch Description Models
- *  REST response model for Publisher APIs
- *
+ * @apiDefine PublisherBranchDescriptionArray
  * @apiVersion 0.0.1
  *
  * @apiSuccess (200) {Branch[]} - List of Branch Descriptions. This response is an array of Branch Models.
@@ -54,14 +50,9 @@ import { LocalizedHashmap } from '../../../utils/language';
  *  ]
  */
 
-/**
- * Describes an RBAC (private Publisher) branch model
- */
 export interface BranchDescription {
-  /** Branch bds id */
   bdsBranchId: number;
 
-  /** Internal PS id */
   id: number;
 
   names: LocalizedHashmap;

@@ -14,11 +14,13 @@ downloadApiRouter.use(getAuthenticateMiddleware());
  * @api {GET} /api/games Get games catalogue
  * @apiName GetAllGames
  * @apiGroup Download
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get all games
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ *
+ * @apiUse PublicGameDescriptionArray
  */
 downloadApiRouter.get(
   '/',
@@ -29,10 +31,10 @@ downloadApiRouter.get(
 );
 
 /**
- * @api {GET} /api/games/download Get owned games
- * @apiName GetOwnedGames
+ * @api {GET} /api/games/download LEGACY Get owned games
+ * @apiName LEGACYMETHOD
  * @apiGroup Download
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get game download data for the list of games the user is authorized to view, returns only public-release branches
  *
  * @apiUse AuthenticateMiddleware
@@ -40,6 +42,26 @@ downloadApiRouter.get(
  */
 downloadApiRouter.get(
   '/download',
+  getAuthorizePlayerMiddleware(),
+  endpointServiceCallWrapper(async (_req, res) => {
+    return GameService.LEGACY_getOwnedGames(PlayerContext.get(res));
+  })
+);
+
+/**
+ * @api {GET} /api/games/owned Get owned games
+ * @apiName GetOwnedGames
+ * @apiGroup Download
+ * @apiVersion 0.0.1
+ * @apiDescription Get game download data for the list of games the user is authorized to view, returns only public-release branches
+ *
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePlayerMiddleware
+ *
+ * @apiUse DownloadDataArray
+ */
+downloadApiRouter.get(
+  '/owned',
   getAuthorizePlayerMiddleware(),
   endpointServiceCallWrapper(async (_req, res) => {
     return GameService.getOwnedGames(PlayerContext.get(res));
@@ -50,13 +72,15 @@ downloadApiRouter.get(
  * @api {GET} /api/games/:gameId/branches Get branches
  * @apiName GetAllBranches
  * @apiGroup Download
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get branch list for a specified title
  *
  * @apiParam (Query) {String} title Title contentful id
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ *
+ * @apiUse PublicBranchDescriptionArray
  */
 downloadApiRouter.get(
   `/:${PathParam.gameId}/branches`,
@@ -70,11 +94,13 @@ downloadApiRouter.get(
  * @api {GET} /games/:gameId/branches/:branchId Get specific game branch
  * @apiName GetSpecificBranch
  * @apiGroup Download
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get game download data of a specific game branch
 
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ * 
+ * @apiUse DownloadData
  */
 downloadApiRouter.get(
   `/:${PathParam.gameId}/:${PathParam.branchId}`,

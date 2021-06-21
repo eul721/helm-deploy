@@ -70,7 +70,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async addUserToGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async addUserToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const user = await rbacContext.fetchUserModel();
     if (!user || !group) {
@@ -78,7 +78,7 @@ export class RbacGroupsService {
     }
 
     await group.addAssignedUser(user);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -86,7 +86,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async removeUserFromGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async removeUserFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const user = await rbacContext.fetchUserModel();
     if (!user || !group) {
@@ -94,7 +94,7 @@ export class RbacGroupsService {
     }
 
     await group.removeAssignedUser(user);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -117,7 +117,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async addRoleToGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async addRoleToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const role = await rbacContext.fetchRoleModel();
     if (!role || !group) {
@@ -125,7 +125,7 @@ export class RbacGroupsService {
     }
 
     await group.addAssignedRole(role);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -133,7 +133,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async removeRoleFromGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async removeRoleFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const role = await rbacContext.fetchRoleModel();
     if (!role || !group) {
@@ -141,7 +141,7 @@ export class RbacGroupsService {
     }
 
     await group.removeAssignedRole(role);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**

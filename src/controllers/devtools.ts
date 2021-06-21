@@ -11,8 +11,8 @@ export const devToolsApiRouter = Router();
 /**
  * @api {GET} /dev/token/simple Get a simple token
  * @apiName GetSimpleToken
- * @apiGroup DevTools
- * @apiVersion  0.0.1
+ * @apiGroup internal/DevTools
+ * @apiVersion 0.0.1
  * @apiDescription Get simple token for given userid/email (dev only)
  * @apiParam (Query) {String} userName='debug@admin' identifier of the user, must match RBAC external ids
  */
@@ -33,8 +33,8 @@ devToolsApiRouter.get('/simple', async (req, res) => {
 /**
  * @api {GET} /dev/token/dna Get a DNA token
  * @apiName GetDnaToken
- * @apiGroup DevTools
- * @apiVersion  0.0.1
+ * @apiGroup internal/DevTools
+ * @apiVersion 0.0.1
  * @apiDescription Get DNA token for given username+password (dev only)
  *
  * @apiParam (Query) {String} email associated with a 2K account
@@ -58,8 +58,8 @@ devToolsApiRouter.get('/dna', async (req, res) => {
 /**
  * @api {POST} /dev/token/dna Create DNA account
  * @apiName CreateDnaAccount
- * @apiGroup DevTools
- * @apiVersion  0.0.1
+ * @apiGroup internal/DevTools
+ * @apiVersion 0.0.1
  * @apiDescription Create an rbac-account for given DNA account
  *
  * @apiParam (Query) {String} email associated with a 2K account
@@ -83,8 +83,8 @@ devToolsApiRouter.post('/dna', async (req, res) => {
 /**
  * @api {POST} /dev/token/elevate Grant caller higher access level
  * @apiName Elevate
- * @apiGroup DevTools
- * @apiVersion  0.0.1
+ * @apiGroup internal/DevTools
+ * @apiVersion 0.0.1
  * @apiDescription Grant caller higher access level, for testing only, additive
  */
 devToolsApiRouter.post('/elevate', getAuthenticateMiddleware(), async (_req, res) => {

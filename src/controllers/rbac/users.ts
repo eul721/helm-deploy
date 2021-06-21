@@ -12,7 +12,7 @@ import { endpointServiceCallWrapper } from '../../utils/service';
  * @api {POST} /api/division/:divisionId/users Create user
  * @apiName CreateUser
  * @apiGroup RbacUsers
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Create a user
  *
  * @apiParam (Query) {String} dnaId DNA Identifier of the user to create
@@ -20,6 +20,8 @@ import { endpointServiceCallWrapper } from '../../utils/service';
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse UserDescription
  */
 rbacApiRouter.post(
   `/${Segment.division}/users`,
@@ -34,12 +36,14 @@ rbacApiRouter.post(
  * @api {GET} /api/division/:divisionId/users Get users
  * @apiName GetUsers
  * @apiGroup RbacUsers
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get all users in a division, returns only basic information
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse UserDescriptionArray
  */
 rbacApiRouter.get(
   `/${Segment.division}/users`,
@@ -53,7 +57,7 @@ rbacApiRouter.get(
  * @api {DELETE} /api/users/:userId Remove user
  * @apiName RemoveUser
  * @apiGroup RbacUsers
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove user
  *
  * @apiUse AuthenticateMiddleware
@@ -72,12 +76,14 @@ rbacApiRouter.delete(
  * @api {GET} /api/users/:userId Get user
  * @apiName GetUser
  * @apiGroup RbacUsers
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get user
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse UserDescription
  */
 rbacApiRouter.get(
   `/${Segment.users}`,

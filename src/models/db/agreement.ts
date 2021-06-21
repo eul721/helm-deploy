@@ -1,7 +1,7 @@
 import { Association, BelongsToGetAssociationMixin, ModelAttributes, Optional } from 'sequelize';
 import { INTERNAL_ID } from '../../utils/database';
 import { Locale, LocalizedHashmap } from '../../utils/language';
-import { AgreementDescription } from '../http/resources/agreementdescription';
+import { AgreementDescription } from '../http/public/agreementdescription';
 import { GameModel } from './game';
 import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';

@@ -1,25 +1,26 @@
 import { Op } from 'sequelize';
-import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
+import { DownloadData } from '../models/http/public/downloaddata';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { AgreementModel } from '../models/db/agreement';
-import { AgreementDescription } from '../models/http/resources/agreementdescription';
+import { AgreementDescription } from '../models/http/public/agreementdescription';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
 import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
-import { PublicGameDescription } from '../models/http/resources/publicgamedescription';
+import { PublicGameDescription } from '../models/http/public/publicgamedescription';
 import { GameContext } from '../models/auth/base/gamecontext';
 import { BranchDescription } from '../models/http/rbac/branchdescription';
 import { BadRequestResponse } from '../utils/errors';
 import { GameDescription } from '../models/http/rbac/gamedescription';
-import { PublicBranchDescription } from '../models/http/resources/branchdescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
 import { localeFromString } from '../utils/language';
+import { PublicBranchDescription } from '../models/http/public/publicbranchdescription';
+import { LEGACY_DownloadData, LEGACY_DownloadDataRoot } from '../models/http/legacy_downloaddata';
 
 export class GameService {
   /**
@@ -37,7 +38,10 @@ export class GameService {
       return { code: HttpCode.NOT_FOUND };
     }
 
-    return { code: HttpCode.OK, payload: await GameService.constructGameDownloadModel(game, branch) };
+    await game.reload({ include: { all: true } });
+    await branch.reload({ include: { all: true } });
+
+    return { code: HttpCode.OK, payload: game.toDownloadHttpModel(branch) };
   }
 
   /**
@@ -109,7 +113,9 @@ export class GameService {
    *
    * @param playerContext request context
    */
-  public static async getOwnedGames(playerContext: PlayerContext): Promise<ServiceResponse<DownloadDataRoot>> {
+  public static async LEGACY_getOwnedGames(
+    playerContext: PlayerContext
+  ): Promise<ServiceResponse<LEGACY_DownloadDataRoot>> {
     const response = await LicensingService.fetchLicenses(playerContext);
     if (response.code !== HttpCode.OK) {
       return { code: response.code };
@@ -121,17 +127,49 @@ export class GameService {
       where: { contentfulId: { [Op.in]: ownedTitles } },
     });
 
-    const gameModelsJson: { [key: string]: DownloadData } = {};
+    const gameModelsJson: { [key: string]: LEGACY_DownloadData } = {};
 
     playerOwnedGames.forEach(gameModel => {
       const [publicBranch] = gameModel.branches?.filter(branch => branch.id === gameModel.defaultBranch) ?? [];
       if (!publicBranch || !gameModel.contentfulId) {
         return;
       }
-      gameModelsJson[gameModel.contentfulId] = GameService.transformGameModelToDownloadModel(gameModel, publicBranch);
+      gameModelsJson[gameModel.contentfulId] = GameService.LEGACY_transformGameModelToDownloadModel(
+        gameModel,
+        publicBranch
+      );
     });
 
     return { code: HttpCode.OK, payload: { model: { downloadData: gameModelsJson } } };
+  }
+
+  /**
+   * Returns download data of all games, returns only publicly released branches
+   *
+   * @param playerContext request context
+   */
+  public static async getOwnedGames(playerContext: PlayerContext): Promise<ServiceResponse<DownloadData[]>> {
+    const response = await LicensingService.fetchLicenses(playerContext);
+    if (response.code !== HttpCode.OK) {
+      return { code: response.code };
+    }
+
+    const ownedTitles: string[] = response.payload ?? [];
+    const playerOwnedGames = await GameModel.findAll({
+      include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
+      where: { contentfulId: { [Op.in]: ownedTitles } },
+    });
+
+    return {
+      code: HttpCode.OK,
+      payload: playerOwnedGames.flatMap(gameModel => {
+        const [publicBranch] = gameModel.branches?.filter(branch => branch.id === gameModel.defaultBranch) ?? [];
+        if (!publicBranch || !gameModel.contentfulId) {
+          return [];
+        }
+        return [gameModel.toDownloadHttpModel(publicBranch)];
+      }),
+    };
   }
 
   /**
@@ -356,27 +394,7 @@ export class GameService {
     return { code: HttpCode.OK, payload: agreements.map(item => item.toHttpModel()) };
   }
 
-  private static async constructGameDownloadModel(
-    game: GameModel,
-    branch: BranchModel,
-    reloadModels = true
-  ): Promise<DownloadData> {
-    // refetch latest data if not specified
-    if (reloadModels) {
-      await game.reload({ include: { all: true } });
-      await branch.reload({ include: { all: true } });
-    }
-    return GameService.transformGameModelToDownloadModel(game, branch);
-  }
-
-  /**
-   * Internal method to construct a DownloadModel given a fully loaded GameModel & BranchModel
-   * @param game Fully loaded GameModel
-   * @param branch Fully loaded BranchModel
-   * @param locale Locale to decorate
-   * @returns A decorated DownloadData payload, used to display to the user
-   */
-  private static transformGameModelToDownloadModel(game: GameModel, branch: BranchModel): DownloadData {
+  private static LEGACY_transformGameModelToDownloadModel(game: GameModel, branch: BranchModel): LEGACY_DownloadData {
     return {
       names: game.names,
       agreements:

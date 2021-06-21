@@ -10,7 +10,8 @@ import {
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { Locale, LocalizedHashmap } from '../../utils/language';
-import { BuildDescription } from '../http/resources/builddescription';
+import { PublicBuildDescription } from '../http/public/publicbuilddescription';
+import { BuildDescription } from '../http/rbac/builddescription';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
 import { Fields, LocalizedFieldModel } from './localizedfield';
@@ -92,7 +93,14 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
     branches: Association<GameModel, BranchModel>;
   };
 
-  public toHttpModel(): BuildDescription {
+  public toPublicHttpModel(): PublicBuildDescription {
+    return {
+      patchNotes: this.notes,
+      mandatory: this.mandatory,
+    };
+  }
+
+  public toPublisherHttpModel(): BuildDescription {
     return {
       id: this.id,
       patchNotes: this.notes,

@@ -11,7 +11,7 @@ import { rbacApiRouter } from './basic';
  * @api {POST} /api/division/:divisionId/groups Create group
  * @apiName CreateGroups
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Create group
  *
  * @apiParam (Query) {String} groupName Name of the group to create
@@ -19,6 +19,8 @@ import { rbacApiRouter } from './basic';
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse GroupDescription
  */
 rbacApiRouter.post(
   `/${Segment.division}/groups`,
@@ -33,7 +35,7 @@ rbacApiRouter.post(
  * @api {DELETE} /api/division/:divisionId/groups/:groupId Remove group
  * @apiName RemoveGroup
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove group
  *
  * @apiUse AuthenticateMiddleware
@@ -55,12 +57,14 @@ rbacApiRouter.delete(
  * @api {GET} /api/division/:divisionId/users Get groups
  * @apiName GetGroups
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get groups
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse GroupDescriptionArray
  */
 rbacApiRouter.get(
   `/${Segment.division}/groups`,
@@ -74,12 +78,14 @@ rbacApiRouter.get(
  * @api {POST} /api/groups/:groupId/users/:userId Add user to group
  * @apiName AddUserToGroup
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Add user to group
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse GroupDescription
  */
 rbacApiRouter.post(
   `/${Segment.groups}/${Segment.users}`,
@@ -96,12 +102,14 @@ rbacApiRouter.post(
  * @api {DELETE} /api/groups/:groupId/users/:userId Remove user from group
  * @apiName RemoveUserFromGroup
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove user from group
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse GroupDescription
  */
 rbacApiRouter.delete(
   `/${Segment.groups}/${Segment.users}`,
@@ -118,12 +126,14 @@ rbacApiRouter.delete(
  * @api {GET} /api/groups/:groupId/users Get users in group
  * @apiName GetUsersInGroup
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get users in group
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse UserDescriptionArray
  */
 rbacApiRouter.get(
   `/${Segment.groups}/users`,
@@ -137,12 +147,14 @@ rbacApiRouter.get(
  * @api {POST} /api/groups/:groupId/roles/:roleId Add role to group
  * @apiName AddRoleToGroup
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Add role to group
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse GroupDescription
  */
 rbacApiRouter.post(
   `/${Segment.groups}/${Segment.roles}`,
@@ -159,12 +171,14 @@ rbacApiRouter.post(
  * @api {DELETE} /api/groups/:groupId/roles/:roleId Remove role from group
  * @apiName RemoveRoleFromGroup
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove role from group
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse GroupDescription
  */
 rbacApiRouter.delete(
   `/${Segment.groups}/${Segment.roles}`,
@@ -181,12 +195,14 @@ rbacApiRouter.delete(
  * @api {GET} /api/division/:divisionId/users Get roles in group
  * @apiName GetRolesInGroup
  * @apiGroup RbacGroups
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get roles in group
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
+ *
+ * @apiUse RoleDescriptionArray
  */
 rbacApiRouter.get(
   `/${Segment.groups}/roles`,

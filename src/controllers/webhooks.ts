@@ -21,10 +21,10 @@ if (!envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
 
 /**
  * @api {POST} /webhooks Notifications after success
- * @apiGroup Webhook
- * @apiVersion  0.0.1
+ * @apiGroup internal/Webhook
+ * @apiVersion 0.0.1
  * @apiDescription Server to server webhook interface to enable third party services to inform
- * events in T2GP Publisher Services
+ * events in T2GP Publisher Services, internal infrastructure call
  *
  * @apiUse WebhookSecretMiddleware
  * @apiUse WebhookValidateMiddleware
@@ -55,10 +55,10 @@ if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
 
 /**
  * @api {POST} /webhooks/verify Pre-execution permissions check
- * @apiGroup Webhook
- * @apiVersion  0.0.1
+ * @apiGroup internal/Webhook
+ * @apiVersion 0.0.1
  * @apiDescription Server to server webhook interface to verify if an action
- * can be performed by the given user
+ * can be performed by the given user, internal infrastructure call
  *
  * @apiUse WebhookSecretMiddleware
  * @apiUse WebhookValidateMiddleware
