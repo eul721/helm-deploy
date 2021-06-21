@@ -16,7 +16,6 @@ interface PaginatedResponse<T = void> {
 
 export interface PageData {
   from: number;
-  size: number;
   total: number;
 }
 

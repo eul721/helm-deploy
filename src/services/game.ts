@@ -75,7 +75,7 @@ export class GameService {
       code: HttpCode.OK,
       payload: {
         page: {
-          ...pageCtx,
+          from: pageCtx.from,
           total: count,
         },
         items,
