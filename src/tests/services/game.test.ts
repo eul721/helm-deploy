@@ -74,7 +74,6 @@ describe('src/services/game', () => {
       const result = await GameService.getAllPublisherGames(pageCtx);
       expect(result.payload?.items).toHaveLength(pageCtx.size);
       expect(result.payload?.page).toHaveProperty('from', pageCtx.from);
-      expect(result.payload?.page).toHaveProperty('size', pageCtx.size);
       expect(result.payload?.page).toHaveProperty('total', 5);
     });
   });
