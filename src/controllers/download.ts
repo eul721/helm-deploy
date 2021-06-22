@@ -44,7 +44,7 @@ downloadApiRouter.get(
   '/download',
   getAuthorizePlayerMiddleware(),
   endpointServiceCallWrapper(async (_req, res) => {
-    return GameService.LegacyGetOwnedGames(PlayerContext.get(res));
+    return GameService.legacyGetOwnedGames(PlayerContext.get(res));
   })
 );
 

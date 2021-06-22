@@ -113,7 +113,7 @@ export class GameService {
    *
    * @param playerContext request context
    */
-  public static async LegacyGetOwnedGames(
+  public static async legacyGetOwnedGames(
     playerContext: PlayerContext
   ): Promise<ServiceResponse<LegacyDownloadDataRoot>> {
     const response = await LicensingService.fetchLicenses(playerContext);
@@ -134,7 +134,7 @@ export class GameService {
       if (!publicBranch || !gameModel.contentfulId) {
         return;
       }
-      gameModelsJson[gameModel.contentfulId] = GameService.LegacyTransformGameModelToDownloadModel(
+      gameModelsJson[gameModel.contentfulId] = GameService.legacyTransformGameModelToDownloadModel(
         gameModel,
         publicBranch
       );
@@ -394,7 +394,7 @@ export class GameService {
     return { code: HttpCode.OK, payload: agreements.map(item => item.toHttpModel()) };
   }
 
-  private static LegacyTransformGameModelToDownloadModel(game: GameModel, branch: BranchModel): LegacyDownloadData {
+  private static legacyTransformGameModelToDownloadModel(game: GameModel, branch: BranchModel): LegacyDownloadData {
     return {
       names: game.names,
       agreements:
