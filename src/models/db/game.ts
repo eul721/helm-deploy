@@ -65,6 +65,10 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public ownerId!: number;
 
+  public createdAt!: string;
+
+  public updatedAt!: string;
+
   // #region association: agreements
 
   public readonly agreements?: AgreementModel[];
@@ -197,14 +201,18 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
 
   public toPublisherHttpModel(): GameDescription {
     return {
+      agreements: this.agreements?.map(agreement => agreement.toHttpModel()) ?? [],
       bdsTitleId: this.bdsTitleId,
       branches: this.branches?.map(branch => branch.toPublisherHttpModel()) ?? [],
       builds: this.builds?.map(build => build.toHttpModel()) ?? [],
       contentfulId: this.contentfulId,
+      createdAt: this.createdAt,
       defaultBranchId: this.defaultBranch,
       divisionId: this.ownerId,
       id: this.id,
       names: this.names,
+      status: 'draft',
+      updatedAt: this.updatedAt,
     };
   }
 }

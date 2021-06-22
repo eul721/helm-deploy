@@ -67,7 +67,7 @@ export class GameService {
     };
     const rows = await GameModel.findAll({
       ...query,
-      include: { all: true },
+      include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
     });
     const count = await GameModel.count(query);
     const items: GameDescription[] = rows.map(row => row.toPublisherHttpModel());
