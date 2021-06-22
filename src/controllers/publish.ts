@@ -136,7 +136,7 @@ publishApiRouter.get(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
  *
- * @apiUse AgreementDescriptionArray
+ * @apiUse AgreementResponse
  */
 publishApiRouter.get(
   `/${Segment.gameById}/eulas`,
@@ -159,7 +159,7 @@ publishApiRouter.get(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
  *
- * @apiUse AgreementDescription
+ * @apiUse AgreementResponse
  */
 publishApiRouter.post(
   `/${Segment.gameById}/eulas`,

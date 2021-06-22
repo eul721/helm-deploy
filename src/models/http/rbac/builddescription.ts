@@ -7,7 +7,7 @@ import { LocalizedHashmap } from '../../../utils/language';
  * @apiSuccess (200)  {Number} id Internal PS id
  * @apiSuccess (200) {Number} ownerId Id of the owning game
  * @apiSuccess (200) {Number} bdsBuildId Build bds id
- * @apiSuccess (200) {Object} releaseNotes Map of locale to release notes
+ * @apiSuccess (200) {Hashmap} releaseNotes Map of locale to release notes
  * @apiSuccess (200) {Boolean} mandatory Whether the update is mandatory and the game should not be allowed to start without getting it
  */
 
@@ -19,7 +19,7 @@ import { LocalizedHashmap } from '../../../utils/language';
  * @apiSuccess (200) {Number} -.id Internal PS id
  * @apiSuccess (200) {Number} -.ownerId Id of the owning game
  * @apiSuccess (200) {Number} -.bdsBuildId Build bds id
- * @apiSuccess (200) {Object} -.releaseNotes Map of locale to release notes
+ * @apiSuccess (200) {Hashmap} -.releaseNotes Map of locale to release notes
  * @apiSuccess (200) {Boolean} -.mandatory Whether the update is mandatory and the game should not be allowed to start without getting it
  */
 

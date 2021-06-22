@@ -14,7 +14,7 @@ import { BuildDescription } from './builddescription';
  * @apiSuccess (200) {Number} defaultBranchId Branch ID of the default branch
  * @apiSuccess (200) {Number} divisionId Division ID to which this game belongs
  * @apiSuccess (200) {Number} id Unique ID of this title
- * @apiSuccess (200) {Object} names Hashmap of names for this game, keyed by Locale
+ * @apiSuccess (200) {Hashmap} names Hashmap of names for this game, keyed by Locale
  *
  * @apiSuccessExample {json} Success-Response:
  * {
@@ -44,7 +44,7 @@ import { BuildDescription } from './builddescription';
  * @apiSuccess (200) {Number} -.defaultBranchId Branch ID of the default branch
  * @apiSuccess (200) {Number} -.divisionId Division ID to which this game belongs
  * @apiSuccess (200) {Number} -.id Unique ID of this title
- * @apiSuccess (200) {Object} -.names Hashmap of names for this game, keyed by Locale
+ * @apiSuccess (200) {Hashmap} -.names Hashmap of names for this game, keyed by Locale
  *
  * @apiSuccessExample {json} Success-Response:
  * [
