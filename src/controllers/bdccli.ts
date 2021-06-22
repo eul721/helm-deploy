@@ -4,7 +4,6 @@ import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
 import { getAuthorizeForResourceMiddleware } from '../middleware/authorizeresource';
 import { AdminRequirements } from '../models/auth/adminrequirements';
-import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
@@ -15,53 +14,12 @@ import { BuildService } from '../services/build';
 import { GameService } from '../services/game';
 import { endpointServiceCallWrapper, toIntRequired } from '../utils/service';
 
-export const publishApiRouter = Router();
+export const bdcCliApiRouter = Router();
 
-publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
-
-/** * @api {GET} /api/publisher/games Get Games
- * @apiName GetGames
- * @apiGroup Publisher
- * @apiDescription Get a list of games the authenticated user is allowed to see
- * @apiVersion 0.0.1
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePublisherMiddleware
- *
- * @apiUse PublisherGameDescriptionArray
- */
-publishApiRouter.get(
-  `/${Segment.games}`,
-  getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
-  endpointServiceCallWrapper(async (_req, res) => {
-    const publisherContext = AuthenticateContext.get(res);
-    return GameService.getGamesPublisher(publisherContext);
-  })
-);
+bdcCliApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
 
 /**
- * @api {GET} /api/publisher/games/:gameId Get Game
- * @apiName GetGame
- * @apiGroup Publisher
- * @apiDescription Get a single game by ID
- * @apiVersion 0.0.1
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePublisherMiddleware
- *
- * @apiUse PublisherGameDescription
- */
-publishApiRouter.get(
-  `/${Segment.gameById}`,
-  getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
-  endpointServiceCallWrapper(async (_req, res) => {
-    const publisherContext = AuthenticateContext.get(res);
-    return GameService.getGamePublisher(ResourceContext.get(res), publisherContext);
-  })
-);
-
-/**
- * @api {PATCH} /api/publisher/games/:gameId Modify a game
+ * @api {PATCH} /api/publisher/bdccli/games/:bdsGameId Modify a game
  * @apiName ModifyGame
  * @apiGroup Publisher
  * @apiVersion 0.0.1
@@ -73,8 +31,8 @@ publishApiRouter.get(
  *
  * @apiUse PublisherGameDescription
  */
-publishApiRouter.patch(
-  `/${Segment.gameById}`,
+bdcCliApiRouter.patch(
+  `/${Segment.gameByBdsId}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
   endpointServiceCallWrapper(async (req, res) => {
     const payload: ModifyTitleRequest = req.body as ModifyTitleRequest;
@@ -83,7 +41,7 @@ publishApiRouter.patch(
 );
 
 /**
- * @api {PATCH} /api/publisher/games/:gameId/branches/:branchId Modify a branch
+ * @api {PATCH} /api/publisher/bdccli/games/:bdsGameId/branches/:bdsBranchId Modify a branch
  * @apiName ModifyGame
  * @apiGroup Publisher
  * @apiVersion 0.0.1
@@ -95,8 +53,8 @@ publishApiRouter.patch(
  *
  * @apiUse PublisherBranchDescription
  */
-publishApiRouter.patch(
-  `/${Segment.gameById}/${Segment.branches}`,
+bdcCliApiRouter.patch(
+  `/${Segment.gameByBdsId}/${Segment.branchByBdsId}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
   endpointServiceCallWrapper(async (req, res) => {
     const payload: ModifyBranchRequest = req.body as ModifyBranchRequest;
@@ -105,30 +63,7 @@ publishApiRouter.patch(
 );
 
 /**
- * @api {GET} /api/publisher/games/:gameId/branches Get branches
- * @apiName GetBranches
- * @apiGroup Publisher
- * @apiVersion 0.0.1
- * @apiDescription Get branch list for a specified title, includes private branches
- *
- * @apiParam (Query) {String} title game contentful id
- *
- * @apiUse AuthenticateMiddleware
- * @apiUse AuthorizePublisherMiddleware
- * @apiUse AuthorizeResourceAccessMiddleware
- *
- * @apiUse PublisherBranchDescriptionArray
- */
-publishApiRouter.get(
-  `/${Segment.gameById}/branches`,
-  getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
-  endpointServiceCallWrapper(async (_req, res) => {
-    return GameService.getBranchesPublisher(ResourceContext.get(res));
-  })
-);
-
-/**
- * @api {GET} /api/publisher/games/:gameId/eulas Get Eula
+ * @api {GET} /api/publisher/bdccli/games/:bdsGameId/eulas Get Eula
  * @apiName GetEula
  * @apiGroup Publisher
  * @apiVersion 0.0.1
@@ -140,8 +75,8 @@ publishApiRouter.get(
  *
  * @apiUse AgreementDescriptionArray
  */
-publishApiRouter.get(
-  `/${Segment.gameById}/eulas`,
+bdcCliApiRouter.get(
+  `/${Segment.gameByBdsId}/eulas`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
   endpointServiceCallWrapper(async (_req, res) => {
     return GameService.getEula(ResourceContext.get(res));
@@ -149,7 +84,7 @@ publishApiRouter.get(
 );
 
 /**
- * @api {POST} /api/publisher/games/:gameId/eulas Create Eula
+ * @api {POST} /api/publisher/bdccli/games/:bdsGameId/eulas Create Eula
  * @apiName CreateEula
  * @apiGroup Publisher
  * @apiVersion 0.0.1
@@ -163,8 +98,8 @@ publishApiRouter.get(
  *
  * @apiUse AgreementDescription
  */
-publishApiRouter.post(
-  `/${Segment.gameById}/eulas`,
+bdcCliApiRouter.post(
+  `/${Segment.gameByBdsId}/eulas`,
   getAuthorizeForResourceMiddleware('create', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (_req, res) => {
     return GameService.createEula(ResourceContext.get(res));
@@ -172,7 +107,7 @@ publishApiRouter.post(
 );
 
 /**
- * @api {DELETE} /api/publisher/games/:gameId/eulas/:eulaId Remove Eula
+ * @api {DELETE} /api/publisher/bdccli/games/:bdsGameId/eulas/:eulaId Remove Eula
  * @apiName RemoveEula
  * @apiGroup Publisher
  * @apiVersion 0.0.1
@@ -182,8 +117,8 @@ publishApiRouter.post(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
  */
-publishApiRouter.delete(
-  `/${Segment.gameById}/${Segment.eula}`,
+bdcCliApiRouter.delete(
+  `/${Segment.gameByBdsId}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('delete', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
     const eulaId = toIntRequired(req.params[PathParam.eulaId]);
@@ -192,7 +127,7 @@ publishApiRouter.delete(
 );
 
 /**
- * @api {Patch} /api/publisher/games/:gameId/eulas/:eulaId Modify Eula
+ * @api {Patch} /api/publisher/bdccli/games/:bdsGameId/eulas/:eulaId Modify Eula
  * @apiName ModifyEula
  * @apiGroup Publisher
  * @apiVersion 0.0.1
@@ -204,8 +139,8 @@ publishApiRouter.delete(
  *
  * @apiUse AgreementDescription
  */
-publishApiRouter.patch(
-  `/${Segment.gameById}/${Segment.eula}`,
+bdcCliApiRouter.patch(
+  `/${Segment.gameByBdsId}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
     const eulaId = toIntRequired(req.params[PathParam.eulaId]);
@@ -215,7 +150,7 @@ publishApiRouter.patch(
 );
 
 /**
- * @api {Patch} /api/publisher/games/:gameId/builds/:buildId Modify build
+ * @api {Patch} /api/publisher/games/:bdsGameId/builds/:bdsBuildId Modify build
  * @apiName ModifyName
  * @apiGroup Publisher
  * @apiVersion 0.0.1
@@ -227,8 +162,8 @@ publishApiRouter.patch(
  *
  * @apiUse PublisherBuildDescription
  */
-publishApiRouter.patch(
-  `/${Segment.gameById}/${Segment.buildById}`,
+bdcCliApiRouter.patch(
+  `/${Segment.gameByBdsId}/${Segment.buildByBdsId}`,
   getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
   endpointServiceCallWrapper(async (req, res) => {
     const body = req.body as ModifyBuildRequest;

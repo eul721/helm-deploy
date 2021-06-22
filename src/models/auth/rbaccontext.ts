@@ -1,5 +1,7 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { Response } from 'express';
+import { BranchModel } from '../db/branch';
+import { BuildModel } from '../db/build';
 import { DivisionModel } from '../db/division';
 import { GameModel } from '../db/game';
 import { GroupModel } from '../db/group';
@@ -18,10 +20,12 @@ export class RbacContext extends ResourceContext {
     groupId?: number,
     roleId?: number,
     userId?: number,
+    permission?: string,
     game?: Maybe<GameModel>,
-    permission?: string
+    branch?: Maybe<BranchModel>,
+    build?: Maybe<BuildModel>
   ) {
-    super(game);
+    super(game, branch, build);
     this.divisionId = divisionId;
     this.groupId = groupId;
     this.roleId = roleId;

@@ -1,8 +1,12 @@
 import { warn } from '../logger';
 import { BuildModel } from '../models/db/build';
 import { GameModel } from '../models/db/game';
-import { ServiceResponse } from '../models/http/serviceresponse';
+import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
+import { BuildDescription } from '../models/http/rbac/builddescription';
+import { ResourceContext } from '../models/auth/resourcecontext';
+import { ModifyBuildRequest } from '../models/http/requests/modifybuildrequest';
+import { processHashmapChangeRequest } from '../utils/language';
 
 export class BuildService {
   /**
@@ -57,5 +61,33 @@ export class BuildService {
     }
 
     return { code: HttpCode.OK };
+  }
+
+  /**
+   * Modifies a build
+   *
+   * @param resourceContext information about the requested resource
+   * @param request json model with information about what to change
+   */
+  public static async modifyBuild(
+    resourceContext: ResourceContext,
+    request: ModifyBuildRequest
+  ): Promise<ServiceResponse<BuildDescription>> {
+    const build = await resourceContext.fetchBuildModel();
+    if (!build) {
+      return malformedRequestPastValidation();
+    }
+
+    if (request.mandatory != null) {
+      build.mandatory = request.mandatory;
+    }
+
+    if (request.patchNotes) {
+      await processHashmapChangeRequest(request.patchNotes, build.removeNote, build.addNote);
+    }
+
+    await build.save();
+
+    return { code: HttpCode.OK, payload: build.toPublisherHttpModel() };
   }
 }

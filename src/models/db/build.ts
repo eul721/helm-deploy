@@ -85,6 +85,22 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
     return nameObj?.value;
   }
 
+  public async addNote(value: string, locale: Locale) {
+    return this.upsertLocalizedField(Fields.patchnotes, value, locale);
+  }
+
+  public async getNote(locale: Locale): Promise<string | undefined> {
+    return this.getLocalizedField(Fields.patchnotes, locale);
+  }
+
+  public async getNotes() {
+    return this.getLocalizedFields(Fields.patchnotes);
+  }
+
+  public async removeNote(locale: Locale) {
+    return this.removeLocalizedField(Fields.patchnotes, locale);
+  }
+
   // #endregion
 
   public static associations: {

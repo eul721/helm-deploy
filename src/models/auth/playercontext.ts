@@ -1,6 +1,7 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { Response } from 'express';
 import { BranchModel } from '../db/branch';
+import { BuildModel } from '../db/build';
 import { GameModel } from '../db/game';
 import { GameContext } from './base/gamecontext';
 
@@ -25,9 +26,10 @@ export class PlayerContext extends GameContext {
     deviceId?: string,
     deviceName?: string,
     game?: Maybe<GameModel>,
-    branch?: Maybe<BranchModel>
+    branch?: Maybe<BranchModel>,
+    build?: Maybe<BuildModel>
   ) {
-    super(game, branch);
+    super(game, branch, build);
     this.bearerToken = bearerToken;
     this.deviceId = deviceId;
     this.deviceName = deviceName;
