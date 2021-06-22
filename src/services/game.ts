@@ -1,8 +1,12 @@
-import { Op } from 'sequelize';
+import { FindOptions, Op } from 'sequelize';
 import { DownloadDataResponse } from '../models/http/public/downloaddata';
-import { GameModel } from '../models/db/game';
+import { GameAttributes, GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
-import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
+import {
+  malformedRequestPastValidation,
+  PaginatedServiceResponse,
+  ServiceResponse,
+} from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { AgreementModel } from '../models/db/agreement';
 import { AgreementResponse } from '../models/http/public/agreementdescription';
@@ -19,8 +23,9 @@ import { GameDescription } from '../models/http/rbac/gamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
 import { localeFromString } from '../utils/language';
-import { PublicBranchResponse } from '../models/http/public/publicbranchdescription';
+import { defaultPagination, PaginationContext } from '../utils/pagination';
 import { LegacyDownloadData, LegacyDownloadDataRoot } from '../models/http/legacy_downloaddata';
+import { PublicBranchResponse } from '../models/http/public/publicbranchdescription';
 
 export class GameService {
   /**
@@ -55,11 +60,31 @@ export class GameService {
     return { code: HttpCode.OK, payload: { items } };
   }
 
-  public static async getAllPublisherGames(): Promise<ServiceResponse<GameDescription[]>> {
-    const items: GameDescription[] = (await GameModel.findAll({ include: { all: true } })).map(item =>
-      item.toPublisherHttpModel()
-    );
-    return { code: HttpCode.OK, payload: items };
+  public static async getAllPublisherGames(
+    paginationContext?: PaginationContext
+  ): Promise<PaginatedServiceResponse<GameDescription>> {
+    const pageCtx = paginationContext ?? defaultPagination();
+    const query: FindOptions<GameAttributes> = {
+      limit: pageCtx.size,
+      offset: pageCtx.from,
+      order: [pageCtx.sort],
+    };
+    const rows = await GameModel.findAll({
+      ...query,
+      include: { all: true },
+    });
+    const count = await GameModel.count(query);
+    const items: GameDescription[] = rows.map(row => row.toPublisherHttpModel());
+    return {
+      code: HttpCode.OK,
+      payload: {
+        page: {
+          from: pageCtx.from,
+          total: count,
+        },
+        items,
+      },
+    };
   }
 
   /**
@@ -67,17 +92,23 @@ export class GameService {
    * @param authenticationContext Publisher authentication context
    */
   public static async getGamesPublisher(
-    authenticationContext: AuthenticateContext
-  ): Promise<ServiceResponse<GameDescription[]>> {
+    authenticationContext: AuthenticateContext,
+    paginationContext?: PaginationContext
+  ): Promise<PaginatedServiceResponse<GameDescription>> {
     const ident = await authenticationContext.fetchStudioUserModel();
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
     }
-    const games = await GameService.getAllPublisherGames();
+    const { payload: { page, items: games } = {} } = await GameService.getAllPublisherGames(
+      paginationContext ?? defaultPagination()
+    );
     // TODO: fitler by permission level
     return {
       code: HttpCode.OK,
-      payload: games.payload,
+      payload: {
+        page,
+        items: games ?? [],
+      },
     };
   }
 
