@@ -48,7 +48,7 @@ jobs:
           scope: take-two-t2gp
       - name: Gen build info
         run: |
-          echo VER=$(git rev-parse --short=8 ${{ github.sha }}) >> $GITHUB_ENV          
+          echo VER=$(git rev-parse --short=8 ${{ github.sha }}) >> $GITHUB_ENV
       - name: build image
         run: |
           docker build -t t2gp-publisher-service --build-arg NPM_TOKEN="${{ secrets.T2GP_BUILD_TOKEN }}" .
@@ -86,17 +86,17 @@ jobs:
       - uses: actions/checkout@v2
       - name: Gen build info
         run: |
-          echo VER=$(git rev-parse --short=8 ${{ github.sha }}) >> $GITHUB_ENV  
+          echo VER=$(git rev-parse --short=8 ${{ github.sha }}) >> $GITHUB_ENV
           REF=$(echo "${{ github.ref }}" | awk -F'/' '{print $3}')
           # TODO: Once production cluster is setup, move production over to new cluster
-          CLUSTER=t2gp-flux
+          CLUSTER=t2gp-debugging
           echo "BRANCH=$REF" >> $GITHUB_ENV
-          echo "CLUSTER=$CLUSTER" >> $GITHUB_ENV   
+          echo "CLUSTER=$CLUSTER" >> $GITHUB_ENV
       - name: Authenticate to EKS Cluster
         run: |
           echo KUBETOKEN=$(aws eks get-token --cluster-name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.status.token') >> $GITHUB_ENV
           echo CLUSTER_ENDPOINT=$(aws eks describe-cluster --name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.cluster.endpoint') >> $GITHUB_ENV
-      
+
       - name: Deploy Helm Chart
         uses: nmasur/alpine-kubectl@master
         with:
@@ -113,14 +113,14 @@ jobs:
               --create-namespace \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
-              --set app.tag=${{ env.VER }} 
+              --set app.tag=${{ env.VER }}
             helm upgrade --install \
               download-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               --kube-token=${{ env.KUBETOKEN }} \
               --create-namespace \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
-              --set app.tag=${{ env.VER }} 
+              --set app.tag=${{ env.VER }}
         # Update deployment status
       - name: Update deployment status (success)
         if: success()
