@@ -58,7 +58,7 @@
  *   "page": {
  *      "from": 0,
  *      "size": 2,
- *      "sort": "id",
+ *      "sort": [["id", "DESC"]],
  *      "total": 5
  *   },
  *   "items": [
