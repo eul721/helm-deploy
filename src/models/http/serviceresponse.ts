@@ -1,4 +1,5 @@
 import { ErrorReason } from '../../utils/errors';
+import { SortPair } from '../../utils/pagination';
 import { HttpCode } from './httpcode';
 
 export interface BaseResponse {
@@ -16,6 +17,8 @@ interface PaginatedResponse<T = void> {
 
 export interface PageData {
   from: number;
+  size: number;
+  sort: SortPair[];
   total: number;
 }
 
@@ -37,7 +40,8 @@ export type ServiceResponse<T = void> = BaseResponse & { payload?: T };
  * @apiSuccess (200) {PaginationDetail} page Pagination details object
  * @apiSuccess (200) {Number} page.from provided "from" value that generated this paged result
  * @apiSuccess (200) {Number} page.size provided "size" value that generated this paged result
- * @apiSuccess (200) {String=id} page.sort field to sort by. Currently only "id" is implemented, so this is to be ignored
+ * @apiSuccess (200) {String=id,id.ASC,id.DESC} page.sort field(s) to sort by. (Currently only "id" is supported). Fields are represented by a comma separated list
+ * of dot notation sorting. Example: `field1.DESC,field2.ASC` would first sort by field1 descending, then field2 ascending.
  * @apiSuccess (200) {Number} page.total total number of values that exist for these parameters. Use to infer if more pages are available
  */
 /**

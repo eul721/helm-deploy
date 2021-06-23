@@ -63,7 +63,7 @@ export class GameService {
     const query: FindOptions<GameAttributes> = {
       limit: pageCtx.size,
       offset: pageCtx.from,
-      order: [pageCtx.sort],
+      order: pageCtx.sort,
     };
     const rows = await GameModel.findAll({
       ...query,

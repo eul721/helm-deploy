@@ -15,10 +15,12 @@ export function paginationMiddleware(): Middleware {
     try {
       res.locals.paginationContext = buildPaginationContext({ from, sort, size });
     } catch (paginationErr) {
-      if (paginationErr.message === 'BadInput') {
-        res.status(400).json({ code: 400, message: 'Invalid pagination' });
+      if (['BadInput', 'Invalid Input'].includes(paginationErr.message)) {
+        res.status(400).json({ code: 400, message: 'Invalid pagination parameters' });
         return;
       }
+      res.status(500).json({ code: 500, message: paginationErr.message });
+      return;
     }
     next();
   };

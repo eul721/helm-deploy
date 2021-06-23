@@ -69,7 +69,7 @@ describe('src/services/game', () => {
       const pageCtx: PaginationContext = {
         from: 0,
         size: 2,
-        sort: 'id',
+        sort: ['id'],
       };
       const result = await GameService.getAllPublisherGames(pageCtx);
       expect(result.payload?.items).toHaveLength(pageCtx.size);
