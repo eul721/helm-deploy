@@ -1,4 +1,6 @@
 import { Op } from 'sequelize';
+import { Md5 } from 'ts-md5';
+
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
@@ -116,9 +118,15 @@ export class GameService {
     }
 
     const ownedTitles: string[] = response.payload ?? [];
+    const playerOwnedGamesAll = await GameModel.findAll();
+    const filteredPlayerOwnedGames = playerOwnedGamesAll.filter(gameModel =>
+      ownedTitles.includes(Md5.hashStr(gameModel.contentfulId || ''))
+    );
+    const ownedContentfulIds = filteredPlayerOwnedGames.map(model => model.contentfulId);
+
     const playerOwnedGames = await GameModel.findAll({
       include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
-      where: { contentfulId: { [Op.in]: ownedTitles } },
+      where: { contentfulId: { [Op.in]: ownedContentfulIds } },
     });
 
     const gameModelsJson: { [key: string]: DownloadData } = {};
