@@ -11,7 +11,7 @@ import {
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { Locale, LocalizedHashmap } from '../../utils/language';
 import { PublicBuildDescription } from '../http/public/publicbuilddescription';
-import { BuildDescription } from '../http/rbac/builddescription';
+import { PublisherBuildDescription } from '../http/rbac/publisherbuilddescription';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
 import { Fields, LocalizedFieldModel } from './localizedfield';
@@ -116,7 +116,7 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
     };
   }
 
-  public toPublisherHttpModel(): BuildDescription {
+  public toPublisherHttpModel(): PublisherBuildDescription {
     return {
       id: this.id,
       patchNotes: this.notes,

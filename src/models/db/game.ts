@@ -18,10 +18,10 @@ import { DivisionModel } from './division';
 import { RoleModel } from './role';
 import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
-import { GameDescription } from '../http/rbac/gamedescription';
 import { Locale, LocalizedHashmap } from '../../utils/language';
 import { PublicGameDescription } from '../http/public/publicgamedescription';
 import { DownloadData } from '../http/public/downloaddata';
+import { PublisherGameDescription } from '../http/rbac/publishergamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -195,7 +195,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
     };
   }
 
-  public toPublisherHttpModel(): GameDescription {
+  public toPublisherHttpModel(): PublisherGameDescription {
     return {
       bdsTitleId: this.bdsTitleId,
       branches: this.branches?.map(branch => branch.toPublisherHttpModel()) ?? [],

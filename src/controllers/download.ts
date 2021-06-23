@@ -20,7 +20,7 @@ downloadApiRouter.use(getAuthenticateMiddleware());
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  *
- * @apiUse PublicGameDescriptionArray
+ * @apiUse PublicGameResponse
  */
 downloadApiRouter.get(
   '/',
@@ -44,7 +44,7 @@ downloadApiRouter.get(
   '/download',
   getAuthorizePlayerMiddleware(),
   endpointServiceCallWrapper(async (_req, res) => {
-    return GameService.LegacyGetOwnedGames(PlayerContext.get(res));
+    return GameService.legacyGetOwnedGames(PlayerContext.get(res));
   })
 );
 
@@ -58,7 +58,7 @@ downloadApiRouter.get(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  *
- * @apiUse DownloadDataArray
+ * @apiUse DownloadDataResponse
  */
 downloadApiRouter.get(
   '/owned',
@@ -75,12 +75,10 @@ downloadApiRouter.get(
  * @apiVersion 0.0.1
  * @apiDescription Get branch list for a specified title
  *
- * @apiParam (Query) {String} title Title contentful id
- *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  *
- * @apiUse PublicBranchDescriptionArray
+ * @apiUse PublicBranchResponse
  */
 downloadApiRouter.get(
   `/:${PathParam.gameId}/branches`,
@@ -100,7 +98,7 @@ downloadApiRouter.get(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  * 
- * @apiUse DownloadData
+ * @apiUse DownloadDataResponse
  */
 downloadApiRouter.get(
   `/:${PathParam.gameId}/:${PathParam.branchId}`,

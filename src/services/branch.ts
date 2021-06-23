@@ -5,6 +5,7 @@ import { GameModel } from '../models/db/game';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { ResourceContext } from '../models/auth/resourcecontext';
+import { PublisherBranchResponse } from '../models/http/rbac/publisherbranchdescription';
 
 export class BranchService {
   /**
@@ -106,7 +107,7 @@ export class BranchService {
   public static async setPassword(
     resourceContext: ResourceContext,
     password?: string
-  ): Promise<ServiceResponse<BranchModel>> {
+  ): Promise<ServiceResponse<PublisherBranchResponse>> {
     if (password !== '' && !password) {
       return { code: HttpCode.BAD_REQUEST, message: 'Missing password parameter' };
     }
@@ -124,7 +125,7 @@ export class BranchService {
     // TODO plaintext, should move to hash at some point
     branch.password = password;
     await branch.save();
-    return { code: HttpCode.OK, payload: branch };
+    return { code: HttpCode.OK, payload: { items: [branch] } };
   }
 
   private static async addNewBuildToBranch(branch: BranchModel | null, build: BuildModel | null): Promise<boolean> {

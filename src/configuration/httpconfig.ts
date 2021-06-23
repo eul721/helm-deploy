@@ -1,6 +1,17 @@
 export type HeaderParam = 'authorization' | 'webhookToken' | 'deviceId' | 'deviceName';
 
-export type QueryParam = 'userName' | 'roleName' | 'email' | 'password' | 'divisionId' | 'groupName' | 'url' | 'dnaId';
+export type QueryParam =
+  | 'divisionId'
+  | 'dnaId'
+  | 'email'
+  | 'from'
+  | 'groupName'
+  | 'page'
+  | 'password'
+  | 'roleName'
+  | 'size'
+  | 'url'
+  | 'userName';
 
 export enum PathParam {
   userId = 'userId',

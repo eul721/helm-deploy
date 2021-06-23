@@ -6,6 +6,7 @@ import { GameModel } from '../../models/db/game';
 import { HttpCode } from '../../models/http/httpcode';
 import { GameService } from '../../services/game';
 import { LicensingService } from '../../services/licensing';
+import { PaginationContext } from '../../utils/pagination';
 import { SampleDatabase } from '../../utils/sampledatabase';
 
 jest.mock('../../services/licensing');
@@ -34,7 +35,7 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getAllPublicGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
+      expect(serviceResponse.payload?.items).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
       // Ensuring it provides the Public http model
       expect(serviceResponse.payload).not.toHaveProperty([0, 'defaultBranchId']);
     });
@@ -43,7 +44,7 @@ describe('src/services/game', () => {
       await getDBInstance().sync({ force: true });
       const serviceResponse = await GameService.getAllPublicGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
-      expect(serviceResponse.payload).toHaveLength(0);
+      expect(serviceResponse.payload?.items).toHaveLength(0);
     });
   });
 
@@ -52,16 +53,28 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getAllPublisherGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
+      expect(serviceResponse.payload?.items).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
       // Ensuring it provides the Publisher http model
-      expect(serviceResponse.payload).toHaveProperty([0, 'defaultBranchId']);
+      expect(serviceResponse.payload?.items).toHaveProperty([0, 'defaultBranchId']);
     });
 
     it('should return no games if database is empty', async () => {
       await getDBInstance().sync({ force: true });
       const serviceResponse = await GameService.getAllPublisherGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
-      expect(serviceResponse.payload).toHaveLength(0);
+      expect(serviceResponse.payload?.items).toHaveLength(0);
+    });
+
+    it('should return the properly paginated response', async () => {
+      const pageCtx: PaginationContext = {
+        from: 0,
+        size: 2,
+        sort: 'id',
+      };
+      const result = await GameService.getAllPublisherGames(pageCtx);
+      expect(result.payload?.items).toHaveLength(pageCtx.size);
+      expect(result.payload?.page).toHaveProperty('from', pageCtx.from);
+      expect(result.payload?.page).toHaveProperty('total', 5);
     });
   });
 
@@ -76,7 +89,7 @@ describe('src/services/game', () => {
 
       const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
-      expect(serviceResponse.payload).toHaveLength(0);
+      expect(serviceResponse.payload?.items).toHaveLength(0);
     });
 
     it('should return all games the user owns', async () => {
@@ -88,7 +101,7 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
+      expect(serviceResponse.payload?.items).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
     });
   });
 
@@ -107,7 +120,7 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getBranches(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(serviceResponse.payload?.length).toBeGreaterThan(0);
+      expect(serviceResponse.payload?.items.length).toBeGreaterThan(0);
     });
   });
 
@@ -122,7 +135,8 @@ describe('src/services/game', () => {
       const result = await GameService.getGamesPublisher(ctx);
       // This will likely change once we implement proper authentication
       expect(result).toHaveProperty('payload');
-      expect(result.payload).toEqual(
+      expect(result.payload?.page).not.toBeUndefined();
+      expect(result.payload?.items).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ id: 1 }),
           expect.objectContaining({ id: 2 }),

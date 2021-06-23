@@ -12,8 +12,8 @@ import {
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 import { Locale, LocalizedHashmap } from '../../utils/language';
-import { BranchDescription } from '../http/rbac/branchdescription';
 import { PublicBranchDescription } from '../http/public/publicbranchdescription';
+import { PublisherBranchDescription } from '../http/rbac/publisherbranchdescription';
 import { BuildModel } from './build';
 import { GameModel } from './game';
 import { Fields, LocalizedFieldModel } from './localizedfield';
@@ -129,7 +129,7 @@ export class BranchModel
     };
   }
 
-  public toPublisherHttpModel(): BranchDescription {
+  public toPublisherHttpModel(): PublisherBranchDescription {
     return {
       bdsBranchId: this.bdsBranchId,
       id: this.id,
