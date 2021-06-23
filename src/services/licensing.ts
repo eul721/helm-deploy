@@ -3,7 +3,6 @@ import fetch from 'cross-fetch';
 import { envConfig } from '../configuration/envconfig';
 import { debug, error, warn } from '../logger';
 import { PlayerContext } from '../models/auth/playercontext';
-import { GameModel } from '../models/db/game';
 import { DeviceRegistrationData } from '../models/http/dna/deviceregistrationdata';
 import { DnaErrorResponse } from '../models/http/dna/dnaerrorresponse';
 import { DnaLicenseResponse } from '../models/http/dna/dnalicenseresponse';
