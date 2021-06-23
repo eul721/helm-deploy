@@ -119,9 +119,10 @@ export class GameService {
 
     const ownedTitles: string[] = response.payload ?? [];
     const playerOwnedGamesAll = await GameModel.findAll();
-    const filteredPlayerOwnedGames = playerOwnedGamesAll.filter(gameModel =>
-      ownedTitles.includes(Md5.hashStr(gameModel.contentfulId || ''))
-    );
+    const filteredPlayerOwnedGames = playerOwnedGamesAll.filter(gameModel => {
+      return ownedTitles.includes(Md5.hashStr(gameModel.contentfulId || ''));
+    });
+
     const ownedContentfulIds = filteredPlayerOwnedGames.map(model => model.contentfulId);
 
     const playerOwnedGames = await GameModel.findAll({

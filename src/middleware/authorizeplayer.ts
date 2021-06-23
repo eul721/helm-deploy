@@ -6,6 +6,7 @@ import { getQueryParamValue, sendMessageResponse, sendServiceResponse } from '..
 import { createPlayerContext, Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
 import { LicensingService } from '../services/licensing';
 import { envConfig } from '../configuration/envconfig';
+import { Md5 } from 'ts-md5';
 
 /**
  * @apiDefine AuthorizePlayerMiddleware
@@ -27,7 +28,7 @@ async function authorizePlayerMiddleware(req: Request, res: Response, next: Next
   }
 
   const game = await playerContext.fetchGameModel();
-  if (game && !response.payload?.some(title => title === game?.contentfulId)) {
+  if (game && !response.payload?.some(title => title === Md5.hashStr(game?.contentfulId || ''))) {
     if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
       info('authorizePlayerMiddleware would have rejected the request here if licensing check was not disabled');
     } else {
