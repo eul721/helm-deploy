@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { Md5 } from 'ts-md5';
 import { info, warn } from '../logger';
 import { HttpCode } from '../models/http/httpcode';
 import { dummyAuthorizePlayerMiddleware } from './dummymiddleware';
@@ -6,7 +7,6 @@ import { getQueryParamValue, sendMessageResponse, sendServiceResponse } from '..
 import { createPlayerContext, Middleware, middlewareExceptionWrapper, useDummyAuth } from '../utils/middleware';
 import { LicensingService } from '../services/licensing';
 import { envConfig } from '../configuration/envconfig';
-import { Md5 } from 'ts-md5';
 
 /**
  * @apiDefine AuthorizePlayerMiddleware
