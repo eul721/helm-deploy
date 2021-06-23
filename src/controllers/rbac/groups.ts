@@ -2,6 +2,10 @@ import { Segment } from '../../configuration/httpconfig';
 import { getAuthorizeForRbacMiddleware } from '../../middleware/authorizeforrbac';
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { RbacResource } from '../../models/auth/rbacresource';
+import { GroupResponse } from '../../models/http/rbac/groupdescription';
+import { RoleResponse } from '../../models/http/rbac/roledescription';
+import { UserResponse } from '../../models/http/rbac/userdescription';
+import { ServiceResponse } from '../../models/http/serviceresponse';
 import { RbacGroupsService } from '../../services/rbac/groups';
 import { getQueryParamValue } from '../../utils/http';
 import { endpointServiceCallWrapper } from '../../utils/service';
@@ -20,12 +24,12 @@ import { rbacApiRouter } from './basic';
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse GroupDescription
+ * @apiUse GroupResponse
  */
 rbacApiRouter.post(
   `/${Segment.division}/groups`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  endpointServiceCallWrapper(async (req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<GroupResponse>>(async (req, res) => {
     const name = getQueryParamValue(req, 'groupName');
     return RbacGroupsService.createGroup(RbacContext.get(res), name);
   })
@@ -48,7 +52,7 @@ rbacApiRouter.delete(
     resource: RbacResource.GROUP,
     allowDifferentOwner: true,
   }),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<void>>(async (_req, res) => {
     return RbacGroupsService.removeGroup(RbacContext.get(res));
   })
 );
@@ -64,12 +68,12 @@ rbacApiRouter.delete(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse GroupDescriptionArray
+ * @apiUse GroupResponse
  */
 rbacApiRouter.get(
   `/${Segment.division}/groups`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<GroupResponse>>(async (_req, res) => {
     return RbacGroupsService.getGroups(RbacContext.get(res));
   })
 );
@@ -85,7 +89,7 @@ rbacApiRouter.get(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse GroupDescription
+ * @apiUse GroupResponse
  */
 rbacApiRouter.post(
   `/${Segment.groups}/${Segment.users}`,
@@ -93,7 +97,7 @@ rbacApiRouter.post(
     resource: RbacResource.USER,
     allowDifferentOwner: true,
   }),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<GroupResponse>>(async (_req, res) => {
     return RbacGroupsService.addUserToGroup(RbacContext.get(res));
   })
 );
@@ -109,7 +113,7 @@ rbacApiRouter.post(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse GroupDescription
+ * @apiUse GroupResponse
  */
 rbacApiRouter.delete(
   `/${Segment.groups}/${Segment.users}`,
@@ -117,7 +121,7 @@ rbacApiRouter.delete(
     resource: RbacResource.USER,
     allowDifferentOwner: true,
   }),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<GroupResponse>>(async (_req, res) => {
     return RbacGroupsService.removeUserFromGroup(RbacContext.get(res));
   })
 );
@@ -133,12 +137,12 @@ rbacApiRouter.delete(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse UserDescriptionArray
+ * @apiUse UserResponse
  */
 rbacApiRouter.get(
   `/${Segment.groups}/users`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.GROUP),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<UserResponse>>(async (_req, res) => {
     return RbacGroupsService.getUsersInGroup(RbacContext.get(res));
   })
 );
@@ -154,7 +158,7 @@ rbacApiRouter.get(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse GroupDescription
+ * @apiUse GroupResponse
  */
 rbacApiRouter.post(
   `/${Segment.groups}/${Segment.roles}`,
@@ -162,7 +166,7 @@ rbacApiRouter.post(
     resource: RbacResource.ROLE,
     allowDifferentOwner: false,
   }),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<GroupResponse>>(async (_req, res) => {
     return RbacGroupsService.addRoleToGroup(RbacContext.get(res));
   })
 );
@@ -178,7 +182,7 @@ rbacApiRouter.post(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse GroupDescription
+ * @apiUse GroupResponse
  */
 rbacApiRouter.delete(
   `/${Segment.groups}/${Segment.roles}`,
@@ -186,7 +190,7 @@ rbacApiRouter.delete(
     resource: RbacResource.ROLE,
     allowDifferentOwner: false,
   }),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<GroupResponse>>(async (_req, res) => {
     return RbacGroupsService.removeRoleFromGroup(RbacContext.get(res));
   })
 );
@@ -202,12 +206,12 @@ rbacApiRouter.delete(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse RoleDescriptionArray
+ * @apiUse RoleResponse
  */
 rbacApiRouter.get(
   `/${Segment.groups}/roles`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.GROUP),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<RoleResponse>>(async (_req, res) => {
     return RbacGroupsService.getRolesInGroup(RbacContext.get(res));
   })
 );

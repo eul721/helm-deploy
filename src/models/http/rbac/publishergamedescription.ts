@@ -1,7 +1,7 @@
 import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
 import { LocalizedHashmap } from '../../../utils/language';
-import { BranchDescription } from './branchdescription';
-import { BuildDescription } from './builddescription';
+import { PublisherBranchDescription } from './publisherbranchdescription';
+import { PublisherBuildDescription } from './publisherbuilddescription';
 
 /**
  * @apiDefine PublisherGameDescription Game Description Model
@@ -31,9 +31,34 @@ import { BuildDescription } from './builddescription';
  *   }
  * }
  */
+export interface PublisherGameDescription {
+  /** Internal PS id */
+  id: number;
+
+  /** Array of Branch objects that belong to this game */
+  branches: PublisherBranchDescription[];
+
+  /** Array of Build objects that belong to this game */
+  builds: PublisherBuildDescription[];
+
+  /** Game id */
+  contentfulId: Maybe<string>;
+
+  /** Default branch ID */
+  defaultBranchId: Maybe<number>;
+
+  /** Owning division id */
+  divisionId: number;
+
+  /** Game bds id */
+  bdsTitleId: number;
+
+  /** Game names */
+  names: LocalizedHashmap;
+}
 
 /**
- * @apiDefine PublisherGameDescriptionArray Array of Game Description Models
+ * @apiDefine PublisherGameResponse
  * @apiVersion 0.0.1
  * @apiSuccess (200) {Game[]} items List of Game Descriptions
  * @apiSuccess (200) {Number} items.bdsTitleId Unique ID of title in BDS
@@ -80,27 +105,6 @@ import { BuildDescription } from './builddescription';
  *   ]
  * }
  */
-
-export interface GameDescription {
-  /** Internal PS id */
-  id: number;
-
-  branches: BranchDescription[];
-
-  builds: BuildDescription[];
-
-  /** Game id */
-  contentfulId: Maybe<string>;
-
-  /** Default branch ID */
-  defaultBranchId: Maybe<number>;
-
-  /** Owning division id */
-  divisionId: number;
-
-  /** Game bds id */
-  bdsTitleId: number;
-
-  /** Game names */
-  names: LocalizedHashmap;
+export interface PublisherGameResponse {
+  items: PublisherGameDescription[];
 }

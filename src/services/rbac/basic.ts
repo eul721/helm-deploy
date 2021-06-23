@@ -12,7 +12,7 @@ import { HttpCode } from '../../models/http/httpcode';
 import { GroupModel } from '../../models/db/group';
 import { DivisionAttributes, DivisionModel } from '../../models/db/division';
 import { GameAttributes, GameUniqueIdentifier } from '../../models/db/game';
-import { UserDescription } from '../../models/http/rbac/userdescription';
+import { UserResponse } from '../../models/http/rbac/userdescription';
 import { AuthenticateContext } from '../../models/auth/authenticatecontext';
 
 export enum AccessType {
@@ -118,7 +118,7 @@ export class RbacService {
    *
    * @param user model of the target user
    */
-  public static async assembleUserInfoFromModel(user: UserModel): Promise<ServiceResponse<UserDescription>> {
+  public static async assembleUserInfoFromModel(user: UserModel): Promise<ServiceResponse<UserResponse>> {
     const neededGameAttributes: (keyof GameAttributes)[] = ['contentfulId'];
     const neededPermissionAttributes: (keyof PermissionAttributes)[] = ['id'];
     const neededDivisionAttributes: (keyof DivisionAttributes)[] = ['name'];
@@ -139,7 +139,7 @@ export class RbacService {
         },
       ],
     });
-    return { code: HttpCode.OK, payload: user.toHttpModel() };
+    return { code: HttpCode.OK, payload: { items: [user.toHttpModel()] } };
   }
 
   /**
@@ -147,7 +147,7 @@ export class RbacService {
    *
    * @param externalId id of the target user
    */
-  public static async assembleUserInfo(externalId: string): Promise<ServiceResponse<UserDescription>> {
+  public static async assembleUserInfo(externalId: string): Promise<ServiceResponse<UserResponse>> {
     const user = await UserModel.findOne({ where: { externalId } });
     if (!user) {
       return { code: HttpCode.NOT_FOUND };
@@ -162,7 +162,7 @@ export class RbacService {
    */
   public static async getUsersInOwnDivision(
     authenticateContext: AuthenticateContext
-  ): Promise<ServiceResponse<UserDescription[]>> {
+  ): Promise<ServiceResponse<UserResponse>> {
     const externalIdAttrib: keyof UserAttributes = 'externalId';
     const caller = await authenticateContext.fetchStudioUserModel();
     if (!caller) {
@@ -173,6 +173,6 @@ export class RbacService {
       attributes: [externalIdAttrib],
     });
 
-    return { code: HttpCode.OK, payload: users.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: users.map(item => item.toHttpModel()) } };
   }
 }

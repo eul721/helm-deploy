@@ -11,14 +11,19 @@ import { LocalizedHashmap } from '../../../utils/language';
  * @apiSuccess (200) {Number} bdsBranchId Branch bds id
  */
 export interface PublicBranchDescription {
+  // Internal PS id
   id: number;
 
+  // Map of locale to name
   names: LocalizedHashmap;
 
+  // Whether the branch is password protected or not
   passwordProtected: boolean;
 
+  // Id of the owning game
   ownerId: number;
 
+  // Branch bds id
   bdsBranchId: number;
 }
 

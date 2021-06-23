@@ -1,9 +1,9 @@
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { RoleModel } from '../../models/db/role';
 import { HttpCode } from '../../models/http/httpcode';
-import { PermissionDescription } from '../../models/http/rbac/permissiondescription';
-import { RoleDescription } from '../../models/http/rbac/roledescription';
-import { GameDescription } from '../../models/http/rbac/gamedescription';
+import { PermissionResponse } from '../../models/http/rbac/permissiondescription';
+import { PublisherGameResponse } from '../../models/http/rbac/publishergamedescription';
+import { RoleResponse } from '../../models/http/rbac/roledescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
 
 export class RbacRolesService {
@@ -13,10 +13,7 @@ export class RbacRolesService {
    * @param rbacContext request context
    * @param roleName name of the role to create
    */
-  public static async createRole(
-    rbacContext: RbacContext,
-    roleName?: string
-  ): Promise<ServiceResponse<RoleDescription>> {
+  public static async createRole(rbacContext: RbacContext, roleName?: string): Promise<ServiceResponse<RoleResponse>> {
     if (!roleName) {
       return { code: HttpCode.BAD_REQUEST, message: 'Missing roleName query param' };
     }
@@ -32,7 +29,7 @@ export class RbacRolesService {
     }
 
     const role = await division?.createRoleEntry({ name: roleName });
-    return { code: HttpCode.CREATED, payload: role.toPublisherHttpModel() };
+    return { code: HttpCode.CREATED, payload: { items: [role.toPublisherHttpModel()] } };
   }
 
   /**
@@ -40,14 +37,14 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async getRoles(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription[]>> {
+  public static async getRoles(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
     const division = await rbacContext.fetchDivisionModel();
     if (!division) {
       return malformedRequestPastValidation();
     }
 
     const roles = await division.getRoles();
-    return { code: HttpCode.OK, payload: roles.map(role => role.toPublisherHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: roles.map(role => role.toPublisherHttpModel()) } };
   }
 
   /**
@@ -55,7 +52,7 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async addPermissionToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
+  public static async addPermissionToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
     const role = await rbacContext.fetchRoleModel();
     if (!role) {
       return malformedRequestPastValidation();
@@ -67,7 +64,7 @@ export class RbacRolesService {
     }
 
     await role.addAssignedPermission(permission);
-    return { code: HttpCode.OK, payload: role.toPublisherHttpModel() };
+    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
   }
 
   /**
@@ -76,7 +73,7 @@ export class RbacRolesService {
    * @param rbacContext request context
    * @param name name of the role to create
    */
-  public static async removePermissionFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
+  public static async removePermissionFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
     const role = await rbacContext.fetchRoleModel();
     if (!role) {
       return malformedRequestPastValidation();
@@ -89,7 +86,7 @@ export class RbacRolesService {
 
     await role.removeAssignedPermission(permission);
 
-    return { code: HttpCode.OK, payload: role.toPublisherHttpModel() };
+    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
   }
 
   /**
@@ -97,15 +94,13 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async getPermissionsInRole(
-    rbacContext: RbacContext
-  ): Promise<ServiceResponse<PermissionDescription[]>> {
+  public static async getPermissionsInRole(rbacContext: RbacContext): Promise<ServiceResponse<PermissionResponse>> {
     const role = await rbacContext.fetchRoleModel();
     const permissions = await role?.getAssignedPermissions();
     if (!role || !permissions) {
       return malformedRequestPastValidation();
     }
-    return { code: HttpCode.OK, payload: permissions.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: permissions.map(item => item.toHttpModel()) } };
   }
 
   /**
@@ -113,7 +108,7 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async addGameToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
+  public static async addGameToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
     const role = await rbacContext.fetchRoleModel();
     const game = await rbacContext.fetchGameModel();
     if (!role || !game) {
@@ -121,7 +116,7 @@ export class RbacRolesService {
     }
 
     await role.addAssignedGame(game);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
   }
 
   /**
@@ -129,7 +124,7 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async removeGameFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
+  public static async removeGameFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
     const role = await rbacContext.fetchRoleModel();
     const game = await rbacContext.fetchGameModel();
     if (!role || !game) {
@@ -137,7 +132,7 @@ export class RbacRolesService {
     }
 
     await role.removeAssignedGame(game);
-    return { code: HttpCode.OK, payload: role.toPublisherHttpModel() };
+    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
   }
 
   /**
@@ -145,12 +140,12 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async getGamesInRole(rbacContext: RbacContext): Promise<ServiceResponse<GameDescription[]>> {
+  public static async getGamesInRole(rbacContext: RbacContext): Promise<ServiceResponse<PublisherGameResponse>> {
     const role = await rbacContext.fetchRoleModel();
     const games = await role?.getAssignedGames();
     if (!role || !games) {
       return malformedRequestPastValidation();
     }
-    return { code: HttpCode.OK, payload: games.map(item => item.toPublisherHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: games.map(item => item.toPublisherHttpModel()) } };
   }
 }

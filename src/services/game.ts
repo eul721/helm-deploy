@@ -17,9 +17,9 @@ import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { PublicGameResponse } from '../models/http/public/publicgamedescription';
 import { GameContext } from '../models/auth/base/gamecontext';
-import { BranchDescription } from '../models/http/rbac/branchdescription';
+import { PublisherBranchResponse } from '../models/http/rbac/publisherbranchdescription';
 import { BadRequestResponse } from '../utils/errors';
-import { GameDescription } from '../models/http/rbac/gamedescription';
+import { PublisherGameResponse } from '../models/http/rbac/publishergamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
 import { localeFromString } from '../utils/language';
@@ -62,7 +62,7 @@ export class GameService {
 
   public static async getAllPublisherGames(
     paginationContext?: PaginationContext
-  ): Promise<PaginatedServiceResponse<GameDescription>> {
+  ): Promise<PaginatedServiceResponse<PublisherGameResponse>> {
     const pageCtx = paginationContext ?? defaultPagination();
     const query: FindOptions<GameAttributes> = {
       limit: pageCtx.size,
@@ -74,7 +74,7 @@ export class GameService {
       include: { all: true },
     });
     const count = await GameModel.count(query);
-    const items: GameDescription[] = rows.map(row => row.toPublisherHttpModel());
+    const items = rows.map(row => row.toPublisherHttpModel());
     return {
       code: HttpCode.OK,
       payload: {
@@ -94,22 +94,13 @@ export class GameService {
   public static async getGamesPublisher(
     authenticationContext: AuthenticateContext,
     paginationContext?: PaginationContext
-  ): Promise<PaginatedServiceResponse<GameDescription>> {
+  ): Promise<PaginatedServiceResponse<PublisherGameResponse>> {
     const ident = await authenticationContext.fetchStudioUserModel();
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
     }
-    const { payload: { page, items: games } = {} } = await GameService.getAllPublisherGames(
-      paginationContext ?? defaultPagination()
-    );
     // TODO: fitler by permission level
-    return {
-      code: HttpCode.OK,
-      payload: {
-        page,
-        items: games ?? [],
-      },
-    };
+    return GameService.getAllPublisherGames(paginationContext ?? defaultPagination());
   }
 
   /**
@@ -120,7 +111,7 @@ export class GameService {
   public static async getGamePublisher(
     gameContext: GameContext,
     authenticationContext: AuthenticateContext
-  ): Promise<ServiceResponse<GameDescription>> {
+  ): Promise<ServiceResponse<PublisherGameResponse>> {
     const ident = await authenticationContext.fetchStudioUserModel();
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
@@ -135,7 +126,7 @@ export class GameService {
 
     return {
       code: HttpCode.OK,
-      payload: game.toPublisherHttpModel(),
+      payload: { items: [game.toPublisherHttpModel()] },
     };
   }
 
@@ -239,12 +230,12 @@ export class GameService {
    */
   public static async getBranchesPublisher(
     resourceContext: ResourceContext
-  ): Promise<ServiceResponse<BranchDescription[]>> {
+  ): Promise<ServiceResponse<PublisherBranchResponse>> {
     const game = await resourceContext.fetchGameModel();
     const branchModels = await game?.getBranches();
-    const branches: BranchDescription[] = branchModels?.map(branch => branch.toPublisherHttpModel()) ?? [];
+    const branches = branchModels?.map(branch => branch.toPublisherHttpModel()) ?? [];
 
-    return { code: HttpCode.OK, payload: branches };
+    return { code: HttpCode.OK, payload: { items: branches } };
   }
 
   /**
@@ -256,7 +247,7 @@ export class GameService {
   public static async modifyGame(
     resourceContext: ResourceContext,
     request: ModifyTitleRequest
-  ): Promise<ServiceResponse<GameDescription>> {
+  ): Promise<ServiceResponse<PublisherGameResponse>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
@@ -302,7 +293,7 @@ export class GameService {
 
     await game.save();
 
-    return { code: HttpCode.OK, payload: game.toPublisherHttpModel() };
+    return { code: HttpCode.OK, payload: { items: [game.toPublisherHttpModel()] } };
   }
 
   /**

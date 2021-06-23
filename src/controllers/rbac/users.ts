@@ -7,6 +7,8 @@ import { getQueryParamValue } from '../../utils/http';
 import { rbacApiRouter } from './basic';
 import { RbacUsersService } from '../../services/rbac/users';
 import { endpointServiceCallWrapper } from '../../utils/service';
+import { ServiceResponse } from '../../models/http/serviceresponse';
+import { UserResponse } from '../../models/http/rbac/userdescription';
 
 /**
  * @api {POST} /api/division/:divisionId/users Create user
@@ -21,12 +23,12 @@ import { endpointServiceCallWrapper } from '../../utils/service';
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse UserDescription
+ * @apiUse UserResponse
  */
 rbacApiRouter.post(
   `/${Segment.division}/users`,
   getAuthorizeForRbacMiddleware('create-account', RbacResource.DIVISION),
-  endpointServiceCallWrapper(async (req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<UserResponse>>(async (req, res) => {
     const dnaId = getQueryParamValue(req, 'dnaId');
     return RbacUsersService.createUser(RbacContext.get(res), dnaId);
   })
@@ -43,12 +45,12 @@ rbacApiRouter.post(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse UserDescriptionArray
+ * @apiUse UserResponse
  */
 rbacApiRouter.get(
   `/${Segment.division}/users`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<UserResponse>>(async (_req, res) => {
     return RbacUsersService.getUsers(RbacContext.get(res));
   })
 );
@@ -67,7 +69,7 @@ rbacApiRouter.get(
 rbacApiRouter.delete(
   `/${Segment.users}`,
   getAuthorizeForRbacMiddleware('remove-account', RbacResource.USER),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse>(async (_req, res) => {
     return RbacUsersService.removeUser(RbacContext.get(res), AuthenticateContext.get(res));
   })
 );
@@ -83,12 +85,12 @@ rbacApiRouter.delete(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse UserDescription
+ * @apiUse UserResponse
  */
 rbacApiRouter.get(
   `/${Segment.users}`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.USER),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<UserResponse>>(async (_req, res) => {
     return RbacUsersService.getUser(RbacContext.get(res));
   })
 );

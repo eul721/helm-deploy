@@ -7,24 +7,33 @@ export interface BaseResponse {
   payload?: unknown;
 }
 
-interface PaginatedResponse<T = void> {
-  payload?: {
-    items: T[];
-    page?: PageData;
-  };
-}
-
 export interface PageData {
   from: number;
   total: number;
 }
 
+/**
+ * @apiDefine PageDataResponse
+ *
+ * @apiSuccess (200) {PageData} page Page data
+ * @apiSuccess (200) {Number} page.from Provided "from" value that generated this paged result
+ * @apiSuccess (200) {Number} page.total Total number of values that exist for these parameters. Use to infer if more pages are available
+ */
+interface PageDataResponse {
+  page?: PageData;
+}
+
 // #region Service Response exports
 
 /**
- * Outbound response payload to clients.
+ * Outbound response to clients.
  */
 export type ServiceResponse<T = void> = BaseResponse & { payload?: T };
+
+/**
+ * Paginated outbound response to clients.
+ */
+export type PaginatedServiceResponse<T = void> = BaseResponse & { payload?: T & PageDataResponse };
 
 /**
  * @apiDefine PaginationRequest Pagination Request Params
@@ -40,11 +49,6 @@ export type ServiceResponse<T = void> = BaseResponse & { payload?: T };
  * @apiSuccess (200) {String=id} page.sort field to sort by. Currently only "id" is implemented, so this is to be ignored
  * @apiSuccess (200) {Number} page.total total number of values that exist for these parameters. Use to infer if more pages are available
  */
-/**
- * Pagination wrapper interface for a generic items list
- */
-export type PaginatedServiceResponse<T = void> = BaseResponse & PaginatedResponse<T>;
-
 // #endregion Service Response exports
 
 export function malformedRequestPastValidation<T>(): ServiceResponse<T> {

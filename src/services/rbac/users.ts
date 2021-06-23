@@ -2,7 +2,7 @@ import { AuthenticateContext } from '../../models/auth/authenticatecontext';
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { UserAttributes, UserModel } from '../../models/db/user';
 import { HttpCode } from '../../models/http/httpcode';
-import { UserDescription } from '../../models/http/rbac/userdescription';
+import { UserResponse } from '../../models/http/rbac/userdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
 import { RbacService } from './basic';
 
@@ -13,7 +13,7 @@ export class RbacUsersService {
    * @param rbacContext request context
    * @param dnaId DNA Identifier of the user to create
    */
-  public static async createUser(rbacContext: RbacContext, dnaId?: string): Promise<ServiceResponse<UserDescription>> {
+  public static async createUser(rbacContext: RbacContext, dnaId?: string): Promise<ServiceResponse<UserResponse>> {
     const division = await rbacContext.fetchDivisionModel();
     if (!division) {
       return malformedRequestPastValidation();
@@ -30,7 +30,7 @@ export class RbacUsersService {
 
     const user = await division.createUserEntry({ externalId: dnaId, accountType: '2K-dna' });
 
-    return { code: HttpCode.CREATED, payload: user.toHttpModel() };
+    return { code: HttpCode.CREATED, payload: { items: [user.toHttpModel()] } };
   }
 
   /**
@@ -38,13 +38,13 @@ export class RbacUsersService {
    *
    * @param rbacContext request context
    */
-  public static async getUsers(rbacContext: RbacContext): Promise<ServiceResponse<UserDescription[]>> {
+  public static async getUsers(rbacContext: RbacContext): Promise<ServiceResponse<UserResponse>> {
     const externalIdAttrib: keyof UserAttributes = 'externalId';
     const users = await UserModel.findAll({
       where: { ownerId: rbacContext.divisionId },
       attributes: [externalIdAttrib],
     });
-    return { code: HttpCode.OK, payload: users.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: users.map(item => item.toHttpModel()) } };
   }
 
   /**
@@ -76,7 +76,7 @@ export class RbacUsersService {
    *
    * @param rbacContext request context
    */
-  public static async getUser(rbacContext: RbacContext): Promise<ServiceResponse<UserDescription>> {
+  public static async getUser(rbacContext: RbacContext): Promise<ServiceResponse<UserResponse>> {
     const user = await rbacContext.fetchUserModel();
 
     if (!user) {
