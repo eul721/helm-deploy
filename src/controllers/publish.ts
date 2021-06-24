@@ -38,7 +38,6 @@ publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddlewar
  */
 publishApiRouter.get(
   `/${Segment.games}`,
-  getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
   paginationMiddleware(),
   endpointServiceCallWrapper<PaginatedServiceResponse<PublisherGameResponse>>((_req, res) => {
     const publisherContext = AuthenticateContext.get(res);
