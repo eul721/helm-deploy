@@ -1,142 +1,76 @@
 import { Router } from 'express';
-import { info, warn } from '../logger';
-import { ControllerResponse } from '../models/http/controllerresponse';
-import { HttpCode } from '../models/http/httpcode';
-import { WebhookPayload } from '../models/http/webhookpayload';
-import { WebhookTrigger, triggersWebhooks, triggersModifyRedistributable } from '../models/http/webhooktrigger';
-import { BranchService } from '../services/branchservice';
-import { BuildService } from '../services/buildservice';
-import { TitleService } from '../services/titlesservice';
+import { info } from '../logger';
+import { WebhookPayload } from '../models/http/webhook/webhookpayload';
+import { getAuthorizePublisherMiddleware } from '../middleware/authorizepublisher';
+import { getAuthenticateMiddleware } from '../middleware/authenticate';
+import { getWebhookSecretKeyAuthMiddleware } from '../middleware/secretkeyauth';
+import { AuthenticateContext } from '../models/auth/authenticatecontext';
+import { SampleDatabase } from '../utils/sampledatabase';
+import { envConfig } from '../configuration/envconfig';
+import { webhookValidate } from '../middleware/webhookvalidate';
+import { WebhooksService } from '../services/webhooks';
+import { endpointServiceCallWrapper } from '../utils/service';
 
 export const webhookRouter = Router();
 
-/**
- * Automatically parse and validate webhook bodies and assign to local values
- */
-webhookRouter.use((req, res, next) => {
-  if (req.method === 'POST') {
-    try {
-      const payload: WebhookPayload = req.body as WebhookPayload;
-      res.locals.payload = payload;
-      const bearerToken = req.headers.authorization;
+webhookRouter.use(getWebhookSecretKeyAuthMiddleware(), webhookValidate);
 
-      // TODO contact external service to confirm token validity
-
-      if (!bearerToken) {
-        // TODO uncomment once functional
-        // || external service says token invalid
-        // res.status(401).json({ message: 'User not authorised' });
-      } else {
-        // TODO parse token and set user info on the request
-        // if response is res.status(403).json({ message: 'User not authorised' });
-      }
-    } catch (jsonException) {
-      res.status(400).json({ message: 'Bad Request' });
-      return;
-    }
-  }
-  next();
-});
+if (!envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
+  webhookRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
+}
 
 /**
- * @api {POST} /webhooks Publisher Webhooks for 'post execution on success'
- * @apiGroup Webhook
- * @apiVersion  0.0.1
+ * @api {POST} /webhooks Notifications after success
+ * @apiGroup internal/Webhook
+ * @apiVersion 0.0.1
  * @apiDescription Server to server webhook interface to enable third party services to inform
- * events in T2GP Publisher Services
+ * events in T2GP Publisher Services, internal infrastructure call
  *
- * | Action              | Description                                    |
- * |---------------------|------------------------------------------------|
- * | **version:create**  | A game update should be created                |
- *
- * | Property         | Description                                    |
- * |------------------|------------------------------------------------|
- * | **title**      |  |
+ * @apiUse WebhookSecretMiddleware
+ * @apiUse WebhookValidateMiddleware
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
+
  */
-webhookRouter.post('/', async (req, res) => {
-  let result: ControllerResponse = {
-    code: 400,
-  };
+webhookRouter.post(
+  '/',
+  endpointServiceCallWrapper(async (req, res) => {
+    const payload: WebhookPayload = res.locals.payload as WebhookPayload;
+    info(`Webhook received: ${JSON.stringify(req.body)}`);
+    let authenticateContext: AuthenticateContext;
 
-  const payload: WebhookPayload = res.locals.payload as WebhookPayload;
-
-  info('Webhook received: %s', req.body);
-  try {
-    switch (payload.trigger) {
-      case WebhookTrigger.TITLE_CREATE:
-        if (payload.titleId) {
-          result = await TitleService.onCreated(payload.titleId);
-        }
-        break;
-      case WebhookTrigger.TITLE_DELETE:
-        if (payload.titleId) {
-          result = await TitleService.onDeleted(payload.titleId);
-        }
-        break;
-      case WebhookTrigger.BRANCH_CREATE:
-        if (payload.titleId && payload.branchId) {
-          result = await BranchService.onCreated(payload.titleId, payload.branchId, payload.buildId);
-        }
-        break;
-      case WebhookTrigger.BRANCH_DELETE:
-        if (payload.branchId && payload.titleId) {
-          result = await BranchService.onDeleted(payload.titleId, payload.branchId);
-        }
-        break;
-      case WebhookTrigger.BRANCH_MODIFY:
-        if (payload.titleId && payload.branchId && payload.buildId) {
-          result = await BranchService.onModified(payload.titleId, payload.branchId, payload.buildId);
-        }
-        break;
-      case WebhookTrigger.BUILD_CREATE:
-        if (payload.buildId) {
-          result = await BuildService.onCreated(payload.buildId);
-        }
-        break;
-      case WebhookTrigger.BUILD_DELETE:
-        if (payload.titleId && payload.buildId) {
-          result = await BuildService.onDeleted(payload.titleId, payload.buildId);
-        }
-        break;
-      default:
-        warn('Payload missing action', req.body);
-        result.code = HttpCode.BAD_REQUEST;
-        break;
+    if (!envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
+      authenticateContext = AuthenticateContext.get(res);
+    } else {
+      authenticateContext = new AuthenticateContext('', SampleDatabase.creationData.debugAdminEmail, 'dev-login');
     }
-  } catch (err) {
-    warn('Encountered error processing webhook, error=%s', err);
-    result.code = HttpCode.INTERNAL_SERVER_ERROR;
-  }
 
-  res.status(result.code).json(result.payload);
-});
+    return WebhooksService.processNotification(authenticateContext, payload);
+  })
+);
+
+if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
+  webhookRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware());
+}
 
 /**
- * @api {POST} /webhooks/verify Publisher Webhooks for user permissions
- * @apiGroup Webhook
- * @apiVersion  0.0.1
+ * @api {POST} /webhooks/verify Pre-execution permissions check
+ * @apiGroup internal/Webhook
+ * @apiVersion 0.0.1
  * @apiDescription Server to server webhook interface to verify if an action
- * can be performed by the given user
+ * can be performed by the given user, internal infrastructure call
+ *
+ * @apiUse WebhookSecretMiddleware
+ * @apiUse WebhookValidateMiddleware
+ * @apiUse AuthenticateMiddleware
+ * @apiUse AuthorizePublisherMiddleware
  */
-webhookRouter.post('/verify', async (req, res) => {
-  const result: ControllerResponse = {
-    code: 403,
-  };
-
-  const payload: WebhookPayload = res.locals.payload as WebhookPayload;
-  info('Webhook received: %s', req.body);
-
-  if (payload.trigger === WebhookTrigger.READ) {
-    // payload.titleId to get game obj
-    // read request rbacService.userCanRead()
-  } else if (triggersModifyRedistributable.some(item => item === payload.trigger)) {
-    // webhooks are t2admin only
-  } else if (triggersWebhooks.some(item => item === payload.trigger)) {
-    // redistributable modification is _probably_ for t2admin only
-  } else if (payload.titleId) {
-    // payload.titleId to get game obj
-    // rbacService.userCanWrite()
-  }
-
-  res.status(result.code).json(result.payload);
-});
+webhookRouter.post(
+  '/verify',
+  endpointServiceCallWrapper(async (req, res) => {
+    const payload: WebhookPayload = res.locals.payload as WebhookPayload;
+    info('Webhook received: %s', req.body);
+    const authenticateContext = AuthenticateContext.get(res);
+    return WebhooksService.processVerification(authenticateContext, payload);
+  })
+);

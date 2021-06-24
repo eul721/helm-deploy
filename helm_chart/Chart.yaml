@@ -1,0 +1,4 @@
+apiVersion: v2
+description: T2GP Publisher Service
+name: t2gp-publisher-service
+version: 0.0.1

@@ -1,0 +1,14 @@
+branch: develop
+hpa:
+  minReplicas: 1
+  maxReplicas: 3
+app:
+  name: publisher
+  requests:
+    cpu: 0.2
+  limits:
+    cpu: 0.5
+aws:
+  tags:
+    service: "publisher-service"
+    env: "develop"

@@ -1,0 +1,14 @@
+branch: production
+hpa:
+  minReplicas: 3
+  maxReplicas: 30
+app:
+  name: download
+  requests:
+    cpu: 0.5
+  limits:
+    cpu: 1
+aws:
+  tags:
+    service: "download-service"
+    env: "production"

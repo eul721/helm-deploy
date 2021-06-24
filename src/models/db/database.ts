@@ -1,5 +1,6 @@
 import { BelongsToOptions, HasManyOptions, Options, Sequelize } from 'sequelize';
 import { debug, error, info, warn } from '../../logger';
+import { AgreementDef, AgreementModel } from './agreement';
 import { BranchDef, BranchModel } from './branch';
 import { BuildDef, BuildModel } from './build';
 import { GameDef, GameModel } from './game';
@@ -7,31 +8,21 @@ import { UserDef, UserModel } from './user';
 import { DivisionDef, DivisionModel } from './division';
 import { PermissionDef, PermissionModel } from './permission';
 import { RoleDef, RoleModel } from './role';
-import { TableNames } from '../defines/tablenames';
 import { GroupDef, GroupModel } from './group';
-
-const { NODE_ENVIRONMENT = 'development' } = process.env;
-
-const {
-  DATABASE_DBG = '',
-  DATABASE_HOST = '',
-  DATABASE_NAME = '',
-  DATABASE_PASS = '',
-  DATABASE_PORT = '',
-  DATABASE_USER = '',
-  DATABASE_DROP = '',
-} = process.env;
+import { MODEL_ID_DEFAULTS } from '../../utils/database';
+import { LocalizedFieldDef, LocalizedFieldModel } from './localizedfield';
+import { envConfig } from '../../configuration/envconfig';
 
 function getDBConf(): Options {
   const opts: Options = {
-    database: DATABASE_NAME,
-    host: DATABASE_HOST,
-    logging: DATABASE_DBG === 'true' ? debug : false,
-    password: DATABASE_PASS,
-    username: DATABASE_USER,
+    database: envConfig.DATABASE_NAME,
+    host: envConfig.DATABASE_HOST,
+    logging: envConfig.DATABASE_DBG ? debug : false,
+    password: envConfig.DATABASE_PASS,
+    username: envConfig.DATABASE_USER,
   };
 
-  switch (NODE_ENVIRONMENT) {
+  switch (envConfig.NODE_ENVIRONMENT) {
     // Test environment uses in-memory SQLite instead of MariaDB
     case 'test':
       opts.dialect = 'sqlite';
@@ -39,12 +30,19 @@ function getDBConf(): Options {
       break;
     case 'production':
     case 'development':
-      if (!DATABASE_HOST || !DATABASE_NAME || !DATABASE_PASS || !DATABASE_USER) {
-        warn('Missing environment=%s configuration in DB_CONFIG', NODE_ENVIRONMENT);
+    case 'develop':
+    case 'staging':
+      if (
+        !envConfig.DATABASE_HOST ||
+        !envConfig.DATABASE_NAME ||
+        !envConfig.DATABASE_PASS ||
+        !envConfig.DATABASE_USER
+      ) {
+        warn('Missing environment=%s configuration in DB_CONFIG', envConfig.NODE_ENVIRONMENT);
         throw new Error('Missing or invalid configuration');
       }
-      if (DATABASE_PORT !== '') {
-        const dbPort = parseInt(DATABASE_PORT, 10);
+      if (envConfig.DATABASE_PORT !== '') {
+        const dbPort = parseInt(envConfig.DATABASE_PORT, 10);
         if (Number.isNaN(dbPort)) {
           warn('DATABASE_PORT provided is not a valid number');
           throw new Error('Missing or invalid configuration');
@@ -73,7 +71,7 @@ export function getDBInstance() {
 
 export async function initializeDB() {
   try {
-    const dropDb = DATABASE_DROP === 'true' && NODE_ENVIRONMENT === 'development';
+    const dropDb = envConfig.DATABASE_DROP && envConfig.isDev();
     if (dropDb) {
       warn('Dropping old database');
     }
@@ -86,16 +84,53 @@ export async function initializeDB() {
     error(exc);
   }
 }
+/**
+ * To avoid table names conflicting with potential real application table names,
+ * manually specify each tablename
+ */
+enum TableNames {
+  Agreement = 'agreements',
+  Branch = 'branches',
+  Build = 'builds',
+  Division = 'divisions',
+  Game = 'games',
+  LocalizedFields = 'localized_fields',
+
+  User = 'rbac_users',
+  Permission = 'rbac_permissions',
+
+  Role = 'rbac_roles',
+  RolePermissions = 'rbac_role_permissions',
+  RoleGames = 'rbac_role_games',
+
+  Group = 'rbac_groups',
+  GroupRole = 'rbac_group_roles',
+  GroupUsers = 'rbac_group_users',
+}
 
 function initModels() {
-  BuildModel.init(BuildDef, { sequelize: getDBInstance(), tableName: TableNames.Build });
-  BranchModel.init(BranchDef, { sequelize: getDBInstance(), tableName: TableNames.Branch });
-  GameModel.init(GameDef, { sequelize: getDBInstance(), tableName: TableNames.Game });
+  AgreementModel.init(AgreementDef, { sequelize: getDBInstance(), tableName: TableNames.Agreement });
+  BuildModel.init(BuildDef, {
+    sequelize: getDBInstance(),
+    tableName: TableNames.Build,
+    initialAutoIncrement: MODEL_ID_DEFAULTS.BuildModel,
+  });
+  BranchModel.init(BranchDef, {
+    sequelize: getDBInstance(),
+    tableName: TableNames.Branch,
+    initialAutoIncrement: MODEL_ID_DEFAULTS.BranchModel,
+  });
+  GameModel.init(GameDef, {
+    sequelize: getDBInstance(),
+    tableName: TableNames.Game,
+    initialAutoIncrement: MODEL_ID_DEFAULTS.GameModel,
+  });
   DivisionModel.init(DivisionDef, { sequelize: getDBInstance(), tableName: TableNames.Division });
   UserModel.init(UserDef, { sequelize: getDBInstance(), tableName: TableNames.User });
   PermissionModel.init(PermissionDef, { sequelize: getDBInstance(), tableName: TableNames.Permission });
   RoleModel.init(RoleDef, { sequelize: getDBInstance(), tableName: TableNames.Role });
   GroupModel.init(GroupDef, { sequelize: getDBInstance(), tableName: TableNames.Group });
+  LocalizedFieldModel.init(LocalizedFieldDef, { sequelize: getDBInstance(), tableName: TableNames.LocalizedFields });
 
   const belongsToDefaults: BelongsToOptions = { as: 'owner', targetKey: 'id' };
   const hasManyDefaults = (as: string): HasManyOptions => {
@@ -103,6 +138,8 @@ function initModels() {
   };
 
   // games have builds and branches
+  AgreementModel.belongsTo(GameModel, belongsToDefaults);
+  GameModel.hasMany(AgreementModel, hasManyDefaults('agreements'));
   BuildModel.belongsTo(GameModel, belongsToDefaults);
   GameModel.hasMany(BuildModel, hasManyDefaults('builds'));
   BranchModel.belongsTo(GameModel, belongsToDefaults);
@@ -122,6 +159,34 @@ function initModels() {
   const BranchBuilds = getDBInstance().define('branch_builds', {});
   BranchModel.belongsToMany(BuildModel, { through: BranchBuilds, as: 'builds' });
   BuildModel.belongsToMany(BranchModel, { through: BranchBuilds, as: 'branches' });
+
+  // Assign localized fields to Game
+  const GameFields = getDBInstance().define('fields_game', {});
+  GameModel.belongsToMany(LocalizedFieldModel, { as: 'fields', through: GameFields, foreignKey: 'gameId' });
+  LocalizedFieldModel.belongsToMany(GameModel, { as: 'game', through: GameFields, foreignKey: 'fieldId' });
+
+  // Assign localized fields to Builds
+  const BuildFields = getDBInstance().define('fields_build', {});
+  BuildModel.belongsToMany(LocalizedFieldModel, { as: 'fields', through: BuildFields, foreignKey: 'buildId' });
+  LocalizedFieldModel.belongsToMany(BuildModel, { as: 'build', through: BuildFields, foreignKey: 'fieldId' });
+
+  // Assign localized fields to Agreements
+  const AgreementFields = getDBInstance().define('fields_agreements', {});
+  AgreementModel.belongsToMany(LocalizedFieldModel, {
+    as: 'fields',
+    through: AgreementFields,
+    foreignKey: 'agreementId',
+  });
+  LocalizedFieldModel.belongsToMany(AgreementModel, {
+    as: 'agreement',
+    through: AgreementFields,
+    foreignKey: 'fieldId',
+  });
+
+  // Assign localized fields to Branches
+  const BranchFields = getDBInstance().define('fields_branch', {});
+  BranchModel.belongsToMany(LocalizedFieldModel, { as: 'field', through: BranchFields, foreignKey: 'branchId' });
+  LocalizedFieldModel.belongsToMany(BranchModel, { as: 'branch', through: BranchFields, foreignKey: 'fieldId' });
 
   // groups have users and roles
   const GroupUsers = getDBInstance().define('rbac_group_users', {});

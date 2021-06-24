@@ -8,7 +8,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID } from '../defines/definitions';
+import { INTERNAL_ID } from '../../utils/database';
 import { GameCreationAttributes, GameModel } from './game';
 import { UserCreationAttributes, UserModel } from './user';
 import { RoleCreationAttributes, RoleModel } from './role';
@@ -26,6 +26,10 @@ export const DivisionDef: ModelAttributes = {
 export interface DivisionAttributes {
   id: number;
   name: string;
+  readonly games?: GameModel[];
+  readonly users?: UserModel[];
+  readonly groups?: GroupModel[];
+  readonly roles?: RoleModel[];
 }
 
 export type DivisionCreationAttributes = Optional<DivisionAttributes, 'id'>;
@@ -44,9 +48,9 @@ export class DivisionModel extends Model<DivisionAttributes, DivisionCreationAtt
 
   public getGames!: HasManyGetAssociationsMixin<GameModel>;
 
-  public createGameEntry = (attributes: GameCreationAttributes): Promise<GameModel> => {
+  public createGameEntry(attributes: GameCreationAttributes): Promise<GameModel> {
     return this.createGame(attributes);
-  };
+  }
   // #endregion
 
   // #region association: users
@@ -58,9 +62,9 @@ export class DivisionModel extends Model<DivisionAttributes, DivisionCreationAtt
 
   public getUsers!: HasManyGetAssociationsMixin<UserModel>;
 
-  public createUserEntry = (attributes: UserCreationAttributes): Promise<UserModel> => {
+  public createUserEntry(attributes: UserCreationAttributes): Promise<UserModel> {
     return this.createUser(attributes);
-  };
+  }
   // #endregion
 
   // #region association: groups
@@ -72,9 +76,9 @@ export class DivisionModel extends Model<DivisionAttributes, DivisionCreationAtt
 
   public getGroups!: HasManyGetAssociationsMixin<GroupModel>;
 
-  public createGroupEntry = (attributes: GroupCreationAttributes): Promise<GroupModel> => {
+  public createGroupEntry(attributes: GroupCreationAttributes): Promise<GroupModel> {
     return this.createGroup(attributes);
-  };
+  }
   // #endregion
 
   // #region association: roles
@@ -86,9 +90,9 @@ export class DivisionModel extends Model<DivisionAttributes, DivisionCreationAtt
 
   public getRoles!: HasManyGetAssociationsMixin<RoleModel>;
 
-  public createRoleEntry = (attributes: RoleCreationAttributes): Promise<RoleModel> => {
+  public createRoleEntry(attributes: RoleCreationAttributes): Promise<RoleModel> {
     return this.createRole(attributes);
-  };
+  }
   // #endregion
 
   public static associations: {

@@ -1,0 +1,40 @@
+vpc: d2c-east1
+
+project: publisher-service
+
+hostname: d2dragon.net
+
+replicas: 1
+max_replicas: 5
+
+app:
+  image: 354767525209.dkr.ecr.us-east-1.amazonaws.com/t2gp-publisher-service
+  tag: latest # default
+  port: 3000
+  requests:
+    cpu: 0.2
+  limits:
+    cpu: 0.8
+
+service:
+  healthcheck_path: /
+  port: 80
+
+ingresses:
+  - scheme: internet-facing
+    security_groups:
+      - eks-alb
+      - cloudflare
+      - ghost-inspector
+      - corp
+      - eip # allow all access from our d2c vpc. Should be removed once BDS is migrated to flux
+    external_to_vpc_sgs:
+      - mpg_2k_bds
+      - eks-debugging-alb
+
+aws:
+  default_tags:
+    project: "publisher-service"
+    description: "Publisher/Downloader Service"
+    billing_code: "d2c"
+  tags: {} # inherited from chart vals, if any

@@ -2,6 +2,7 @@ import {
   Association,
   BelongsToGetAssociationMixin,
   BelongsToManyAddAssociationMixin,
+  BelongsToManyAddAssociationsMixin,
   BelongsToManyGetAssociationsMixin,
   BelongsToManyRemoveAssociationMixin,
   DataTypes,
@@ -9,10 +10,11 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
-import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../defines/definitions';
 import { UserModel } from './user';
 import { RoleModel } from './role';
 import { DivisionModel } from './division';
+import { GroupDescription } from '../http/rbac/groupdescription';
+import { INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
 
 export const GroupDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -28,6 +30,9 @@ export interface GroupAttributes {
   id: number;
   name: string;
   ownerId: number;
+  readonly assignedRoles?: RoleModel[];
+  readonly assignedUsers?: UserModel[];
+  readonly owner?: DivisionModel;
 }
 
 export type GroupCreationAttributes = Optional<GroupAttributes, 'id' | 'ownerId'>;
@@ -40,9 +45,11 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
   ownerId!: number;
 
   // #region association: roles
-  public readonly roles?: RoleModel[];
+  public readonly assignedRoles?: RoleModel[];
 
   public addAssignedRole!: BelongsToManyAddAssociationMixin<RoleModel, number>;
+
+  public addAssignedRoles!: BelongsToManyAddAssociationsMixin<RoleModel, number>;
 
   public removeAssignedRole!: BelongsToManyRemoveAssociationMixin<RoleModel, number>;
 
@@ -50,9 +57,11 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
   // #endregion
 
   // #region association: roles
-  public readonly users?: UserModel[];
+  public readonly assignedUsers?: UserModel[];
 
   public addAssignedUser!: BelongsToManyAddAssociationMixin<UserModel, number>;
+
+  public addAssignedUsers!: BelongsToManyAddAssociationsMixin<UserModel, number>;
 
   public removeAssignedUser!: BelongsToManyRemoveAssociationMixin<UserModel, number>;
 
@@ -66,8 +75,18 @@ export class GroupModel extends Model<GroupAttributes, GroupCreationAttributes> 
   // #endregion
 
   public static associations: {
-    roles: Association<GroupModel, RoleModel>;
-    users: Association<GroupModel, UserModel>;
+    assignedRoles: Association<GroupModel, RoleModel>;
+    assignedUsers: Association<GroupModel, UserModel>;
     owner: Association<GroupModel, DivisionModel>;
   };
+
+  public toHttpModel(): GroupDescription {
+    return {
+      id: this.id,
+      name: this.name,
+      divisionId: this.ownerId,
+      users: this.assignedUsers?.map(user => user.toHttpModel()),
+      roles: this.assignedRoles?.map(role => role.toPublisherHttpModel()),
+    };
+  }
 }

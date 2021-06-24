@@ -1,7 +1,7 @@
-const IsDev = process.env.NODE_ENV === 'development';
+import { envConfig } from './configuration/envconfig';
 
 export function debug(message: string, ...args: Array<unknown>): void {
-  if (IsDev) {
+  if (envConfig.isDev()) {
     // eslint-disable-next-line no-console
     console.debug(`Debug: ${message}`, ...args);
   }

@@ -1,28 +1,41 @@
-import { Model, ModelAttributes } from 'sequelize';
-import { INTERNAL_STRING_ID } from '../defines/definitions';
+import {
+  Association,
+  BelongsToManyGetAssociationsMixin,
+  HasManyCreateAssociationMixin,
+  HasManyRemoveAssociationMixin,
+  Model,
+  ModelAttributes,
+} from 'sequelize';
+import { INTERNAL_STRING_ID } from '../../utils/database';
+import { PermissionDescription } from '../http/rbac/permissiondescription';
+import { RoleModel } from './role';
 
 export const PermissionDef: ModelAttributes = {
   id: INTERNAL_STRING_ID(),
 };
 
-export const AccessPermissions = ['create', 'read', 'update', 'delete', 'update-production'] as const;
-export const UserPermissions = ['create-account', 'remove-account', 'manage-access'] as const;
-export const Permissions = [
+// access permissions relate to binaries and metadata, targeted game must be in the same division as the owning group/role
+export const ResourcePermissions = [
   'create',
   'read',
   'update',
   'delete',
-  'update-production',
-  'create-account',
-  'remove-account',
-  'manage-access',
-  'rbac-admin',
-  'all-games-access',
+  'change-production', // modifier applied to create/read/update/delete, allows applying them to live/released data
 ] as const;
 
-export type AccessPermissionType = typeof AccessPermissions[number];
-export type UserPermissionType = typeof Permissions[number];
-export type PermissionType = typeof Permissions[number];
+// user permissions relate to managing users and rbac itself, they apply only to the division that owns owns the groups/roles that have them
+export const DivisionPermissions = [
+  'rbac-admin', // allows modifying rbac resources and assigning users
+  'create-account', // account creation within division
+  'remove-account', // account deletion within division
+  'all-games-access', // for ease of permission-setting, roles with this should be granted access to all new / current on creation (logic should be part of RBAC rather than querying)
+
+  't2-admin', // special permission, will need to figure out how to handle
+] as const;
+
+export type ResourcePermissionType = typeof ResourcePermissions[number];
+export type DivisionPermissionType = typeof DivisionPermissions[number];
+export type PermissionType = ResourcePermissionType | DivisionPermissionType;
 
 export interface PermissionAttributes {
   id: PermissionType;
@@ -41,5 +54,23 @@ export class PermissionModel
       return model;
     }
     throw new Error('No permission model corresponding to passed in PermissionType, looks like db is set up wrong');
+  }
+
+  // #region association: roles
+  public readonly rolesWithPermission?: RoleModel[];
+
+  public createRolesWithPermission!: HasManyCreateAssociationMixin<RoleModel>;
+
+  public removeRolesWithPermission!: HasManyRemoveAssociationMixin<RoleModel, number>;
+
+  public getRolesWithPermission!: BelongsToManyGetAssociationsMixin<RoleModel>;
+  // #endregion
+
+  public static associations: {
+    rolesWithPermission: Association<PermissionModel, RoleModel>;
+  };
+
+  public toHttpModel(): PermissionDescription {
+    return { id: this.id };
   }
 }
