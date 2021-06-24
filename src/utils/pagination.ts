@@ -3,7 +3,7 @@ const SortParams = ['id' as const];
 export type SortParam = typeof SortParams[0];
 const SortDirs = ['ASC' as const, 'DESC' as const];
 export type SortDir = typeof SortDirs[0];
-export type SortPair = SortParam | [SortParam, SortDir];
+export type SortPair = [SortParam, SortDir];
 
 export function sortParamsFromString(input: string): SortParam | undefined {
   return (SortParams as string[]).includes(input) ? (input as SortParam) : undefined;
@@ -55,7 +55,7 @@ export function sortPairFromInput(input?: string): SortPair[] | undefined {
   const usedKeys: Partial<Record<SortParam, boolean>> = {};
   return items.map(inputStr => {
     const [keyIn, dirIn = 'DESC'] = inputStr.split('.');
-    const key: SortPair | undefined = sortParamsFromString(keyIn);
+    const key: SortParam | undefined = sortParamsFromString(keyIn);
     const dir: SortDir | undefined = sortDirFromString(dirIn);
     if (!key || !dir || usedKeys[key]) {
       throw new Error('Invalid Input');
