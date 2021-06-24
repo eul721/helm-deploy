@@ -130,39 +130,39 @@ jobs:
           LB_HOSTED_ZONE=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].CanonicalHostedZoneId')
 
           PUBLISHER_CHANGESET=$(cat <<EOF
-            {
-              "Changes": [{
-                "Action": "UPSERT",
-                "ResourceRecordSet": {
-                  "Name": "publisher-service-${{ env.BRANCH }}.d2dragon.net",
-                  "Type": "A",
-                  "AliasTarget": {
-                    "HostedZoneId": $LB_HOSTED_ZONE,
-                    "DNSName": $LB_DNSNAME,
-                    "EvaluateTargetHealth": true
-                  }
-                }
-              }]
-            }
-          EOF
-          )
+{
+  "Changes": [{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "publisher-service-${{ env.BRANCH }}.d2dragon.net",
+      "Type": "A",
+      "AliasTarget": {
+        "HostedZoneId": "$LB_HOSTED_ZONE",
+        "DNSName": "dualstack.$LB_DNSNAME",
+        "EvaluateTargetHealth": true
+      }
+    }
+  }]
+}
+EOF
+)
           DOWNLOAD_CHANGESET=$(cat <<EOF
-            {
-              "Changes": [{
-                "Action": "UPSERT",
-                "ResourceRecordSet": {
-                  "Name": "publisher-service-${{ env.BRANCH }}.d2dragon.net",
-                  "Type": "A",
-                  "AliasTarget": {
-                    "HostedZoneId": $LB_HOSTED_ZONE,
-                    "DNSName": $LB_DNSNAME,
-                    "EvaluateTargetHealth": true
-                  }
-                }
-              }]
-            }
-          EOF
-          )
+{
+  "Changes": [{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "download-service-${{ env.BRANCH }}.d2dragon.net",
+      "Type": "A",
+      "AliasTarget": {
+        "HostedZoneId": "$LB_HOSTED_ZONE",
+        "DNSName": "dualstack.$LB_DNSNAME",
+        "EvaluateTargetHealth": true
+      }
+    }
+  }]
+}
+EOF
+)
 
           aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --change-batch $PUBLISHER_CHANGESET --region ${{ env.REGION }}
           aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --change-batch $DOWNLOAD_CHANGESET --region ${{ env.REGION }}
