@@ -79,7 +79,7 @@ export class BuildService {
     }
 
     if (request.patchNotesId) {
-      build.patchNotesId = request.patchNotesId;
+      /* TODO (migration||drop) build.patchNotesId = request.patchNotesId; */
     }
 
     await build.save();

@@ -27,10 +27,12 @@ export const BuildDef: ModelAttributes = {
     allowNull: true,
     type: DataTypes.BOOLEAN,
   },
+  /* TODO (migration||drop)
   patchNotesId: {
     allowNull: true,
     type: DataTypes.STRING(64),
   },
+  */
 };
 
 export interface BuildAttributes {
@@ -38,12 +40,17 @@ export interface BuildAttributes {
   ownerId: number;
   bdsBuildId: number;
   mandatory: boolean;
+  /* TODO (migration||drop)
   patchNotesId: string;
+  */
   readonly branches?: BranchModel[];
   readonly owner?: GameModel;
 }
 
-export type BuildCreationAttributes = Optional<BuildAttributes, 'id' | 'mandatory' | 'ownerId' | 'patchNotesId'>;
+export type BuildCreationAttributes = Optional<
+  BuildAttributes,
+  'id' | 'mandatory' | 'ownerId' /* TODO (migration||drop) | 'patchNotesId' */
+>;
 
 export type BuildUniqueIdentifier = AtLeastOne<Pick<BuildAttributes, 'id' | 'bdsBuildId'>>;
 
@@ -56,7 +63,9 @@ export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> 
 
   public ownerId!: number;
 
+  /* TODO (migration||drop)
   public patchNotesId!: string;
+  */
 
   // #region association: branches
   public readonly branches?: BranchModel[];
@@ -85,7 +94,7 @@ export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> 
 
   public toPublicHttpModel(): PublicBuildDescription {
     return {
-      patchNotesId: this.patchNotesId,
+      patchNotesId: '' /* TODO (migration||drop) this.patchNotesId */,
       mandatory: this.mandatory,
     };
   }
@@ -93,7 +102,7 @@ export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> 
   public toPublisherHttpModel(): PublisherBuildDescription {
     return {
       id: this.id,
-      patchNotesId: this.patchNotesId,
+      patchNotesId: '' /* TODO (migration||drop) this.patchNotesId */,
       ownerId: this.ownerId,
       bdsBuildId: this.bdsBuildId,
       mandatory: this.mandatory,
