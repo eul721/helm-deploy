@@ -1,8 +1,13 @@
+import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
+import { AgreementDescription } from '../public/agreementdescription';
+import { PublisherBranchDescription } from './publisherbranchdescription';
+import { PublisherBuildDescription } from './publisherbuilddescription';
+import { LocalizedHashmap } from '../../../utils/language';
+
 /**
- * @apiDefine PublisherGameModel Game Description Model
- *  REST response model for Publisher APIs
- *
+ * @apiDefine PublisherGameDescription Game Description Model
  * @apiVersion 0.0.1
+ *
  * @apiSuccess (200) {Number} bdsTitleId Unique ID of title in BDS
  * @apiSuccess (200) {Agreement[]} agreements Array of Agreement objects that belong to this game
  * @apiSuccess (200) {Number} bdsTitleId Unique ID of title in BDS
@@ -13,7 +18,7 @@
  * @apiSuccess (200) {Number} defaultBranchId Branch ID of the default branch
  * @apiSuccess (200) {Number} divisionId Division ID to which this game belongs
  * @apiSuccess (200) {Number} id Unique ID of this title
- * @apiSuccess (200) {Object} names Hashmap of names for this game, keyed by Locale
+ * @apiSuccess (200) {Hashmap} names Hashmap of names for this game, keyed by Locale
  * @apiSuccess (200) {String} updatedAt ISO 8601 timestamp representing when this item was last updated
  *
  * @apiSuccessExample {json} Success-Response:
@@ -34,10 +39,46 @@
  *   "updatedAt": "2021-06-22T23:45:59.000Z"
  * }
  */
+export interface PublisherGameDescription {
+  /** Internal PS id */
+  id: number;
+
+  /** Array of Agreement objects that belong to this game */
+  agreements: AgreementDescription[];
+
+  /** Game bds id */
+  bdsTitleId: number;
+
+  /** Array of Branch objects that belong to this game */
+  branches: PublisherBranchDescription[];
+
+  /** Array of Build objects that belong to this game */
+  builds: PublisherBuildDescription[];
+
+  /** Game id */
+  contentfulId: Maybe<string>;
+
+  /** ISO timestamp of game creation */
+  createdAt: string;
+
+  /** Default branch ID */
+  defaultBranchId: Maybe<number>;
+
+  /** Owning division id */
+  divisionId: number;
+
+  /** Game names */
+  names: LocalizedHashmap;
+
+  /** TODO: Mocked for now, need to implement status as a field on game model */
+  status: 'draft';
+
+  /** ISO timestamp of last model update */
+  updatedAt: string;
+}
+
 /**
- * @apiDefine PublisherGameModelsArray Array of Game Description Models
- *  REST response model for Publisher APIs
- *
+ * @apiDefine PublisherGameResponse
  * @apiVersion 0.0.1
  * @apiSuccess (200) {Game[]} items List of Game Descriptions
  * @apiSuccess (200) {Number} items.bdsTitleId Unique ID of title in BDS
@@ -67,9 +108,8 @@
  *     "bdsTitleId": 1000000,
  *     "branches": [{Branch Model}],
  *     "builds": [{Build Model}]
- *     "createdAt": "2021-06-22T23:44:59.000Z",
- *     "updatedAt": "2021-06-22T23:45:59.000Z",
  *     "contentfulId": "6sAfVxoGuShx9DV38DcFxI",
+ *     "createdAt": "2021-06-22T23:44:59.000Z",
  *     "defaultBranchId": 200000,
  *     "divisionId": 2,
  *     "id": 100000,
@@ -95,45 +135,6 @@
  *   ]
  * }
  */
-
-import { Maybe } from '@take-two-t2gp/t2gp-node-toolkit';
-import { LocalizedHashmap } from '../../../utils/language';
-import { BranchDescription } from './branchdescription';
-import { BuildDescription } from '../resources/builddescription';
-import { AgreementDescription } from '../resources/agreementdescription';
-
-/**
- * Describes an RBAC (private Publisher) game model
- */
-export interface GameDescription {
-  /** Internal PS id */
-  id: number;
-
-  agreements: AgreementDescription[];
-
-  branches: BranchDescription[];
-
-  builds: BuildDescription[];
-
-  /** Game id */
-  contentfulId: Maybe<string>;
-
-  /** Default branch ID */
-  defaultBranchId: Maybe<number>;
-
-  /** Owning division id */
-  divisionId: number;
-
-  /** Game bds id */
-  bdsTitleId: number;
-
-  /** Game names */
-  names: LocalizedHashmap;
-
-  /** TODO: Mocked for now, need to implement status as a field on game model */
-  status: 'draft';
-
-  createdAt: unknown;
-
-  updatedAt: unknown;
+export interface PublisherGameResponse {
+  items: PublisherGameDescription[];
 }

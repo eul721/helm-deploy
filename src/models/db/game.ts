@@ -10,6 +10,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
+import md5 from 'md5';
 import { INTERNAL_ID, INTERNAL_ID_REFERENCE, AtLeastOne } from '../../utils/database';
 import { AgreementCreationAttributes, AgreementModel } from './agreement';
 import { BuildCreationAttributes, BuildModel } from './build';
@@ -18,9 +19,10 @@ import { DivisionModel } from './division';
 import { RoleModel } from './role';
 import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
-import { GameDescription } from '../http/rbac/gamedescription';
 import { Locale, LocalizedHashmap } from '../../utils/language';
-import { PublicGameDescription } from '../http/resources/publicgamedescription';
+import { PublicGameDescription } from '../http/public/publicgamedescription';
+import { DownloadData } from '../http/public/downloaddata';
+import { PublisherGameDescription } from '../http/rbac/publishergamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -68,6 +70,16 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
   public createdAt!: string;
 
   public updatedAt!: string;
+
+  /**
+   * The DNA reference ID is what is put in the license
+   * to uniquely identify the DRM wrapped content
+   * The reference ID is the md5sum of the contentful ID
+   * will return empty string if contentful ID is not set.
+   */
+  public get dnaReferenceId(): string {
+    return this.contentfulId ? md5(this.contentfulId) : '';
+  }
 
   // #region association: agreements
 
@@ -193,18 +205,17 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
     return {
       bdsTitleId: this.bdsTitleId,
       contentfulId: this.contentfulId ?? '',
-      divisionId: this.ownerId,
       id: this.id,
       names: this.names,
     };
   }
 
-  public toPublisherHttpModel(): GameDescription {
+  public toPublisherHttpModel(): PublisherGameDescription {
     return {
       agreements: this.agreements?.map(agreement => agreement.toHttpModel()) ?? [],
       bdsTitleId: this.bdsTitleId,
       branches: this.branches?.map(branch => branch.toPublisherHttpModel()) ?? [],
-      builds: this.builds?.map(build => build.toHttpModel()) ?? [],
+      builds: this.builds?.map(build => build.toPublisherHttpModel()) ?? [],
       contentfulId: this.contentfulId,
       createdAt: this.createdAt,
       defaultBranchId: this.defaultBranch,
@@ -213,6 +224,19 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
       names: this.names,
       status: 'draft',
       updatedAt: this.updatedAt,
+    };
+  }
+
+  // TODO: no builds data on branch, there is no versions info anymore, sending all builds for now
+  public toDownloadHttpModel(branch: BranchModel): DownloadData {
+    return {
+      ...this.toPublicHttpModel(),
+      branch: branch.toPublicHttpModel(),
+      agreements: this.agreements?.map(agreementData => agreementData.toHttpModel()) ?? [],
+      versions: this.builds?.map(build => build.toPublicHttpModel()) ?? [],
+
+      // TODO: transfer former contentful spec to SQL
+      supportedLanguages: ['mocklanguage1', 'mocklanguage2'],
     };
   }
 }

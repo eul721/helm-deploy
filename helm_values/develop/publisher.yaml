@@ -8,3 +8,7 @@ app:
     cpu: 0.2
   limits:
     cpu: 0.5
+aws:
+  tags:
+    service: "publisher-service"
+    env: "develop"

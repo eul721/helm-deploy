@@ -8,3 +8,7 @@ app:
     cpu: 0.3
   limits:
     cpu: 0.8
+aws:
+  tags:
+    service: "publisher-service"
+    env: "staging"

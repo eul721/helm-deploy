@@ -2,7 +2,7 @@ import { AuthenticateContext } from '../../models/auth/authenticatecontext';
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { UserAttributes, UserModel } from '../../models/db/user';
 import { HttpCode } from '../../models/http/httpcode';
-import { UserDescription } from '../../models/http/rbac/userdescription';
+import { UserDescription, UserResponse } from '../../models/http/rbac/userdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
 import { RbacService } from './basic';
 
@@ -38,13 +38,13 @@ export class RbacUsersService {
    *
    * @param rbacContext request context
    */
-  public static async getUsers(rbacContext: RbacContext): Promise<ServiceResponse<UserDescription[]>> {
+  public static async getUsers(rbacContext: RbacContext): Promise<ServiceResponse<UserResponse>> {
     const externalIdAttrib: keyof UserAttributes = 'externalId';
     const users = await UserModel.findAll({
       where: { ownerId: rbacContext.divisionId },
       attributes: [externalIdAttrib],
     });
-    return { code: HttpCode.OK, payload: users.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: users.map(item => item.toHttpModel()) } };
   }
 
   /**

@@ -18,7 +18,7 @@ const {
   NODE_ENVIRONMENT = 'development',
   PORT = '5000',
   WEBHOOK_SECRET_KEY = '',
-  TEMP_FLAG_VERSION_1_0_AUTH_OFF = 'true',
+  TEMP_FLAG_VERSION_1_0_AUTH_OFF = 'false',
 } = process.env;
 
 /*

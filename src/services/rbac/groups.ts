@@ -1,9 +1,9 @@
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { GroupModel } from '../../models/db/group';
 import { HttpCode } from '../../models/http/httpcode';
-import { GroupDescription } from '../../models/http/rbac/groupdescription';
-import { RoleDescription } from '../../models/http/rbac/roledescription';
-import { UserDescription } from '../../models/http/rbac/userdescription';
+import { GroupDescription, GroupResponse } from '../../models/http/rbac/groupdescription';
+import { RoleResponse } from '../../models/http/rbac/roledescription';
+import { UserResponse } from '../../models/http/rbac/userdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
 
 export class RbacGroupsService {
@@ -55,14 +55,14 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async getGroups(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription[]>> {
+  public static async getGroups(rbacContext: RbacContext): Promise<ServiceResponse<GroupResponse>> {
     const division = await rbacContext.fetchDivisionModel();
     if (!division) {
       return malformedRequestPastValidation();
     }
 
     const groups = await division.getGroups();
-    return { code: HttpCode.OK, payload: groups.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: groups.map(item => item.toHttpModel()) } };
   }
 
   /**
@@ -70,7 +70,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async addUserToGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async addUserToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const user = await rbacContext.fetchUserModel();
     if (!user || !group) {
@@ -78,7 +78,7 @@ export class RbacGroupsService {
     }
 
     await group.addAssignedUser(user);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -86,7 +86,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async removeUserFromGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async removeUserFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const user = await rbacContext.fetchUserModel();
     if (!user || !group) {
@@ -94,7 +94,7 @@ export class RbacGroupsService {
     }
 
     await group.removeAssignedUser(user);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -102,14 +102,14 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async getUsersInGroup(rbacContext: RbacContext): Promise<ServiceResponse<UserDescription[]>> {
+  public static async getUsersInGroup(rbacContext: RbacContext): Promise<ServiceResponse<UserResponse>> {
     const group = await rbacContext.fetchGroupModel();
     if (!group) {
       return malformedRequestPastValidation();
     }
 
     const users = await group.getAssignedUsers();
-    return { code: HttpCode.OK, payload: users.map(item => item.toHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: users.map(item => item.toHttpModel()) } };
   }
 
   /**
@@ -117,7 +117,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async addRoleToGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async addRoleToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const role = await rbacContext.fetchRoleModel();
     if (!role || !group) {
@@ -125,7 +125,7 @@ export class RbacGroupsService {
     }
 
     await group.addAssignedRole(role);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -133,7 +133,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async removeRoleFromGroup(rbacContext: RbacContext): Promise<ServiceResponse> {
+  public static async removeRoleFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const role = await rbacContext.fetchRoleModel();
     if (!role || !group) {
@@ -141,7 +141,7 @@ export class RbacGroupsService {
     }
 
     await group.removeAssignedRole(role);
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -149,13 +149,13 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async getRolesInGroup(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription[]>> {
+  public static async getRolesInGroup(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
     const group = await rbacContext.fetchGroupModel();
     if (!group) {
       return malformedRequestPastValidation();
     }
 
     const roles = await group.getAssignedRoles();
-    return { code: HttpCode.OK, payload: roles.map(item => item.toPublisherHttpModel()) };
+    return { code: HttpCode.OK, payload: { items: roles.map(item => item.toPublisherHttpModel()) } };
   }
 }

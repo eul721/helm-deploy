@@ -64,9 +64,9 @@ async function bdsGet<P, ResBody, ReqBody, ReqQuery, Locals>(
 /**
  * @api {GET} bds/titles/:titleId Get title
  * @apiName GetBdsTitle
- * @apiGroup BDS
- * @apiVersion  0.0.1
- * @apiDescription Get title from the BDS
+ * @apiGroup internal/BDS
+ * @apiVersion 0.0.1
+ * @apiDescription Get title from the BDS, internal BDC call
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
@@ -78,9 +78,9 @@ bdsApiRouter.get(`/titles/:${PathParam.gameId}`, async (req, res) => {
 /**
  * @api {GET} bds/:titleId/branches Get branches
  * @apiName GetBdsBranches
- * @apiGroup BDS
- * @apiVersion  0.0.1
- * @apiDescription Get branches from the BDS
+ * @apiGroup internal/BDS
+ * @apiVersion 0.0.1
+ * @apiDescription Get branches from the BDS, internal BDC call
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
@@ -90,11 +90,11 @@ bdsApiRouter.get(`/:${PathParam.gameId}/branches*`, async (req, res) => {
 });
 
 /**
- * @api {GET} bds/:titleId/builds Get branches
+ * @api {GET} bds/:titleId/builds Get builds
  * @apiName GetBdsBuilds
- * @apiGroup BDS
- * @apiVersion  0.0.1
- * @apiDescription Get builds from the BDS
+ * @apiGroup internal/BDS
+ * @apiVersion 0.0.1
+ * @apiDescription Get builds from the BDS, internal BDC call
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
@@ -106,9 +106,9 @@ bdsApiRouter.get(`/:${PathParam.gameId}/builds*`, async (req, res) => {
 /**
  * @api {GET} bds/:titleId/depots* Get depots
  * @apiName GetBdsDepots
- * @apiGroup BDS
- * @apiVersion  0.0.1
- * @apiDescription Get depots from the BDS
+ * @apiGroup internal/BDS
+ * @apiVersion 0.0.1
+ * @apiDescription Get depots from the BDS, internal BDC call
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
@@ -120,9 +120,9 @@ bdsApiRouter.get(`/:${PathParam.gameId}/depots*`, async (req, res) => {
 /**
  * @api {GET} bds/:titleId/launchOptions* Get launch options
  * @apiName GetBdsLaunchOptions
- * @apiGroup BDS
- * @apiVersion  0.0.1
- * @apiDescription Get launch options from the BDS
+ * @apiGroup internal/BDS
+ * @apiVersion 0.0.1
+ * @apiDescription Get launch options from the BDS, internal BDC call
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware

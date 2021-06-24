@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { getAuthenticateMiddleware } from '../../middleware/authenticate';
 import { getAuthorizePublisherMiddleware } from '../../middleware/authorizepublisher';
 import { AuthenticateContext } from '../../models/auth/authenticatecontext';
+import { UserDescription, UserResponse } from '../../models/http/rbac/userdescription';
+import { ServiceResponse } from '../../models/http/serviceresponse';
 import { RbacService } from '../../services/rbac/basic';
 import { endpointServiceCallWrapper } from '../../utils/service';
 
@@ -12,16 +14,18 @@ rbacApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware()
 /**
  * @api {GET} /api/rbac/about Get user information
  * @apiName GetUserInformation
- * @apiGroup RbacBasic
- * @apiVersion  0.0.1
+ * @apiGroup User
+ * @apiVersion 0.0.1
  * @apiDescription Get all rbac information about current user
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
+ *
+ * @apiUse UserDescription
  */
 rbacApiRouter.get(
   '/about',
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<UserDescription>>(async (_req, res) => {
     const context = AuthenticateContext.get(res);
     const callerId = (await context.fetchStudioUserModel())?.externalId ?? '';
     return RbacService.assembleUserInfo(callerId);
@@ -31,16 +35,18 @@ rbacApiRouter.get(
 /**
  * @api {GET} /api/rbac/users List users
  * @apiName ListUsers
- * @apiGroup RbacBasic
- * @apiVersion  0.0.1
+ * @apiGroup User
+ * @apiVersion 0.0.1
  * @apiDescription Get list of users in callers own division
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
+ *
+ * @apiUse UserResponse
  */
 rbacApiRouter.get(
   '/users',
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<UserResponse>>(async (_req, res) => {
     return RbacService.getUsersInOwnDivision(AuthenticateContext.get(res));
   })
 );
