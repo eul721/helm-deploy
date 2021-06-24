@@ -30,3 +30,11 @@ ingresses:
       - eip # allow all access from our d2c vpc. Should be removed once BDS is migrated to flux
     external_to_vpc_sgs:
       - mpg_2k_bds
+      - eks-debugging-alb
+
+aws:
+  default_tags:
+    project: "publisher-service"
+    description: "Publisher/Downloader Service"
+    billing_code: "d2c"
+  tags: {} # inherited from chart vals, if any
