@@ -26,6 +26,7 @@ export default {
     'express',
     'fs',
     'jsonwebtoken',
+    'md5',
     'path',
     'sequelize',
     'uuid',

@@ -65,11 +65,11 @@ export class GameService {
     const query: FindOptions<GameAttributes> = {
       limit: pageCtx.size,
       offset: pageCtx.from,
-      order: [pageCtx.sort],
+      order: pageCtx.sort,
     };
     const rows = await GameModel.findAll({
       ...query,
-      include: { all: true },
+      include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
     });
     const count = await GameModel.count(query);
     const items = rows.map(row => row.toPublisherHttpModel());
@@ -77,7 +77,7 @@ export class GameService {
       code: HttpCode.OK,
       payload: {
         page: {
-          from: pageCtx.from,
+          ...pageCtx,
           total: count,
         },
         items,

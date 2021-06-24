@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
+import { sendMessageResponse } from '../utils/http';
 import { Middleware } from '../utils/middleware';
 import { buildPaginationContext, PaginationContext } from '../utils/pagination';
 import { toIntOptional } from '../utils/service';
@@ -15,10 +16,12 @@ export function paginationMiddleware(): Middleware {
     try {
       res.locals.paginationContext = buildPaginationContext({ from, sort, size });
     } catch (paginationErr) {
-      if (paginationErr.message === 'BadInput') {
-        res.status(400).json({ code: 400, message: 'Invalid pagination' });
+      if (['BadInput', 'Invalid Input'].includes(paginationErr.message)) {
+        sendMessageResponse(res, 400, 'Invalid pagination parameters');
         return;
       }
+      sendMessageResponse(res, 500, paginationErr.message);
+      return;
     }
     next();
   };
