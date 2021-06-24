@@ -74,7 +74,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
    * will return empty string if contentful ID is not set.
    */
   public get dnaReferenceId(): string {
-    return md5(this.contentfulId ?? '');
+    return this.contentfulId ? md5(this.contentfulId) : '';
   }
 
   // #region association: agreements
