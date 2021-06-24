@@ -29,7 +29,10 @@ export class LicensingService {
 
     if (envConfig.TEMP_FLAG_VERSION_1_0_AUTH_OFF) {
       const allGames = await GameModel.findAll();
-      return { code: HttpCode.OK, payload: allGames.flatMap(game => (game.contentfulId ? [game.contentfulId] : [])) };
+      return {
+        code: HttpCode.OK,
+        payload: allGames.flatMap(game => (game.dnaReferenceId ? [game.dnaReferenceId] : [])),
+      };
     }
 
     const deviceRegistrationData: DeviceRegistrationData = {

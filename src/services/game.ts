@@ -142,9 +142,17 @@ export class GameService {
     }
 
     const ownedTitles: string[] = response.payload ?? [];
+    const playerOwnedGamesAll = await GameModel.findAll();
+
+    const ownedContentfulIds = playerOwnedGamesAll
+      .filter(gameModel => {
+        return gameModel.contentfulId !== null && ownedTitles.includes(gameModel.dnaReferenceId);
+      })
+      .map<string>(game => game.contentfulId as string);
+
     const playerOwnedGames = await GameModel.findAll({
       include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
-      where: { contentfulId: { [Op.in]: ownedTitles } },
+      where: { contentfulId: { [Op.in]: ownedContentfulIds } },
     });
 
     const gameModelsJson: { [key: string]: LegacyDownloadData } = {};
