@@ -85,7 +85,7 @@ describe('src/controllers/webhooks', () => {
 
         const responseBody: DnaLicenseResponse = {
           licenseBinary: 'licenseBinary',
-          licenses: [{ referenceId: sampleDb.gameCiv6.contentfulId ?? '', expireAt: 1 }],
+          licenses: [{ referenceId: sampleDb.gameCiv6.dnaReferenceId, expireAt: 1 }],
         };
         const scope = nock('https://dummyUrl.com').get(/.*/).reply(HttpCode.OK, responseBody);
 
