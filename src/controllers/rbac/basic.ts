@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getAuthenticateMiddleware } from '../../middleware/authenticate';
 import { getAuthorizePublisherMiddleware } from '../../middleware/authorizepublisher';
 import { AuthenticateContext } from '../../models/auth/authenticatecontext';
-import { UserResponse } from '../../models/http/rbac/userdescription';
+import { UserDescription, UserResponse } from '../../models/http/rbac/userdescription';
 import { ServiceResponse } from '../../models/http/serviceresponse';
 import { RbacService } from '../../services/rbac/basic';
 import { endpointServiceCallWrapper } from '../../utils/service';
@@ -21,11 +21,11 @@ rbacApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddleware()
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  *
- * @apiUse UserResponse
+ * @apiUse UserDescription
  */
 rbacApiRouter.get(
   '/about',
-  endpointServiceCallWrapper<ServiceResponse<UserResponse>>(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<UserDescription>>(async (_req, res) => {
     const context = AuthenticateContext.get(res);
     const callerId = (await context.fetchStudioUserModel())?.externalId ?? '';
     return RbacService.assembleUserInfo(callerId);

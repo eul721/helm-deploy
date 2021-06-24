@@ -2,7 +2,7 @@ import { AuthenticateContext } from '../../models/auth/authenticatecontext';
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { UserAttributes, UserModel } from '../../models/db/user';
 import { HttpCode } from '../../models/http/httpcode';
-import { UserResponse } from '../../models/http/rbac/userdescription';
+import { UserDescription, UserResponse } from '../../models/http/rbac/userdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
 import { RbacService } from './basic';
 
@@ -13,7 +13,7 @@ export class RbacUsersService {
    * @param rbacContext request context
    * @param dnaId DNA Identifier of the user to create
    */
-  public static async createUser(rbacContext: RbacContext, dnaId?: string): Promise<ServiceResponse<UserResponse>> {
+  public static async createUser(rbacContext: RbacContext, dnaId?: string): Promise<ServiceResponse<UserDescription>> {
     const division = await rbacContext.fetchDivisionModel();
     if (!division) {
       return malformedRequestPastValidation();
@@ -30,7 +30,7 @@ export class RbacUsersService {
 
     const user = await division.createUserEntry({ externalId: dnaId, accountType: '2K-dna' });
 
-    return { code: HttpCode.CREATED, payload: { items: [user.toHttpModel()] } };
+    return { code: HttpCode.CREATED, payload: user.toHttpModel() };
   }
 
   /**
@@ -76,7 +76,7 @@ export class RbacUsersService {
    *
    * @param rbacContext request context
    */
-  public static async getUser(rbacContext: RbacContext): Promise<ServiceResponse<UserResponse>> {
+  public static async getUser(rbacContext: RbacContext): Promise<ServiceResponse<UserDescription>> {
     const user = await rbacContext.fetchUserModel();
 
     if (!user) {

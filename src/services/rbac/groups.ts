@@ -1,7 +1,7 @@
 import { RbacContext } from '../../models/auth/rbaccontext';
 import { GroupModel } from '../../models/db/group';
 import { HttpCode } from '../../models/http/httpcode';
-import { GroupResponse } from '../../models/http/rbac/groupdescription';
+import { GroupDescription, GroupResponse } from '../../models/http/rbac/groupdescription';
 import { RoleResponse } from '../../models/http/rbac/roledescription';
 import { UserResponse } from '../../models/http/rbac/userdescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
@@ -16,7 +16,7 @@ export class RbacGroupsService {
   public static async createGroup(
     rbacContext: RbacContext,
     groupName?: string
-  ): Promise<ServiceResponse<GroupResponse>> {
+  ): Promise<ServiceResponse<GroupDescription>> {
     if (!groupName) {
       return { code: HttpCode.BAD_REQUEST, message: 'Missing groupName query param' };
     }
@@ -32,7 +32,7 @@ export class RbacGroupsService {
     }
 
     const group = await division?.createGroupEntry({ name: groupName });
-    return { code: HttpCode.CREATED, payload: { items: [group.toHttpModel()] } };
+    return { code: HttpCode.CREATED, payload: group.toHttpModel() };
   }
 
   /**
@@ -70,7 +70,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async addUserToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupResponse>> {
+  public static async addUserToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const user = await rbacContext.fetchUserModel();
     if (!user || !group) {
@@ -78,7 +78,7 @@ export class RbacGroupsService {
     }
 
     await group.addAssignedUser(user);
-    return { code: HttpCode.OK, payload: { items: [group.toHttpModel()] } };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -86,7 +86,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async removeUserFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupResponse>> {
+  public static async removeUserFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const user = await rbacContext.fetchUserModel();
     if (!user || !group) {
@@ -94,7 +94,7 @@ export class RbacGroupsService {
     }
 
     await group.removeAssignedUser(user);
-    return { code: HttpCode.OK, payload: { items: [group.toHttpModel()] } };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -117,7 +117,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async addRoleToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupResponse>> {
+  public static async addRoleToGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const role = await rbacContext.fetchRoleModel();
     if (!role || !group) {
@@ -125,7 +125,7 @@ export class RbacGroupsService {
     }
 
     await group.addAssignedRole(role);
-    return { code: HttpCode.OK, payload: { items: [group.toHttpModel()] } };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**
@@ -133,7 +133,7 @@ export class RbacGroupsService {
    *
    * @param rbacContext request context
    */
-  public static async removeRoleFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupResponse>> {
+  public static async removeRoleFromGroup(rbacContext: RbacContext): Promise<ServiceResponse<GroupDescription>> {
     const group = await rbacContext.fetchGroupModel();
     const role = await rbacContext.fetchRoleModel();
     if (!role || !group) {
@@ -141,7 +141,7 @@ export class RbacGroupsService {
     }
 
     await group.removeAssignedRole(role);
-    return { code: HttpCode.OK, payload: { items: [group.toHttpModel()] } };
+    return { code: HttpCode.OK, payload: group.toHttpModel() };
   }
 
   /**

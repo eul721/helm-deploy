@@ -3,6 +3,11 @@ import { PathParam } from '../configuration/httpconfig';
 import { getAuthenticateMiddleware } from '../middleware/authenticate';
 import { getAuthorizePlayerMiddleware } from '../middleware/authorizeplayer';
 import { PlayerContext } from '../models/auth/playercontext';
+import { LegacyDownloadDataRoot } from '../models/http/legacy_downloaddata';
+import { DownloadData, DownloadDataResponse } from '../models/http/public/downloaddata';
+import { PublicBranchResponse } from '../models/http/public/publicbranchdescription';
+import { PublicGameResponse } from '../models/http/public/publicgamedescription';
+import { ServiceResponse } from '../models/http/serviceresponse';
 import { GameService } from '../services/game';
 import { endpointServiceCallWrapper } from '../utils/service';
 
@@ -25,7 +30,7 @@ downloadApiRouter.use(getAuthenticateMiddleware());
 downloadApiRouter.get(
   '/',
   getAuthorizePlayerMiddleware(),
-  endpointServiceCallWrapper(async () => {
+  endpointServiceCallWrapper<ServiceResponse<PublicGameResponse>>(async () => {
     return GameService.getAllPublicGames();
   })
 );
@@ -43,7 +48,7 @@ downloadApiRouter.get(
 downloadApiRouter.get(
   '/download',
   getAuthorizePlayerMiddleware(),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<LegacyDownloadDataRoot>>(async (_req, res) => {
     return GameService.legacyGetOwnedGames(PlayerContext.get(res));
   })
 );
@@ -63,7 +68,7 @@ downloadApiRouter.get(
 downloadApiRouter.get(
   '/owned',
   getAuthorizePlayerMiddleware(),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<DownloadDataResponse>>(async (_req, res) => {
     return GameService.getOwnedGames(PlayerContext.get(res));
   })
 );
@@ -83,7 +88,7 @@ downloadApiRouter.get(
 downloadApiRouter.get(
   `/:${PathParam.gameId}/branches`,
   getAuthorizePlayerMiddleware(),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<PublicBranchResponse>>(async (_req, res) => {
     return GameService.getBranches(PlayerContext.get(res));
   })
 );
@@ -98,12 +103,12 @@ downloadApiRouter.get(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
  * 
- * @apiUse DownloadDataResponse
+ * @apiUse DownloadData
  */
 downloadApiRouter.get(
   `/:${PathParam.gameId}/:${PathParam.branchId}`,
   getAuthorizePlayerMiddleware(),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<DownloadData>>(async (_req, res) => {
     return GameService.getGameDownloadModel(PlayerContext.get(res));
   })
 );
