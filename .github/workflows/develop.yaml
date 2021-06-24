@@ -122,6 +122,8 @@ jobs:
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
               --set app.tag=${{ env.VER }}
+            kubectl get -n configs --export -o yaml configmap publisher-service-${{ env.BRANCH }} | kubectl apply -n publisher-service -f -
+            kubectl get -n configs --export -o yaml secrets publisher-service-${{ env.BRANCH }} | kubectl apply -n publisher-service -f -
       - name: Update R53 (Temporary, until migration to flux)
         run: |
           HOSTEDZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "d2dragon.net" --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.HostedZones[0].Id' | sed 's/\/hostedzone\///g')
