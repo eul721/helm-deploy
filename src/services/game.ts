@@ -1,5 +1,3 @@
-import { Md5 } from 'ts-md5';
-
 import { FindOptions, Op } from 'sequelize';
 import { DownloadDataRoot, DownloadData } from '../models/http/downloaddata';
 import { GameAttributes, GameModel } from '../models/db/game';
@@ -150,11 +148,12 @@ export class GameService {
 
     const ownedTitles: string[] = response.payload ?? [];
     const playerOwnedGamesAll = await GameModel.findAll();
-    const filteredPlayerOwnedGames = playerOwnedGamesAll.filter(gameModel => {
-      return ownedTitles.includes(Md5.hashStr(gameModel.contentfulId || ''));
-    });
 
-    const ownedContentfulIds = filteredPlayerOwnedGames.map(model => model.contentfulId);
+    const ownedContentfulIds = playerOwnedGamesAll
+      .filter(gameModel => {
+        return gameModel.contentfulId !== null && ownedTitles.includes(gameModel.dnaReferenceId);
+      })
+      .map<string>(game => game.contentfulId as string);
 
     const playerOwnedGames = await GameModel.findAll({
       include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],

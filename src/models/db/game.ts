@@ -10,6 +10,7 @@ import {
   ModelAttributes,
   Optional,
 } from 'sequelize';
+import md5 from 'md5';
 import { INTERNAL_ID, INTERNAL_ID_REFERENCE, AtLeastOne } from '../../utils/database';
 import { AgreementCreationAttributes, AgreementModel } from './agreement';
 import { BuildCreationAttributes, BuildModel } from './build';
@@ -64,6 +65,16 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
   public defaultBranch!: number | null;
 
   public ownerId!: number;
+
+  /**
+   * The DNA reference ID is what is put in the license
+   * to uniquely identify the DRM wrapped content
+   * The reference ID is the md5sum of the contentful ID
+   * will return empty string if contentful ID is not set.
+   */
+  public get dnaReferenceId(): string {
+    return md5(this.contentfulId ?? '');
+  }
 
   // #region association: agreements
 
