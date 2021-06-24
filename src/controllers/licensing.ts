@@ -13,11 +13,13 @@ licensingApiRouter.use(getAuthenticateMiddleware());
  * @api {GET} /api/licensing Get licenses
  * @apiName GetLicenses
  * @apiGroup Licensing
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get all licenses
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePlayerMiddleware
+ *
+ * @apiSuccess (200) {String[]} - Array of contentful ids of permitted/owned games
  */
 licensingApiRouter.get(
   '/',

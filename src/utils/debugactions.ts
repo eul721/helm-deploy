@@ -361,7 +361,7 @@ export const actions: DebugAction[] = [
     command: 'build list',
     params: [],
     action: async () => {
-      const items = (await BuildModel.findAll()).map(item => item.toHttpModel());
+      const items = (await BuildModel.findAll()).map(item => item.toPublisherHttpModel());
       return {
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),

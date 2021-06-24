@@ -7,11 +7,13 @@ import { getPagination, paginationMiddleware } from '../middleware/pagination';
 import { AdminRequirements } from '../models/auth/adminrequirements';
 import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { ResourceContext } from '../models/auth/resourcecontext';
-import { GameDescription } from '../models/http/rbac/gamedescription';
+import { AgreementDescription, AgreementResponse } from '../models/http/public/agreementdescription';
+import { PublisherBranchDescription, PublisherBranchResponse } from '../models/http/rbac/publisherbranchdescription';
+import { PublisherGameDescription, PublisherGameResponse } from '../models/http/rbac/publishergamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
 import { ModifyTitleRequest } from '../models/http/requests/modifytitlerequest';
-import { PaginatedServiceResponse } from '../models/http/serviceresponse';
+import { PaginatedServiceResponse, ServiceResponse } from '../models/http/serviceresponse';
 import { BranchService } from '../services/branch';
 import { GameService } from '../services/game';
 import { endpointServiceCallWrapper, toIntRequired } from '../utils/service';
@@ -30,12 +32,14 @@ publishApiRouter.use(getAuthenticateMiddleware(), getAuthorizePublisherMiddlewar
  * @apiUse AuthorizePublisherMiddleware
  *
  * @apiUse PaginationRequest
- * @apiUse PublisherGameModelsArray
+ *
+ * @apiUse PublisherGameResponse
+ * @apiUse PageDataResponse
  */
 publishApiRouter.get(
   `/${Segment.games}`,
   paginationMiddleware(),
-  endpointServiceCallWrapper<PaginatedServiceResponse<GameDescription>>((_req, res) => {
+  endpointServiceCallWrapper<PaginatedServiceResponse<PublisherGameResponse>>((_req, res) => {
     const publisherContext = AuthenticateContext.get(res);
     const paginationContext = getPagination(res);
     return GameService.getGamesPublisher(publisherContext, paginationContext);
@@ -47,17 +51,17 @@ publishApiRouter.get(
  * @apiName GetGame
  * @apiGroup Publisher
  * @apiDescription Get a single game by ID
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  *
- * @apiUse PublisherGameModel
+ * @apiUse PublisherGameDescription
  */
 publishApiRouter.get(
   `/${Segment.gameById}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<PublisherGameDescription>>(async (_req, res) => {
     const publisherContext = AuthenticateContext.get(res);
     return GameService.getGamePublisher(ResourceContext.get(res), publisherContext);
   })
@@ -67,17 +71,19 @@ publishApiRouter.get(
  * @api {PATCH} /api/publisher/games/:gameId Modify a game
  * @apiName ModifyGame
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Modify a game
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse PublisherGameDescription
  */
 publishApiRouter.patch(
   `/${Segment.gameById}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
-  endpointServiceCallWrapper(async (req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<PublisherGameDescription>>(async (req, res) => {
     const payload: ModifyTitleRequest = req.body as ModifyTitleRequest;
     return GameService.modifyGame(ResourceContext.get(res), payload);
   })
@@ -87,17 +93,19 @@ publishApiRouter.patch(
  * @api {PATCH} /api/publisher/games/:gameId/branches/:branchId Modify a branch
  * @apiName ModifyGame
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Modify a game
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse PublisherBranchDescription
  */
 publishApiRouter.patch(
   `/${Segment.gameById}/${Segment.branches}`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
-  endpointServiceCallWrapper(async (req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<PublisherBranchDescription>>(async (req, res) => {
     const payload: ModifyBranchRequest = req.body as ModifyBranchRequest;
     return BranchService.setPassword(ResourceContext.get(res), payload.password);
   })
@@ -107,7 +115,7 @@ publishApiRouter.patch(
  * @api {GET} /api/publisher/games/:gameId/branches Get branches
  * @apiName GetBranches
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get branch list for a specified title, includes private branches
  *
  * @apiParam (Query) {String} title game contentful id
@@ -116,12 +124,12 @@ publishApiRouter.patch(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
  *
- * @apiUse PublisherBranchModelArray
+ * @apiUse PublisherBranchResponse
  */
 publishApiRouter.get(
   `/${Segment.gameById}/branches`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<PublisherBranchResponse>>(async (_req, res) => {
     return GameService.getBranchesPublisher(ResourceContext.get(res));
   })
 );
@@ -130,17 +138,19 @@ publishApiRouter.get(
  * @api {GET} /api/publisher/games/:gameId/eulas Get Eula
  * @apiName GetEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Get eula assigned to a given game
  *
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse AgreementResponse
  */
 publishApiRouter.get(
   `/${Segment.gameById}/eulas`,
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Never),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<AgreementResponse>>(async (_req, res) => {
     return GameService.getEula(ResourceContext.get(res));
   })
 );
@@ -149,7 +159,7 @@ publishApiRouter.get(
  * @api {POST} /api/publisher/games/:gameId/eulas Create Eula
  * @apiName CreateEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Create Eula
  *
  * @apiParam (Query) {String} url Url with fill EULA text
@@ -157,11 +167,13 @@ publishApiRouter.get(
  * @apiUse AuthenticateMiddleware
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeResourceAccessMiddleware
+ *
+ * @apiUse AgreementDescription
  */
 publishApiRouter.post(
   `/${Segment.gameById}/eulas`,
   getAuthorizeForResourceMiddleware('create', AdminRequirements.ReleasedGame),
-  endpointServiceCallWrapper(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<AgreementDescription>>(async (_req, res) => {
     return GameService.createEula(ResourceContext.get(res));
   })
 );
@@ -170,7 +182,7 @@ publishApiRouter.post(
  * @api {DELETE} /api/publisher/games/:gameId/eulas/:eulaId Remove Eula
  * @apiName RemoveEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Remove Eula
  *
  * @apiUse AuthenticateMiddleware
@@ -180,7 +192,7 @@ publishApiRouter.post(
 publishApiRouter.delete(
   `/${Segment.gameById}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('delete', AdminRequirements.ReleasedGame),
-  endpointServiceCallWrapper(async (req, res) => {
+  endpointServiceCallWrapper<ServiceResponse>(async (req, res) => {
     const eulaId = toIntRequired(req.params[PathParam.eulaId]);
     return GameService.removeEula(ResourceContext.get(res), eulaId);
   })
@@ -190,7 +202,7 @@ publishApiRouter.delete(
  * @api {Patch} /api/publisher/games/:gameId/eulas/:eulaId Modify Eula
  * @apiName ModifyEula
  * @apiGroup Publisher
- * @apiVersion  0.0.1
+ * @apiVersion 0.0.1
  * @apiDescription Modify Eula
  *
  * @apiUse AuthenticateMiddleware
@@ -200,7 +212,7 @@ publishApiRouter.delete(
 publishApiRouter.patch(
   `/${Segment.gameById}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
-  endpointServiceCallWrapper(async (req, res) => {
+  endpointServiceCallWrapper<ServiceResponse>(async (req, res) => {
     const eulaId = toIntRequired(req.params[PathParam.eulaId]);
     const body = req.body as ModifyAgreementRequest;
     return GameService.updateEula(ResourceContext.get(res), eulaId, body);
