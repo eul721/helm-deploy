@@ -125,9 +125,9 @@ jobs:
       - name: Update R53 (Temporary, until migration to flux)
         run: |
           HOSTEDZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "d2dragon.net" --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.HostedZones[0].Id' | sed 's/\/hostedzone\///g')
-          LB_ARN=$(aws resourcegroupstaggingapi get-resources --tag-filters Key=elbv2.k8s.aws/cluster,Values=t2gp-debugging Key=ingress.k8s.aws/stack,Values=publisher-service-develop Key=ingress.k8s.aws/resource,Values=LoadBalancer | docker run --rm -i imega/jq -c -r '.ResourceTagMappingList[0].ResourceARN')
-          LB_DNSNAME=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].DNSName')
-          LB_HOSTED_ZONE=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].CanonicalHostedZoneId')
+          LB_ARN=$(aws resourcegroupstaggingapi get-resources --tag-filters Key=elbv2.k8s.aws/cluster,Values=t2gp-debugging Key=ingress.k8s.aws/stack,Values=publisher-service-develop Key=ingress.k8s.aws/resource,Values=LoadBalancer --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.ResourceTagMappingList[0].ResourceARN')
+          LB_DNSNAME=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN  --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].DNSName')
+          LB_HOSTED_ZONE=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].CanonicalHostedZoneId')
 
           PUBLISHER_CHANGESET=$(cat <<EOF
             {
@@ -164,8 +164,8 @@ jobs:
           EOF
           )
 
-          aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --change-batch $PUBLISHER_CHANGESET
-          aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --change-batch $DOWNLOAD_CHANGESET
+          aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --change-batch $PUBLISHER_CHANGESET --region ${{ env.REGION }}
+          aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --change-batch $DOWNLOAD_CHANGESET --region ${{ env.REGION }}
         # Update deployment status
       - name: Update deployment status (success)
         if: success()
