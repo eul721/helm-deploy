@@ -289,7 +289,11 @@ export class GameService {
     }
 
     if (request.names !== undefined) {
-      await processHashmapChangeRequest(request.names, game.removeName, game.addName);
+      await processHashmapChangeRequest(
+        request.names,
+        (loc: Locale) => game.removeName(loc),
+        (value: string, loc: Locale) => game.addName(value, loc)
+      );
     }
 
     await game.save();
@@ -352,7 +356,7 @@ export class GameService {
     eulaId: number,
     request: ModifyAgreementRequest
   ): Promise<ServiceResponse<AgreementResponse>> {
-    debug(`updateEula with body ${JSON.stringify(request)}`);
+    debug(`updateEula id ${eulaId} with body ${JSON.stringify(request)}`);
 
     const game = await resourceContext.fetchGameModelValidated();
 
@@ -365,8 +369,16 @@ export class GameService {
       return { code: HttpCode.BAD_REQUEST, message: 'The game does not contains this EULA' };
     }
 
-    await processHashmapChangeRequest(request.names, eula.removeName, eula.addName);
-    await processHashmapChangeRequest(request.urls, eula.removeUrl, eula.addUrl);
+    await processHashmapChangeRequest(
+      request.names,
+      (loc: Locale) => eula.removeName(loc),
+      (value: string, loc: Locale) => eula.addName(value, loc)
+    );
+    await processHashmapChangeRequest(
+      request.urls,
+      (loc: Locale) => eula.removeUrl(loc),
+      (value: string, loc: Locale) => eula.addUrl(value, loc)
+    );
 
     return { code: HttpCode.OK, payload: { items: [eula.toHttpModel()] } };
   }

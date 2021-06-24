@@ -33,12 +33,12 @@ DNA.initialize({
     });
 
     app.use('/api/games', downloadApiRouter);
+    app.use('/api/publisher/bdccli', bdcCliApiRouter);
     app.use('/api/publisher', publishApiRouter);
     app.use('/api/rbac', rbacApiRouter);
     app.use('/api/licensing', licensingApiRouter);
     app.use('/bds', bdsApiRouter);
     app.use('/webhooks', webhookRouter);
-    app.use('/api/publisher/bdccli', bdcCliApiRouter);
 
     if (envConfig.isDev()) {
       app.use('/dev/token', devToolsApiRouter);
