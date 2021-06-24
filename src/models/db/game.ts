@@ -19,9 +19,10 @@ import { DivisionModel } from './division';
 import { RoleModel } from './role';
 import { Fields, LocalizedFieldModel } from './localizedfield';
 import { LocalizableModel } from './mixins/localizablemodel';
-import { GameDescription } from '../http/rbac/gamedescription';
 import { Locale, LocalizedHashmap } from '../../utils/language';
-import { PublicGameDescription } from '../http/resources/publicgamedescription';
+import { PublicGameDescription } from '../http/public/publicgamedescription';
+import { DownloadData } from '../http/public/downloaddata';
+import { PublisherGameDescription } from '../http/rbac/publishergamedescription';
 
 export const GameDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -200,22 +201,34 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
     return {
       bdsTitleId: this.bdsTitleId,
       contentfulId: this.contentfulId ?? '',
+      id: this.id,
+      names: this.names,
+    };
+  }
+
+  public toPublisherHttpModel(): PublisherGameDescription {
+    return {
+      bdsTitleId: this.bdsTitleId,
+      branches: this.branches?.map(branch => branch.toPublisherHttpModel()) ?? [],
+      builds: this.builds?.map(build => build.toPublisherHttpModel()) ?? [],
+      contentfulId: this.contentfulId,
+      defaultBranchId: this.defaultBranch,
       divisionId: this.ownerId,
       id: this.id,
       names: this.names,
     };
   }
 
-  public toPublisherHttpModel(): GameDescription {
+  // TODO: no builds data on branch, there is no versions info anymore, sending all builds for now
+  public toDownloadHttpModel(branch: BranchModel): DownloadData {
     return {
-      bdsTitleId: this.bdsTitleId,
-      branches: this.branches?.map(branch => branch.toPublisherHttpModel()) ?? [],
-      builds: this.builds?.map(build => build.toHttpModel()) ?? [],
-      contentfulId: this.contentfulId,
-      defaultBranchId: this.defaultBranch,
-      divisionId: this.ownerId,
-      id: this.id,
-      names: this.names,
+      ...this.toPublicHttpModel(),
+      branch: branch.toPublicHttpModel(),
+      agreements: this.agreements?.map(agreementData => agreementData.toHttpModel()) ?? [],
+      versions: this.builds?.map(build => build.toPublicHttpModel()) ?? [],
+
+      // TODO: transfer former contentful spec to SQL
+      supportedLanguages: ['mocklanguage1', 'mocklanguage2'],
     };
   }
 }

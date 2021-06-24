@@ -8,3 +8,7 @@ app:
     cpu: 0.4
   limits:
     cpu: 0.8
+aws:
+  tags:
+    service: "download-service"
+    env: "develop"

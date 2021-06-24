@@ -35,7 +35,7 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getAllPublicGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(serviceResponse.payload).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
+      expect(serviceResponse.payload?.items).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
       // Ensuring it provides the Public http model
       expect(serviceResponse.payload).not.toHaveProperty([0, 'defaultBranchId']);
     });
@@ -44,7 +44,7 @@ describe('src/services/game', () => {
       await getDBInstance().sync({ force: true });
       const serviceResponse = await GameService.getAllPublicGames();
       expect(serviceResponse.code).toBe(HttpCode.OK);
-      expect(serviceResponse.payload).toHaveLength(0);
+      expect(serviceResponse.payload?.items).toHaveLength(0);
     });
   });
 
@@ -89,8 +89,7 @@ describe('src/services/game', () => {
 
       const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
-      expect(serviceResponse.payload?.model.downloadData).toBeTruthy();
-      expect(Object.keys(serviceResponse.payload?.model.downloadData ?? {})).toHaveLength(0);
+      expect(serviceResponse.payload?.items).toHaveLength(0);
     });
 
     it('should return all games the user owns', async () => {
@@ -102,9 +101,7 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getOwnedGames(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(Object.keys(serviceResponse.payload?.model.downloadData ?? {})).toHaveLength(
-        SampleDatabase.creationData.gameContentfulIds.length
-      );
+      expect(serviceResponse.payload?.items).toHaveLength(SampleDatabase.creationData.gameContentfulIds.length);
     });
   });
 
@@ -123,7 +120,7 @@ describe('src/services/game', () => {
       const serviceResponse = await GameService.getBranches(playerContext);
       expect(serviceResponse.code).toBe(HttpCode.OK);
       expect(serviceResponse.payload).toBeTruthy();
-      expect(serviceResponse.payload?.length).toBeGreaterThan(0);
+      expect(serviceResponse.payload?.items.length).toBeGreaterThan(0);
     });
   });
 

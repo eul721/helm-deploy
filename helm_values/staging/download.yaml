@@ -8,3 +8,7 @@ app:
     cpu: 0.5
   limits:
     cpu: 1
+aws:
+  tags:
+    service: "download-service"
+    env: "staging"

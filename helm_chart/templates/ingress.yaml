@@ -16,8 +16,15 @@ metadata:
     {{- range .external_to_vpc_sgs -}}
     {{-  $full_sgs = . | append $full_sgs -}}
     {{- end }}
-    alb.ingress.kubernetes.io/security-groups: {{ join ", " $full_sgs }}
-    alb.ingress.kubernetes.io/tags: Project={{ $.Values.project }}
+    alb.ingress.kubernetes.io/security-groups: "{{ join ", " $full_sgs }}"
+    {{- $tags := list -}}
+    {{- range $k, $v := $.Values.aws.default_tags -}}
+    {{-   $tags = printf "%s=%s" $k $v | append $tags -}}
+    {{- end }}
+    {{- range $k, $v := $.Values.aws.tags -}}
+    {{-   $tags = printf "%s=%s" $k $v | append $tags -}}
+    {{- end }}
+    alb.ingress.kubernetes.io/tags: "{{ join ", " $tags }}"
     alb.ingress.kubernetes.io/target-type: instance
   name: {{ $.Release.Name }}
   namespace: {{ $.Release.Namespace }}
