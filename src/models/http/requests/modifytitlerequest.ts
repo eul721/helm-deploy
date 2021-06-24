@@ -16,4 +16,7 @@ export interface ModifyTitleRequest {
 
   // Names to modify
   names?: HashmapChangeRequest;
+
+  // Installation directory
+  installDir?: string;
 }

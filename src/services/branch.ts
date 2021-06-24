@@ -6,6 +6,8 @@ import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { PublisherBranchResponse } from '../models/http/rbac/publisherbranchdescription';
+import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
+import { Op } from 'sequelize';
 
 export class BranchService {
   /**
@@ -102,30 +104,58 @@ export class BranchService {
    * Function for setting a password on a branch
    *
    * @param resourceContext id of the modified branch
-   * @param password password to set
+   * @param request password to set
    */
-  public static async setPassword(
+  public static async modifyBranch(
     resourceContext: ResourceContext,
-    password?: string
+    request: ModifyBranchRequest
   ): Promise<ServiceResponse<PublisherBranchResponse>> {
-    if (password !== '' && !password) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Missing password parameter' };
-    }
-
-    const branch = await resourceContext.fetchBranchModel();
-    if (!branch) {
-      return { code: HttpCode.NOT_FOUND, message: 'Failed to find the requested branch' };
-    }
-
-    const game = await resourceContext.fetchGameModel();
-    if (game?.defaultBranch === branch.id && password.length > 0) {
-      return { code: HttpCode.BAD_REQUEST, message: 'Cannot set a non empty password on the default branch' };
-    }
+    const branch = await resourceContext.fetchBranchModelValidated();
 
     // TODO plaintext, should move to hash at some point
-    branch.password = password;
+    if (request.password != null) {
+      const game = await resourceContext.fetchGameModel();
+      if (game?.defaultBranch === branch.id && request.password.length > 0) {
+        return { code: HttpCode.BAD_REQUEST, message: 'Cannot set a non empty password on the default branch' };
+      }
+      branch.password = request.password;
+    }
+
+    if (request.buildHistoryPsIds != null && request.buildHistoryBdcIds != null) {
+      return { code: HttpCode.BAD_REQUEST, message: 'Only one of the build history fields is supposed to be set' };
+    }
+
+    if (request.buildHistoryBdcIds != null) {
+      const buildsToRemove = await branch.getBuilds();
+      Promise.all(buildsToRemove.map(build => branch.removeBuild(build)));
+      const buildsToAdd = await BuildModel.findAll({
+        where: { ownerId: branch.ownerId, bdsBuildId: { [Op.in]: request.buildHistoryBdcIds } },
+      });
+      if (buildsToAdd.length !== request.buildHistoryBdcIds.length) {
+        return {
+          code: HttpCode.BAD_REQUEST,
+          message: 'Some build ids either do not exist or do not belong to parent game',
+        };
+      }
+      await branch.addBuilds(buildsToAdd);
+    } else if (request.buildHistoryPsIds != null) {
+      const buildsToRemove = await branch.getBuilds();
+      Promise.all(buildsToRemove.map(build => branch.removeBuild(build)));
+      const buildsToAdd = await BuildModel.findAll({
+        where: { ownerId: branch.ownerId, id: { [Op.in]: request.buildHistoryPsIds } },
+      });
+      if (buildsToAdd.length !== request.buildHistoryPsIds.length) {
+        return {
+          code: HttpCode.BAD_REQUEST,
+          message: 'Some build ids either do not exist or do not belong to parent game',
+        };
+      }
+      await branch.addBuilds(buildsToAdd);
+    }
+
     await branch.save();
-    return { code: HttpCode.OK, payload: { items: [branch] } };
+
+    return { code: HttpCode.OK, payload: { items: [branch.toPublisherHttpModel()] } };
   }
 
   private static async addNewBuildToBranch(branch: BranchModel | null, build: BuildModel | null): Promise<boolean> {

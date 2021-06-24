@@ -8,7 +8,7 @@ import { LocalizedHashmap } from '../../../utils/language';
  * @apiSuccess (200) {Number} bdsBranchId Unique ID of this branch in BDS
  * @apiSuccess (200) {Hashmap} names Hashmap of localized names for this branch
  * @apiSuccess (200) {Number} ownerId Owner PS ID of this resource
- * @apiSuccess (200) {String} password Password for this branch (null if not defined)
+ * @apiSuccess (200) {String} password Password for this branch (empty string if not defined)
  *
  * @apiSuccessExample {json} Success-Response:
  *  {
@@ -46,7 +46,7 @@ export interface PublisherBranchDescription {
  * @apiSuccess (200) {Number} items.bdsBranchId Unique ID of this branch in BDS
  * @apiSuccess (200) {Hashmap} items.names Hashmap of localized names for this branch
  * @apiSuccess (200) {Number} items.ownerId Owner PS ID of this resource
- * @apiSuccess (200) {String} items.password Password for this branch (null if not defined)
+ * @apiSuccess (200) {String} items.password Password for this branch (empty string if not defined)
  *
  * @apiSuccessExample {json} Success-Response:
  * {

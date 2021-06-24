@@ -109,7 +109,7 @@ publishApiRouter.patch(
   getAuthorizeForResourceMiddleware('read', AdminRequirements.Always),
   endpointServiceCallWrapper<ServiceResponse<PublisherBranchResponse>>(async (req, res) => {
     const payload: ModifyBranchRequest = req.body as ModifyBranchRequest;
-    return BranchService.setPassword(ResourceContext.get(res), payload.password);
+    return BranchService.modifyBranch(ResourceContext.get(res), payload);
   })
 );
 
@@ -216,7 +216,7 @@ publishApiRouter.delete(
 publishApiRouter.patch(
   `/${Segment.gameById}/${Segment.eula}`,
   getAuthorizeForResourceMiddleware('update', AdminRequirements.ReleasedGame),
-  endpointServiceCallWrapper<ServiceResponse>(async (req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<AgreementResponse>>(async (req, res) => {
     const eulaId = toIntRequired(req.params[PathParam.eulaId]);
     const body = req.body as ModifyAgreementRequest;
     return GameService.updateEula(ResourceContext.get(res), eulaId, body);

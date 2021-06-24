@@ -1,12 +1,11 @@
 import { warn } from '../logger';
 import { BuildModel } from '../models/db/build';
 import { GameModel } from '../models/db/game';
-import { malformedRequestPastValidation, ServiceResponse } from '../models/http/serviceresponse';
+import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
-import { BuildDescription } from '../models/http/rbac/builddescription';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { ModifyBuildRequest } from '../models/http/requests/modifybuildrequest';
-import { processHashmapChangeRequest } from '../utils/language';
+import { PublisherBuildResponse } from '../models/http/rbac/publisherbuilddescription';
 
 export class BuildService {
   /**
@@ -72,22 +71,19 @@ export class BuildService {
   public static async modifyBuild(
     resourceContext: ResourceContext,
     request: ModifyBuildRequest
-  ): Promise<ServiceResponse<BuildDescription>> {
-    const build = await resourceContext.fetchBuildModel();
-    if (!build) {
-      return malformedRequestPastValidation();
-    }
+  ): Promise<ServiceResponse<PublisherBuildResponse>> {
+    const build = await resourceContext.fetchBuildModelValidated();
 
     if (request.mandatory != null) {
       build.mandatory = request.mandatory;
     }
 
-    if (request.patchNotes) {
-      await processHashmapChangeRequest(request.patchNotes, build.removeNote, build.addNote);
+    if (request.patchNotesId) {
+      build.patchNotesId = request.patchNotesId;
     }
 
     await build.save();
 
-    return { code: HttpCode.OK, payload: build.toPublisherHttpModel() };
+    return { code: HttpCode.OK, payload: { items: [build.toPublisherHttpModel()] } };
   }
 }

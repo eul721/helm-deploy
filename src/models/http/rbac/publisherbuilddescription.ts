@@ -1,13 +1,11 @@
-import { LocalizedHashmap } from '../../../utils/language';
-
 /**
  * @apiDefine PublisherBuildDescription
  * @apiVersion 0.0.1
  *
- * @apiSuccess (200)  {Number} id Internal PS id
+ * @apiSuccess (200) {Number} id Internal PS id
  * @apiSuccess (200) {Number} ownerId PS id of the owning game
  * @apiSuccess (200) {Number} bdsBuildId Build bds id
- * @apiSuccess (200) {Hashmap} releaseNotes Map of locale to release notes
+ * @apiSuccess (200) {String} patchNotesId Resource id of patch notes
  * @apiSuccess (200) {Boolean} mandatory Whether the update is mandatory and the game should not be allowed to start without getting it
  */
 export interface PublisherBuildDescription {
@@ -21,7 +19,7 @@ export interface PublisherBuildDescription {
   bdsBuildId: number;
 
   // Map of locale to release notes
-  patchNotes: LocalizedHashmap;
+  patchNotesId?: string;
 
   // Whether the update is mandatory and the game should not be allowed to start without getting it
   mandatory: boolean;
@@ -35,9 +33,9 @@ export interface PublisherBuildDescription {
  * @apiSuccess (200) {Number} items.id Internal PS id
  * @apiSuccess (200) {Number} items.ownerId Id of the owning game
  * @apiSuccess (200) {Number} items.bdsBuildId Build bds id
- * @apiSuccess (200) {Hashmap} items.releaseNotes Map of locale to release notes
+ * @apiSuccess (200) {String} items.patchNotesId Resource id of patch notes
  * @apiSuccess (200) {Boolean} items.mandatory Whether the update is mandatory and the game should not be allowed to start without getting it
  */
 export interface PublisherBuildResponse {
-  items: PublisherBuildResponse[];
+  items: PublisherBuildDescription[];
 }

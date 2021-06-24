@@ -21,7 +21,7 @@ import { PublisherBranchResponse } from '../models/http/rbac/publisherbranchdesc
 import { PublisherGameResponse } from '../models/http/rbac/publishergamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
-import { processHashmapChangeRequest } from '../utils/language';
+import { Locale, processHashmapChangeRequest } from '../utils/language';
 import { defaultPagination, PaginationContext } from '../utils/pagination';
 import { LegacyDownloadData, LegacyDownloadDataRoot } from '../models/http/legacy_downloaddata';
 import { PublicBranchResponse } from '../models/http/public/publicbranchdescription';
@@ -353,7 +353,7 @@ export class GameService {
     resourceContext: ResourceContext,
     eulaId: number,
     request: ModifyAgreementRequest
-  ): Promise<ServiceResponse<AgreementDescription>> {
+  ): Promise<ServiceResponse<AgreementResponse>> {
     debug(`updateEula with body ${JSON.stringify(request)}`);
 
     const game = await resourceContext.fetchGameModelValidated();
@@ -370,7 +370,7 @@ export class GameService {
     await processHashmapChangeRequest(request.names, eula.removeName, eula.addName);
     await processHashmapChangeRequest(request.urls, eula.removeUrl, eula.addUrl);
 
-    return { code: HttpCode.OK, payload: eula.toHttpModel() };
+    return { code: HttpCode.OK, payload: { items: [eula.toHttpModel()] } };
   }
 
   /**
@@ -404,7 +404,7 @@ export class GameService {
         game.builds?.map(branchData => ({
           buildId: branchData.bdsBuildId,
           mandatory: branchData.mandatory ?? false,
-          releaseNotes: branchData.notes,
+          releaseNotes: { [Locale.en]: branchData.patchNotesId },
           version: branchData.id.toString(),
         })) ?? [],
       // TODO: transfer former contentful spec to SQL
