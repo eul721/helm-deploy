@@ -4,7 +4,7 @@ import { RbacContext } from '../../models/auth/rbaccontext';
 import { RbacResource } from '../../models/auth/rbacresource';
 import { PermissionResponse } from '../../models/http/rbac/permissiondescription';
 import { PublisherGameResponse } from '../../models/http/rbac/publishergamedescription';
-import { RoleResponse } from '../../models/http/rbac/roledescription';
+import { RoleDescription, RoleResponse } from '../../models/http/rbac/roledescription';
 import { ServiceResponse } from '../../models/http/serviceresponse';
 import { RbacRolesService } from '../../services/rbac/roles';
 import { endpointServiceCallWrapper } from '../../utils/service';
@@ -23,12 +23,12 @@ import { rbacApiRouter } from './basic';
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse RoleResponse
+ * @apiUse RoleDescription
  */
 rbacApiRouter.post(
   `/${Segment.division}/roles`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.DIVISION),
-  endpointServiceCallWrapper<ServiceResponse<RoleResponse>>(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<RoleDescription>>(async (_req, res) => {
     return RbacRolesService.createRole(RbacContext.get(res));
   })
 );
@@ -65,12 +65,12 @@ rbacApiRouter.get(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse RoleResponse
+ * @apiUse RoleDescription
  */
 rbacApiRouter.post(
   `/${Segment.roles}/${Segment.permissions}`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE),
-  endpointServiceCallWrapper<ServiceResponse<RoleResponse>>(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<RoleDescription>>(async (_req, res) => {
     return RbacRolesService.addPermissionToRole(RbacContext.get(res));
   })
 );
@@ -86,12 +86,12 @@ rbacApiRouter.post(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse RoleResponse
+ * @apiUse RoleDescription
  */
 rbacApiRouter.delete(
   `/${Segment.roles}/${Segment.permissions}`,
   getAuthorizeForRbacMiddleware('rbac-admin', RbacResource.ROLE),
-  endpointServiceCallWrapper<ServiceResponse<RoleResponse>>(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<RoleDescription>>(async (_req, res) => {
     return RbacRolesService.removePermissionFromRole(RbacContext.get(res));
   })
 );
@@ -128,7 +128,7 @@ rbacApiRouter.get(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse RoleResponse
+ * @apiUse RoleDescription
  */
 rbacApiRouter.post(
   `/${Segment.roles}/${Segment.gameById}`,
@@ -136,7 +136,7 @@ rbacApiRouter.post(
     resource: RbacResource.GAME,
     allowDifferentOwner: false,
   }),
-  endpointServiceCallWrapper<ServiceResponse<RoleResponse>>(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<RoleDescription>>(async (_req, res) => {
     return RbacRolesService.addGameToRole(RbacContext.get(res));
   })
 );
@@ -152,7 +152,7 @@ rbacApiRouter.post(
  * @apiUse AuthorizePublisherMiddleware
  * @apiUse AuthorizeForRbacMiddleware
  *
- * @apiUse RoleResponse
+ * @apiUse RoleDescription
  */
 rbacApiRouter.delete(
   `/${Segment.roles}/${Segment.gameById}`,
@@ -160,7 +160,7 @@ rbacApiRouter.delete(
     resource: RbacResource.GAME,
     allowDifferentOwner: false,
   }),
-  endpointServiceCallWrapper<ServiceResponse<RoleResponse>>(async (_req, res) => {
+  endpointServiceCallWrapper<ServiceResponse<RoleDescription>>(async (_req, res) => {
     return RbacRolesService.removeGameFromRole(RbacContext.get(res));
   })
 );

@@ -3,7 +3,7 @@ import { RoleModel } from '../../models/db/role';
 import { HttpCode } from '../../models/http/httpcode';
 import { PermissionResponse } from '../../models/http/rbac/permissiondescription';
 import { PublisherGameResponse } from '../../models/http/rbac/publishergamedescription';
-import { RoleResponse } from '../../models/http/rbac/roledescription';
+import { RoleDescription, RoleResponse } from '../../models/http/rbac/roledescription';
 import { malformedRequestPastValidation, ServiceResponse } from '../../models/http/serviceresponse';
 
 export class RbacRolesService {
@@ -13,7 +13,10 @@ export class RbacRolesService {
    * @param rbacContext request context
    * @param roleName name of the role to create
    */
-  public static async createRole(rbacContext: RbacContext, roleName?: string): Promise<ServiceResponse<RoleResponse>> {
+  public static async createRole(
+    rbacContext: RbacContext,
+    roleName?: string
+  ): Promise<ServiceResponse<RoleDescription>> {
     if (!roleName) {
       return { code: HttpCode.BAD_REQUEST, message: 'Missing roleName query param' };
     }
@@ -29,7 +32,7 @@ export class RbacRolesService {
     }
 
     const role = await division?.createRoleEntry({ name: roleName });
-    return { code: HttpCode.CREATED, payload: { items: [role.toPublisherHttpModel()] } };
+    return { code: HttpCode.CREATED, payload: role.toPublisherHttpModel() };
   }
 
   /**
@@ -52,7 +55,7 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async addPermissionToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
+  public static async addPermissionToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
     const role = await rbacContext.fetchRoleModel();
     if (!role) {
       return malformedRequestPastValidation();
@@ -64,7 +67,7 @@ export class RbacRolesService {
     }
 
     await role.addAssignedPermission(permission);
-    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
+    return { code: HttpCode.OK, payload: role.toPublisherHttpModel() };
   }
 
   /**
@@ -73,7 +76,7 @@ export class RbacRolesService {
    * @param rbacContext request context
    * @param name name of the role to create
    */
-  public static async removePermissionFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
+  public static async removePermissionFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
     const role = await rbacContext.fetchRoleModel();
     if (!role) {
       return malformedRequestPastValidation();
@@ -86,7 +89,7 @@ export class RbacRolesService {
 
     await role.removeAssignedPermission(permission);
 
-    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
+    return { code: HttpCode.OK, payload: role.toPublisherHttpModel() };
   }
 
   /**
@@ -108,7 +111,7 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async addGameToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
+  public static async addGameToRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
     const role = await rbacContext.fetchRoleModel();
     const game = await rbacContext.fetchGameModel();
     if (!role || !game) {
@@ -116,7 +119,7 @@ export class RbacRolesService {
     }
 
     await role.addAssignedGame(game);
-    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
+    return { code: HttpCode.OK, payload: role.toPublisherHttpModel() };
   }
 
   /**
@@ -124,7 +127,7 @@ export class RbacRolesService {
    *
    * @param rbacContext request context
    */
-  public static async removeGameFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleResponse>> {
+  public static async removeGameFromRole(rbacContext: RbacContext): Promise<ServiceResponse<RoleDescription>> {
     const role = await rbacContext.fetchRoleModel();
     const game = await rbacContext.fetchGameModel();
     if (!role || !game) {
@@ -132,7 +135,7 @@ export class RbacRolesService {
     }
 
     await role.removeAssignedGame(game);
-    return { code: HttpCode.OK, payload: { items: [role.toPublisherHttpModel()] } };
+    return { code: HttpCode.OK, payload: role.toPublisherHttpModel() };
   }
 
   /**

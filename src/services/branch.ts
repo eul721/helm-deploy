@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import { info, warn } from '../logger';
 import { BuildModel } from '../models/db/build';
 import { BranchModel } from '../models/db/branch';
@@ -5,9 +6,8 @@ import { GameModel } from '../models/db/game';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { ResourceContext } from '../models/auth/resourcecontext';
-import { PublisherBranchResponse } from '../models/http/rbac/publisherbranchdescription';
+import { PublisherBranchDescription } from '../models/http/rbac/publisherbranchdescription';
 import { ModifyBranchRequest } from '../models/http/requests/modifybranchrequest';
-import { Op } from 'sequelize';
 
 export class BranchService {
   /**
@@ -109,7 +109,7 @@ export class BranchService {
   public static async modifyBranch(
     resourceContext: ResourceContext,
     request: ModifyBranchRequest
-  ): Promise<ServiceResponse<PublisherBranchResponse>> {
+  ): Promise<ServiceResponse<PublisherBranchDescription>> {
     const branch = await resourceContext.fetchBranchModelValidated();
 
     // TODO plaintext, should move to hash at some point
@@ -155,7 +155,7 @@ export class BranchService {
 
     await branch.save();
 
-    return { code: HttpCode.OK, payload: { items: [branch.toPublisherHttpModel()] } };
+    return { code: HttpCode.OK, payload: branch.toPublisherHttpModel() };
   }
 
   private static async addNewBuildToBranch(branch: BranchModel | null, build: BuildModel | null): Promise<boolean> {

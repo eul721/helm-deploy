@@ -1,5 +1,5 @@
 import { FindOptions, Op } from 'sequelize';
-import { DownloadDataResponse } from '../models/http/public/downloaddata';
+import { DownloadData, DownloadDataResponse } from '../models/http/public/downloaddata';
 import { GameAttributes, GameModel } from '../models/db/game';
 import { BranchModel } from '../models/db/branch';
 import {
@@ -9,7 +9,7 @@ import {
 } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
 import { AgreementModel } from '../models/db/agreement';
-import { AgreementResponse } from '../models/http/public/agreementdescription';
+import { AgreementDescription, AgreementResponse } from '../models/http/public/agreementdescription';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { PlayerContext } from '../models/auth/playercontext';
 import { LicensingService } from './licensing';
@@ -18,7 +18,7 @@ import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { PublicGameResponse } from '../models/http/public/publicgamedescription';
 import { GameContext } from '../models/auth/base/gamecontext';
 import { PublisherBranchResponse } from '../models/http/rbac/publisherbranchdescription';
-import { PublisherGameResponse } from '../models/http/rbac/publishergamedescription';
+import { PublisherGameDescription, PublisherGameResponse } from '../models/http/rbac/publishergamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
 import { Locale, processHashmapChangeRequest } from '../utils/language';
@@ -32,9 +32,7 @@ export class GameService {
    *
    * @param playerContext request context
    */
-  public static async getGameDownloadModel(
-    playerContext: PlayerContext
-  ): Promise<ServiceResponse<DownloadDataResponse>> {
+  public static async getGameDownloadModel(playerContext: PlayerContext): Promise<ServiceResponse<DownloadData>> {
     const game = await playerContext.fetchGameModel();
     if (!game) {
       return { code: HttpCode.NOT_FOUND };
@@ -47,7 +45,7 @@ export class GameService {
     await game.reload({ include: { all: true } });
     await branch.reload({ include: { all: true } });
 
-    return { code: HttpCode.OK, payload: { items: [game.toDownloadHttpModel(branch)] } };
+    return { code: HttpCode.OK, payload: game.toDownloadHttpModel(branch) };
   }
 
   /**
@@ -110,7 +108,7 @@ export class GameService {
   public static async getGamePublisher(
     gameContext: GameContext,
     authenticationContext: AuthenticateContext
-  ): Promise<ServiceResponse<PublisherGameResponse>> {
+  ): Promise<ServiceResponse<PublisherGameDescription>> {
     const ident = await authenticationContext.fetchStudioUserModel();
     if (!ident) {
       return { code: HttpCode.UNAUTHORIZED };
@@ -125,7 +123,7 @@ export class GameService {
 
     return {
       code: HttpCode.OK,
-      payload: { items: [game.toPublisherHttpModel()] },
+      payload: game.toPublisherHttpModel(),
     };
   }
 
@@ -246,7 +244,7 @@ export class GameService {
   public static async modifyGame(
     resourceContext: ResourceContext,
     request: ModifyTitleRequest
-  ): Promise<ServiceResponse<PublisherGameResponse>> {
+  ): Promise<ServiceResponse<PublisherGameDescription>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
@@ -296,7 +294,7 @@ export class GameService {
 
     await game.save();
 
-    return { code: HttpCode.OK, payload: { items: [game.toPublisherHttpModel()] } };
+    return { code: HttpCode.OK, payload: game.toPublisherHttpModel() };
   }
 
   /**
@@ -305,14 +303,14 @@ export class GameService {
    * @param resourceContext information about the requested resource
    * @param eulaId id of the eula to assign
    */
-  public static async createEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementResponse>> {
+  public static async createEula(resourceContext: ResourceContext): Promise<ServiceResponse<AgreementDescription>> {
     const game = await resourceContext.fetchGameModel();
     if (!game) {
       return malformedRequestPastValidation();
     }
 
     const agreement = await game.createAgreementEntry({});
-    return { code: HttpCode.OK, payload: { items: [agreement.toHttpModel()] } };
+    return { code: HttpCode.OK, payload: agreement.toHttpModel() };
   }
 
   /**

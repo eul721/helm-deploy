@@ -12,7 +12,7 @@ import { HttpCode } from '../../models/http/httpcode';
 import { GroupModel } from '../../models/db/group';
 import { DivisionAttributes, DivisionModel } from '../../models/db/division';
 import { GameAttributes, GameUniqueIdentifier } from '../../models/db/game';
-import { UserResponse } from '../../models/http/rbac/userdescription';
+import { UserDescription, UserResponse } from '../../models/http/rbac/userdescription';
 import { AuthenticateContext } from '../../models/auth/authenticatecontext';
 
 export enum AccessType {
@@ -118,7 +118,7 @@ export class RbacService {
    *
    * @param user model of the target user
    */
-  public static async assembleUserInfoFromModel(user: UserModel): Promise<ServiceResponse<UserResponse>> {
+  public static async assembleUserInfoFromModel(user: UserModel): Promise<ServiceResponse<UserDescription>> {
     const neededGameAttributes: (keyof GameAttributes)[] = ['contentfulId'];
     const neededPermissionAttributes: (keyof PermissionAttributes)[] = ['id'];
     const neededDivisionAttributes: (keyof DivisionAttributes)[] = ['name'];
@@ -139,7 +139,7 @@ export class RbacService {
         },
       ],
     });
-    return { code: HttpCode.OK, payload: { items: [user.toHttpModel()] } };
+    return { code: HttpCode.OK, payload: user.toHttpModel() };
   }
 
   /**
@@ -147,7 +147,7 @@ export class RbacService {
    *
    * @param externalId id of the target user
    */
-  public static async assembleUserInfo(externalId: string): Promise<ServiceResponse<UserResponse>> {
+  public static async assembleUserInfo(externalId: string): Promise<ServiceResponse<UserDescription>> {
     const user = await UserModel.findOne({ where: { externalId } });
     if (!user) {
       return { code: HttpCode.NOT_FOUND };
