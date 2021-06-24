@@ -1,4 +1,5 @@
 import { LocalizedHashmap } from '../../../utils/language';
+import { PublisherBuildDescription } from './publisherbuilddescription';
 
 /**
  * @apiDefine PublisherBranchDescription
@@ -9,6 +10,7 @@ import { LocalizedHashmap } from '../../../utils/language';
  * @apiSuccess (200) {Hashmap} names Hashmap of localized names for this branch
  * @apiSuccess (200) {Number} ownerId Owner PS ID of this resource
  * @apiSuccess (200) {String} password Password for this branch (empty string if not defined)
+ * @apiSuccess (200) {Build[]} versions Version history of this branch
  *
  * @apiSuccessExample {json} Success-Response:
  *  {
@@ -35,6 +37,9 @@ export interface PublisherBranchDescription {
 
   // Password for this branch (null if not defined)
   password?: string;
+
+  // Version history of this branch
+  versions?: PublisherBuildDescription[];
 }
 
 /**
@@ -47,6 +52,7 @@ export interface PublisherBranchDescription {
  * @apiSuccess (200) {Hashmap} items.names Hashmap of localized names for this branch
  * @apiSuccess (200) {Number} items.ownerId Owner PS ID of this resource
  * @apiSuccess (200) {String} items.password Password for this branch (empty string if not defined)
+ * @apiSuccess (200) {Build[]} items.versions Version history of this branch
  *
  * @apiSuccessExample {json} Success-Response:
  * {

@@ -126,6 +126,7 @@ export class BranchModel
       names: this.names,
       ownerId: this.ownerId,
       passwordProtected: this.password !== null,
+      versions: this.builds?.map(item => item.toPublicHttpModel()),
     };
   }
 
@@ -136,6 +137,7 @@ export class BranchModel
       names: this.names,
       ownerId: this.ownerId,
       password: this.password,
+      versions: this.builds?.map(item => item.toPublisherHttpModel()),
     };
   }
 }

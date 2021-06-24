@@ -15,6 +15,7 @@ import { PublisherBuildDescription } from './publisherbuilddescription';
  * @apiSuccess (200) {Number} divisionId Division ID to which this game belongs
  * @apiSuccess (200) {Number} id Unique ID of this title
  * @apiSuccess (200) {Hashmap} names Hashmap of names for this game, keyed by Locale
+ * @apiSuccess (200) {String} installDir Installation folder, if not set a default is meant to be used
  *
  * @apiSuccessExample {json} Success-Response:
  * {
@@ -32,29 +33,32 @@ import { PublisherBuildDescription } from './publisherbuilddescription';
  * }
  */
 export interface PublisherGameDescription {
-  /** Internal PS id */
+  // Internal PS id
   id: number;
 
-  /** Array of Branch objects that belong to this game */
+  // Array of Branch objects that belong to this game
   branches: PublisherBranchDescription[];
 
-  /** Array of Build objects that belong to this game */
+  // Array of Build objects that belong to this game
   builds: PublisherBuildDescription[];
 
-  /** Game id */
+  // Game id
   contentfulId: Maybe<string>;
 
-  /** Default branch ID */
+  // Default branch ID
   defaultBranchId: Maybe<number>;
 
-  /** Owning division id */
+  // Owning division id
   divisionId: number;
 
-  /** Game bds id */
+  // Game bds id
   bdsTitleId: number;
 
-  /** Game names */
+  // Game names
   names: LocalizedHashmap;
+
+  // Installation folder, if not set a default is meant to be used
+  installDir: string;
 }
 
 /**
@@ -69,6 +73,7 @@ export interface PublisherGameDescription {
  * @apiSuccess (200) {Number} items.divisionId Division ID to which this game belongs
  * @apiSuccess (200) {Number} items.id Unique ID of this title
  * @apiSuccess (200) {Object} items.names Hashmap of names for this game, keyed by Locale
+ * @apiSuccess (200) {String} items.installDir Installation folder, if not set a default is meant to be used
  *
  * @apiSuccessExample {json} Success-Response:
  * {
