@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Tag to Deploy'  
+        description: 'Tag to Deploy'
       deploy_key:
-        description: 'Deploy Key: SECRETS.DEPLOY_KEY' 
+        description: 'Deploy Key: SECRETS.DEPLOY_KEY'
 
 jobs:
   k8s-deploy:
@@ -34,7 +34,7 @@ jobs:
           echo DEPLOY_KEY=${{ secrets.DEPLOY_KEY }} >> $GITHUB_ENV
           echo BRANCH=$(echo ${{ github.ref }} | awk -F'/' '{print $3}') >> $GITHUB_ENV
           echo TARGET_ENV=staging >> $GITHUB_ENV
-          echo CLUSTER=t2gp-flux >> $GITHUB_ENV   
+          echo CLUSTER=t2gp-production >> $GITHUB_ENV
           echo APP_VERSION=${{ github.event.inputs.version }} >> $GITHUB_ENV
       - name: Stop if branch is not master
         if: ${{ env.BRANCH != 'master'}}
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Check git tag exists 
+      - name: Check git tag exists
         id: tag
         shell: bash
         run: git show-ref --tags --verify -- "refs/tags/${{ env.APP_VERSION }}" && echo "::set-output name=exists::0" || echo "::set-output name=exists::1"
@@ -55,7 +55,7 @@ jobs:
         run: |
           echo KUBETOKEN=$(aws eks get-token --cluster-name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.status.token') >> $GITHUB_ENV
           echo CLUSTER_ENDPOINT=$(aws eks describe-cluster --name ${{ env.CLUSTER }} --region ${{ env.REGION }} | jq -r '.cluster.endpoint') >> $GITHUB_ENV
-      
+
       - name: Deploy Helm Chart
         uses: nmasur/alpine-kubectl@master
         with:
@@ -72,14 +72,48 @@ jobs:
               --create-namespace \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/publisher.yaml \
-              --set app.tag=${{ env.APP_VERSION }} 
+              --set app.tag=${{ env.APP_VERSION }}
             helm upgrade --install \
               download-service-${{ env.TARGET_ENV }} /github/workspace/helm_chart \
               --kube-token=${{ env.KUBETOKEN }} \
               --create-namespace \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/download.yaml \
-              --set app.tag=${{ env.APP_VERSION }} 
+              --set app.tag=${{ env.APP_VERSION }}
+      - name: Update R53 (Temporary, until migration to flux)
+        run: |-
+          HOSTEDZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "d2dragon.net" --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.HostedZones[0].Id' | sed 's/\/hostedzone\///g')
+          LB_ARN=$(aws resourcegroupstaggingapi get-resources --tag-filters Key=elbv2.k8s.aws/cluster,Values=t2gp-debugging Key=ingress.k8s.aws/stack,Values=publisher-service-${{ env.TARGET_ENV }} Key=ingress.k8s.aws/resource,Values=LoadBalancer --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.ResourceTagMappingList[0].ResourceARN')
+          LB_DNSNAME=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN  --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].DNSName')
+          LB_HOSTED_ZONE=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].CanonicalHostedZoneId')
+          aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --region ${{ env.REGION }} --change-batch "{ \
+            \"Changes\": [{ \
+              \"Action\": \"UPSERT\", \
+              \"ResourceRecordSet\": { \
+                \"Name\": \"publisher-service-${{ env.TARGET_ENV }}.d2dragon.net\", \
+                \"Type\": \"A\", \
+                \"AliasTarget\": { \
+                  \"HostedZoneId\": \"$LB_HOSTED_ZONE\", \
+                  \"DNSName\": \"dualstack.$LB_DNSNAME\", \
+                  \"EvaluateTargetHealth\": true \
+                } \
+              } \
+            }] \
+          }"
+          aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --region ${{ env.REGION }} --change-batch "{ \
+            \"Changes\": [{ \
+              \"Action\": \"UPSERT\", \
+              \"ResourceRecordSet\": { \
+                \"Name\": \"download-service-${{ env.TARGET_ENV }}.d2dragon.net\", \
+                \"Type\": \"A\", \
+                \"AliasTarget\": { \
+                  \"HostedZoneId\": \"$LB_HOSTED_ZONE\", \
+                  \"DNSName\": \"dualstack.$LB_DNSNAME\", \
+                  \"EvaluateTargetHealth\": true \
+                } \
+              } \
+            }] \
+          }"
         # Update deployment status
       - name: Update deployment status (success)
         if: success()

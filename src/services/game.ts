@@ -64,11 +64,11 @@ export class GameService {
     const query: FindOptions<GameAttributes> = {
       limit: pageCtx.size,
       offset: pageCtx.from,
-      order: [pageCtx.sort],
+      order: pageCtx.sort,
     };
     const rows = await GameModel.findAll({
       ...query,
-      include: { all: true },
+      include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
     });
     const count = await GameModel.count(query);
     const items = rows.map(row => row.toPublisherHttpModel());
@@ -76,7 +76,7 @@ export class GameService {
       code: HttpCode.OK,
       payload: {
         page: {
-          from: pageCtx.from,
+          ...pageCtx,
           total: count,
         },
         items,
@@ -141,9 +141,17 @@ export class GameService {
     }
 
     const ownedTitles: string[] = response.payload ?? [];
+    const playerOwnedGamesAll = await GameModel.findAll();
+
+    const ownedContentfulIds = playerOwnedGamesAll
+      .filter(gameModel => {
+        return gameModel.contentfulId !== null && ownedTitles.includes(gameModel.dnaReferenceId);
+      })
+      .map<string>(game => game.contentfulId as string);
+
     const playerOwnedGames = await GameModel.findAll({
       include: [{ all: true }, { model: AgreementModel, as: 'agreements', all: true, nested: true }],
-      where: { contentfulId: { [Op.in]: ownedTitles } },
+      where: { contentfulId: { [Op.in]: ownedContentfulIds } },
     });
 
     const gameModelsJson: { [key: string]: LegacyDownloadData } = {};
