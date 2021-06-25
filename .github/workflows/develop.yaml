@@ -120,6 +120,8 @@ jobs:
               --cluster=cluster
             kubectl config use-context cluster
             helm
+            helm plugin list
+            helm version
             helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
               publisher-service-${{ env.BRANCH }} /github/workspace/helm_chart \
