@@ -119,7 +119,7 @@ jobs:
             kubectl config set-context cluster \
               --cluster=cluster
             kubectl config use-context cluster
-            helm
+            helm env
             helm plugin list
             helm version
             helm diff upgrade --install \
