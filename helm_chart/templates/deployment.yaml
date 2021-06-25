@@ -26,9 +26,9 @@ spec:
         imagePullPolicy: Always
         envFrom:
           - configMapRef:
-              name: {{ $.Values.project }}-{{ $.Values.branch }}
+              name: {{ $.Values.app.configToUse }}
           - secretRef:
-              name: {{ $.Values.project }}-{{ $.Values.branch }}
+              name: {{ $.Values.app.configToUse }}
         env:
           - name: "NODE_ENVIRONMENT"
             value: {{ include "branch" . }}
@@ -38,6 +38,10 @@ spec:
             value: "{{ required "Must declare branch name." $.Values.app.tag }}"
           - name: "PORT"
             value: "{{ required "Must declare branch name." $.Values.app.port }}"
+          {{- range $k, $v := $.Values.app.envOverrides -}}
+          - name: "{{ $k }}"
+            value: "{{ $v }}"
+          {{- end }}
         ports:
         - containerPort: {{ $.Values.app.port }}
           protocol: TCP

@@ -1,5 +1,4 @@
 vpc: d2c-east1
-
 project: publisher-service
 
 hostname: d2dragon.net
@@ -8,6 +7,8 @@ replicas: 1
 max_replicas: 5
 
 app:
+  configToUse:
+  envOverrides: {}
   image: 354767525209.dkr.ecr.us-east-1.amazonaws.com/t2gp-publisher-service
   tag: latest # default
   port: 3000

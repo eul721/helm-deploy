@@ -3,6 +3,7 @@ hpa:
   minReplicas: 3
   maxReplicas: 30
 app:
+  configToUse: download-production
   name: download
   requests:
     cpu: 0.5
