@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - develop
+  pull_request:
+    branches:
+      - develop
 
 jobs:
   test:
@@ -76,6 +79,7 @@ jobs:
       # Deploy status
       - uses: chrnorm/deployment-action@releases/v1
         name: Create GitHub deployment
+        if: github.event_name == 'push'
         id: deployment
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
@@ -84,6 +88,8 @@ jobs:
       - uses: rokroskar/workflow-run-cleanup-action@v0.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
       - uses: actions/checkout@v2
       - name: Gen build info
         run: |
@@ -93,12 +99,51 @@ jobs:
           CLUSTER=t2gp-debugging
           echo "BRANCH=$REF" >> $GITHUB_ENV
           echo "CLUSTER=$CLUSTER" >> $GITHUB_ENV
+      - name: set target env if PR
+        if: github.event_name == 'pull_request'
+        run: |
+          echo BRANCH=${{ env.GITHUB_BASE_REF_SLUG }} >> $GITHUB_ENV
       - name: Authenticate to EKS Cluster
         run: |
           echo KUBETOKEN=$(aws eks get-token --cluster-name ${{ env.CLUSTER }} --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.status.token') >> $GITHUB_ENV
           echo CLUSTER_ENDPOINT=$(aws eks describe-cluster --name ${{ env.CLUSTER }} --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.cluster.endpoint') >> $GITHUB_ENV
-
+      - name: Helm Diffs
+        id: helm_diffs
+        if: github.event_name == 'pull_request'
+        uses: nmasur/alpine-kubectl@master
+        with:
+          command: |-
+            kubectl config set-cluster cluster \
+              --server=${{ env.CLUSTER_ENDPOINT }} \
+              --insecure-skip-tls-verify && \
+            kubectl config set-context cluster \
+              --cluster=cluster && \
+            kubectl config use-context cluster && \
+            helm diff upgrade --install \
+              --kube-token=${{ env.KUBETOKEN }} \
+              publisher-service-${{ env.BRANCH }} /github/workspace/helm_chart \
+              -n publisher-service \
+              -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
+              -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
+              --set app.tag=${{ env.VER }}
+            helm upgrade upgrade --install \
+              --kube-token=${{ env.KUBETOKEN }} \
+              download-service-${{ env.BRANCH }} /github/workspace/helm_chart \
+              -n publisher-service \
+              -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
+              -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
+              --set app.tag=${{ env.VER }}
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: |
+            ${{ steps.helm_diffs.outputs.stdout }}
+          check_for_duplicate_msg: true
       - name: Deploy Helm Chart
+        if: github.event_name == 'push'
         uses: nmasur/alpine-kubectl@master
         with:
           command: |-
@@ -125,6 +170,7 @@ jobs:
               -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
               --set app.tag=${{ env.VER }}
       - name: Update R53 (Temporary, until migration to flux)
+        if: github.event_name == 'push'
         run: |-
           HOSTEDZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "d2dragon.net" --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.HostedZones[0].Id' | sed 's/\/hostedzone\///g')
           LB_ARN=$(aws resourcegroupstaggingapi get-resources --tag-filters Key=elbv2.k8s.aws/cluster,Values=t2gp-debugging Key=ingress.k8s.aws/stack,Values=publisher-service-${{ env.BRANCH }} Key=ingress.k8s.aws/resource,Values=LoadBalancer --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.ResourceTagMappingList[0].ResourceARN')
@@ -160,14 +206,14 @@ jobs:
           }"
         # Update deployment status
       - name: Update deployment status (success)
-        if: success()
+        if: success() && github.event_name == 'push'
         uses: chrnorm/deployment-status@releases/v1
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
           state: "success"
           deployment_id: ${{ steps.deployment.outputs.deployment_id }}
       - name: Update deployment status (failure)
-        if: failure()
+        if: failure() && github.event_name == 'push'
         uses: chrnorm/deployment-status@releases/v1
         with:
           token: "${{ secrets.GITHUB_TOKEN }}"
