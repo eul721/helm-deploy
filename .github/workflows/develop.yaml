@@ -113,6 +113,7 @@ jobs:
               --kube-token=${{ env.KUBETOKEN }} \
               --create-namespace \
               -n publisher-service \
+              -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/base.yaml \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
               --set app.tag=${{ env.VER }}
             helm upgrade --install \
@@ -120,6 +121,7 @@ jobs:
               --kube-token=${{ env.KUBETOKEN }} \
               --create-namespace \
               -n publisher-service \
+              -f /github/workspace/helm_values/${{ env.TARGET_ENV }}/base.yaml \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
               --set app.tag=${{ env.VER }}
       - name: Update R53 (Temporary, until migration to flux)
