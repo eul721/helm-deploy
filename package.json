@@ -1,6 +1,6 @@
 {
   "name": "t2gp-publisher-service",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "T2GP Publisher Backend Services",
   "main": "dist/index.cjs.js",
   "src": "src/index.ts",
