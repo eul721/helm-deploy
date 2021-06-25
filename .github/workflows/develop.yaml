@@ -126,7 +126,7 @@ jobs:
               -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
               --set app.tag=${{ env.VER }}
-            helm upgrade upgrade --install \
+            helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
               download-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               -n publisher-service \
