@@ -18,11 +18,10 @@ import { AuthenticateContext } from '../models/auth/authenticatecontext';
 import { PublicGameResponse } from '../models/http/public/publicgamedescription';
 import { GameContext } from '../models/auth/base/gamecontext';
 import { PublisherBranchResponse } from '../models/http/rbac/publisherbranchdescription';
-import { BadRequestResponse } from '../utils/errors';
 import { PublisherGameDescription, PublisherGameResponse } from '../models/http/rbac/publishergamedescription';
 import { ModifyAgreementRequest } from '../models/http/requests/modifyagreementrequest';
 import { debug } from '../logger';
-import { localeFromString } from '../utils/language';
+import { Locale, processHashmapChangeRequest } from '../utils/language';
 import { defaultPagination, PaginationContext } from '../utils/pagination';
 import { LegacyDownloadData, LegacyDownloadDataRoot } from '../models/http/legacy_downloaddata';
 import { PublicBranchResponse } from '../models/http/public/publicbranchdescription';
@@ -245,7 +244,7 @@ export class GameService {
   }
 
   /**
-   * Sets a branch to be the main/default one
+   * Modifies a game
    *
    * @param resourceContext information about the requested resource
    * @param request json model with information about what to change
@@ -295,6 +294,14 @@ export class GameService {
         };
       }
       game.defaultBranch = branch.id;
+    }
+
+    if (request.names !== undefined) {
+      await processHashmapChangeRequest(
+        request.names,
+        (loc: Locale) => game.removeName(loc),
+        (value: string, loc: Locale) => game.addName(value, loc)
+      );
     }
 
     await game.save();
@@ -356,8 +363,8 @@ export class GameService {
     resourceContext: ResourceContext,
     eulaId: number,
     request: ModifyAgreementRequest
-  ): Promise<ServiceResponse> {
-    debug(`updateEula with body ${JSON.stringify(request)}`);
+  ): Promise<ServiceResponse<AgreementResponse>> {
+    debug(`updateEula id ${eulaId} with body ${JSON.stringify(request)}`);
 
     const game = await resourceContext.fetchGameModelValidated();
 
@@ -370,47 +377,18 @@ export class GameService {
       return { code: HttpCode.BAD_REQUEST, message: 'The game does not contains this EULA' };
     }
 
-    const promises: Promise<unknown>[] = [];
+    await processHashmapChangeRequest(
+      request.names,
+      (loc: Locale) => eula.removeName(loc),
+      (value: string, loc: Locale) => eula.addName(value, loc)
+    );
+    await processHashmapChangeRequest(
+      request.urls,
+      (loc: Locale) => eula.removeUrl(loc),
+      (value: string, loc: Locale) => eula.addUrl(value, loc)
+    );
 
-    Object.values(request.names).forEach(entry => {
-      const loc = localeFromString(entry.key);
-      if (!loc) {
-        throw new BadRequestResponse(`Request contains an invalid locale: ${entry.key}`);
-      }
-      if (entry.value == null) {
-        throw new BadRequestResponse(
-          `Invalid name for locale: ${loc}, use an empty string to delete instead of null or undefined`
-        );
-      }
-
-      if (entry.value === '') {
-        promises.push(eula.removeName(loc));
-      } else {
-        promises.push(eula.addName(entry.value, loc));
-      }
-    });
-
-    Object.values(request.urls).forEach(entry => {
-      const loc = localeFromString(entry.key);
-      if (!loc) {
-        throw new BadRequestResponse(`Request contains an invalid locale: ${entry.key}`);
-      }
-      if (entry.value == null) {
-        throw new BadRequestResponse(
-          `Invalid url for locale: ${loc}, use an empty string to delete instead of null or undefined`
-        );
-      }
-
-      if (!entry.value) {
-        promises.push(eula.removeUrl(loc));
-      } else if (!entry.value) {
-        promises.push(eula.addUrl(entry.value, loc));
-      }
-    });
-
-    await Promise.all(promises);
-
-    return { code: HttpCode.OK };
+    return { code: HttpCode.OK, payload: { items: [eula.toHttpModel()] } };
   }
 
   /**
@@ -444,7 +422,7 @@ export class GameService {
         game.builds?.map(branchData => ({
           buildId: branchData.bdsBuildId,
           mandatory: branchData.mandatory ?? false,
-          releaseNotes: branchData.notes,
+          releaseNotes: branchData.patchNotesId,
           version: branchData.id.toString(),
         })) ?? [],
       // TODO: transfer former contentful spec to SQL

@@ -165,11 +165,6 @@ function initModels() {
   GameModel.belongsToMany(LocalizedFieldModel, { as: 'fields', through: GameFields, foreignKey: 'gameId' });
   LocalizedFieldModel.belongsToMany(GameModel, { as: 'game', through: GameFields, foreignKey: 'fieldId' });
 
-  // Assign localized fields to Builds
-  const BuildFields = getDBInstance().define('fields_build', {});
-  BuildModel.belongsToMany(LocalizedFieldModel, { as: 'fields', through: BuildFields, foreignKey: 'buildId' });
-  LocalizedFieldModel.belongsToMany(BuildModel, { as: 'build', through: BuildFields, foreignKey: 'fieldId' });
-
   // Assign localized fields to Agreements
   const AgreementFields = getDBInstance().define('fields_agreements', {});
   AgreementModel.belongsToMany(LocalizedFieldModel, {

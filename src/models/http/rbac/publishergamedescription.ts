@@ -18,6 +18,7 @@ import { LocalizedHashmap } from '../../../utils/language';
  * @apiSuccess (200) {Number} defaultBranchId Branch ID of the default branch
  * @apiSuccess (200) {Number} divisionId Division ID to which this game belongs
  * @apiSuccess (200) {Number} id Unique ID of this title
+ * @apiSuccess (200) {String} installDir Installation folder, if not set a default is meant to be used
  * @apiSuccess (200) {Hashmap} names Hashmap of names for this game, keyed by Locale
  * @apiSuccess (200) {String} updatedAt ISO 8601 timestamp representing when this item was last updated
  *
@@ -32,6 +33,7 @@ import { LocalizedHashmap } from '../../../utils/language';
  *   "defaultBranchId": 200000,
  *   "divisionId": 2,
  *   "id": 100000,
+ *   "installDir": "XCOM 2",
  *   "names": {
  *     "en": "XCOM 2 Super Game",
  *     "fi": "XCOM 2 Superpeli"
@@ -40,9 +42,10 @@ import { LocalizedHashmap } from '../../../utils/language';
  * }
  */
 export interface PublisherGameDescription {
-  /** Internal PS id */
+  // Internal PS id
   id: number;
 
+  // Array of Branch objects that belong to this game
   /** Array of Agreement objects that belong to this game */
   agreements: AgreementDescription[];
 
@@ -52,20 +55,24 @@ export interface PublisherGameDescription {
   /** Array of Branch objects that belong to this game */
   branches: PublisherBranchDescription[];
 
-  /** Array of Build objects that belong to this game */
+  // Array of Build objects that belong to this game
   builds: PublisherBuildDescription[];
 
-  /** Game id */
+  // Game id
   contentfulId: Maybe<string>;
 
+  // Default branch ID
   /** ISO timestamp of game creation */
   createdAt: string;
 
   /** Default branch ID */
   defaultBranchId: Maybe<number>;
 
-  /** Owning division id */
+  // Owning division id
   divisionId: number;
+
+  // Installation folder, if not set a default is meant to be used
+  installDir: string;
 
   /** Game names */
   names: LocalizedHashmap;
@@ -92,6 +99,7 @@ export interface PublisherGameDescription {
  * @apiSuccess (200) {Number} items.divisionId Division ID to which this game belongs
  * @apiSuccess (200) {Number} items.id Unique ID of this title
  * @apiSuccess (200) {Object} items.names Hashmap of names for this game, keyed by Locale
+ * @apiSuccess (200) {String} items.installDir Installation folder, if not set a default is meant to be used
  * @apiSuccess (200) {String} items.updatedAt ISO 8601 timestamp representing when this item was last updated
  *
  * @apiSuccessExample {json} Success-Response:
@@ -113,6 +121,7 @@ export interface PublisherGameDescription {
  *     "defaultBranchId": 200000,
  *     "divisionId": 2,
  *     "id": 100000,
+ *     "installDir": "XCOM 2",
  *     "names": {
  *       "en": "XCOM 2 Super Game",
  *       "fi": "XCOM 2 Superpeli"
@@ -129,6 +138,7 @@ export interface PublisherGameDescription {
  *     "defaultBranchId": 200002,
  *     "divisionId": 2,
  *     "id": 100001,
+ *     "installDir": "Test Game 2",
  *     "names": {}
  *     "updatedAt": "2021-06-22T23:45:59.000Z"
  *   }

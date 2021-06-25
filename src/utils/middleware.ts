@@ -9,6 +9,7 @@ import { RbacContext } from '../models/auth/rbaccontext';
 import { RbacResource } from '../models/auth/rbacresource';
 import { ResourceContext } from '../models/auth/resourcecontext';
 import { BranchModel } from '../models/db/branch';
+import { BuildModel } from '../models/db/build';
 import { GameModel } from '../models/db/game';
 import { HttpCode } from '../models/http/httpcode';
 import { getHeaderParamValue, sendMessageResponse } from './http';
@@ -58,8 +59,10 @@ export async function createRbacContext(req: Request, res: Response): Promise<Rb
     toIntOptional(req.params[PathParam.groupId]),
     toIntOptional(req.params[PathParam.roleId]),
     toIntOptional(req.params[PathParam.userId]),
+    req.params[PathParam.permissionId],
     resources.game,
-    req.params[PathParam.permissionId]
+    resources.branch,
+    resources.build
   );
   RbacContext.set(res, rbacContext);
   return rbacContext;
@@ -67,18 +70,35 @@ export async function createRbacContext(req: Request, res: Response): Promise<Rb
 
 export async function getGameResourcesFromRequest(
   req: Request
-): Promise<{ game: Maybe<GameModel>; branch: Maybe<BranchModel> }> {
+): Promise<{ game: Maybe<GameModel>; branch: Maybe<BranchModel>; build: Maybe<BuildModel> }> {
   const gameId = toIntOptional(req.params[PathParam.gameId]);
-  const branchId = toIntOptional(req.params[PathParam.branchId]);
-  if (getHeaderParamValue(req, 'useBdsIds')) {
-    const game = gameId ? await GameModel.findOne({ where: { bdsTitleId: gameId } }) : undefined;
-    const branch = branchId ? await BranchModel.findOne({ where: { bdsBranchId: branchId } }) : undefined;
-    return { game, branch };
+  const bdsTitleId = toIntOptional(req.params[PathParam.bdsGameId]);
+  let game: Maybe<GameModel>;
+  if (gameId) {
+    game = await GameModel.findOne({ where: { id: gameId } });
+  } else if (bdsTitleId) {
+    game = await GameModel.findOne({ where: { bdsTitleId } });
   }
 
-  const game = gameId ? await GameModel.findOne({ where: { id: gameId } }) : undefined;
-  const branch = branchId ? await BranchModel.findOne({ where: { id: branchId } }) : undefined;
-  return { game, branch };
+  const branchId = toIntOptional(req.params[PathParam.branchId]);
+  const bdsBranchId = toIntOptional(req.params[PathParam.bdsBranchId]);
+  let branch: Maybe<BranchModel>;
+  if (branchId) {
+    branch = await BranchModel.findOne({ where: { id: branchId } });
+  } else if (bdsBranchId) {
+    branch = await BranchModel.findOne({ where: { bdsBranchId } });
+  }
+
+  const buildId = toIntOptional(req.params[PathParam.buildId]);
+  const bdsBuildId = toIntOptional(req.params[PathParam.bdsBuildId]);
+  let build: Maybe<BuildModel>;
+  if (buildId) {
+    build = await BuildModel.findOne({ where: { id: buildId } });
+  } else if (bdsBuildId) {
+    build = await BuildModel.findOne({ where: { bdsBuildId } });
+  }
+
+  return { game, branch, build };
 }
 
 export async function createPlayerContext(req: Request, res: Response): Promise<PlayerContext> {
@@ -90,7 +110,8 @@ export async function createPlayerContext(req: Request, res: Response): Promise<
     deviceId,
     deviceName,
     resources.game,
-    resources.branch
+    resources.branch,
+    resources.build
   );
   PlayerContext.set(res, playerContext);
   return playerContext;
@@ -98,7 +119,7 @@ export async function createPlayerContext(req: Request, res: Response): Promise<
 
 export async function createResourceContext(req: Request, res: Response): Promise<ResourceContext> {
   const resources = await getGameResourcesFromRequest(req);
-  const resourceContext = new ResourceContext(resources.game, resources.branch);
+  const resourceContext = new ResourceContext(resources.game, resources.branch, resources.build);
   res.locals.resourceContext = resourceContext;
   return resourceContext;
 }

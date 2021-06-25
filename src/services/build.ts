@@ -3,6 +3,9 @@ import { BuildModel } from '../models/db/build';
 import { GameModel } from '../models/db/game';
 import { ServiceResponse } from '../models/http/serviceresponse';
 import { HttpCode } from '../models/http/httpcode';
+import { ResourceContext } from '../models/auth/resourcecontext';
+import { ModifyBuildRequest } from '../models/http/requests/modifybuildrequest';
+import { PublisherBuildResponse } from '../models/http/rbac/publisherbuilddescription';
 
 export class BuildService {
   /**
@@ -57,5 +60,30 @@ export class BuildService {
     }
 
     return { code: HttpCode.OK };
+  }
+
+  /**
+   * Modifies a build
+   *
+   * @param resourceContext information about the requested resource
+   * @param request json model with information about what to change
+   */
+  public static async modifyBuild(
+    resourceContext: ResourceContext,
+    request: ModifyBuildRequest
+  ): Promise<ServiceResponse<PublisherBuildResponse>> {
+    const build = await resourceContext.fetchBuildModelValidated();
+
+    if (request.mandatory != null) {
+      build.mandatory = request.mandatory;
+    }
+
+    if (request.patchNotesId) {
+      build.patchNotesId = request.patchNotesId;
+    }
+
+    await build.save();
+
+    return { code: HttpCode.OK, payload: { items: [build.toPublisherHttpModel()] } };
   }
 }

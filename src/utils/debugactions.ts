@@ -38,6 +38,7 @@ export const actions: DebugAction[] = [
       };
     },
   },
+  // #region users
   {
     command: 'users list',
     params: [],
@@ -103,6 +104,8 @@ export const actions: DebugAction[] = [
       };
     },
   },
+  // #endregion
+  // #region title
   {
     command: 'title register',
     params: ['BDS_TITLE'],
@@ -126,6 +129,18 @@ export const actions: DebugAction[] = [
         code: 200,
         message: items.map(item => `\t${JSON.stringify(item)}`),
       };
+    },
+  },
+  {
+    command: 'title branches list',
+    params: ['GAME_PK'],
+    action: async (params: string[]) => {
+      const game = await GameModel.findOne({ where: { id: params[0] } });
+      if (!game?.branches) {
+        return { code: HttpCode.NOT_FOUND, message: 'Failed to find the game' };
+      }
+      const context = new ResourceContext(game);
+      return toDebuggerResponse(await GameService.getBranchesPublisher(context));
     },
   },
   {
@@ -305,6 +320,8 @@ export const actions: DebugAction[] = [
       };
     },
   },
+  // #endregion
+  // #region branch
   {
     command: 'branch register',
     params: ['BDS_TITLE', 'BDS_BRANCH'],
@@ -350,6 +367,23 @@ export const actions: DebugAction[] = [
     },
   },
   {
+    command: 'branch version history',
+    params: ['BRANCH_PK'],
+    action: async (params: string[]) => {
+      const [id] = params;
+      const branch = await BranchModel.findOne({ where: { id }, include: BranchModel.associations.builds });
+      if (!branch?.builds) {
+        return { code: 404, message: 'Failed to find branch' };
+      }
+      return {
+        code: 200,
+        message: branch.builds.map(item => `\t${JSON.stringify(item)}`),
+      };
+    },
+  },
+  // #endregion
+  // #region build
+  {
     command: 'build register',
     params: ['BDS_TITLE', 'BDS_BUILD'],
     action: async (params: string[]) => {
@@ -368,10 +402,34 @@ export const actions: DebugAction[] = [
       };
     },
   },
+  // #endregion
   {
     command: 'drop database',
-    params: [],
-    action: async () => {
+    params: ['SECRET_KEY'],
+    action: async (params: string[]) => {
+      if (params[0] !== 'chrząszcz-brzmi-w-trzcinie') {
+        return {
+          code: HttpCode.BAD_REQUEST,
+          message: [
+            '\tNNNNNNNN........NNNNNNNN.....OOOOOOOOO.....',
+            '\tN#######N.......N######N...OO#########OO...',
+            '\tN########N......N######N.OO#############OO.',
+            '\tN#########N.....N######NO#######OOO#######O',
+            '\tN##########N....N######NO######O...O######O',
+            '\tN###########N...N######NO#####O.....O#####O',
+            '\tN#######N####N..N######NO#####O.....O#####O',
+            '\tN######N.N####N.N######NO#####O.....O#####O',
+            '\tN######N..N####N#######NO#####O.....O#####O',
+            '\tN######N...N###########NO#####O.....O#####O',
+            '\tN######N....N##########NO#####O.....O#####O',
+            '\tN######N.....N#########NO######O...O######O',
+            '\tN######N......N########NO#######OOO#######O',
+            '\tN######N.......N#######N.OO#############OO.',
+            '\tN######N........N######N...OO#########OO...',
+            '\tNNNNNNNN.........NNNNNNN.....OOOOOOOOO.....',
+          ],
+        };
+      }
       info('About to drop and redo db');
       const sq = await getDBInstance().sync({ force: true, match: /_dev$/ });
       info('Sync done');

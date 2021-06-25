@@ -38,6 +38,11 @@ export const GameDef: ModelAttributes = {
   },
   defaultBranch: INTERNAL_ID_REFERENCE(),
   ownerId: INTERNAL_ID_REFERENCE(),
+  installDir: {
+    allowNull: true,
+    type: DataTypes.STRING(256),
+    unique: true,
+  },
 };
 
 export interface GameAttributes {
@@ -46,13 +51,17 @@ export interface GameAttributes {
   defaultBranch: number | null;
   id: number;
   ownerId: number;
+  installDir: string;
   readonly branches?: BranchModel[];
   readonly builds?: BuildModel[];
   readonly owner?: DivisionModel;
   readonly rolesWithGame?: RoleModel[];
 }
 
-export type GameCreationAttributes = Optional<GameAttributes, 'id' | 'defaultBranch' | 'ownerId' | 'contentfulId'>;
+export type GameCreationAttributes = Optional<
+  GameAttributes,
+  'id' | 'defaultBranch' | 'ownerId' | 'contentfulId' | 'installDir'
+>;
 
 export type GameUniqueIdentifier = AtLeastOne<Pick<GameAttributes, 'id' | 'bdsTitleId' | 'contentfulId'>>;
 
@@ -66,6 +75,8 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
   public defaultBranch!: number | null;
 
   public ownerId!: number;
+
+  public installDir!: string;
 
   public createdAt!: string;
 
@@ -207,6 +218,7 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
       contentfulId: this.contentfulId ?? '',
       id: this.id,
       names: this.names,
+      installDir: this.installDir,
     };
   }
 
@@ -221,19 +233,19 @@ export class GameModel extends LocalizableModel<GameAttributes, GameCreationAttr
       defaultBranchId: this.defaultBranch,
       divisionId: this.ownerId,
       id: this.id,
+      installDir: this.installDir,
       names: this.names,
       status: 'draft',
       updatedAt: this.updatedAt,
     };
   }
 
-  // TODO: no builds data on branch, there is no versions info anymore, sending all builds for now
   public toDownloadHttpModel(branch: BranchModel): DownloadData {
     return {
       ...this.toPublicHttpModel(),
       branch: branch.toPublicHttpModel(),
       agreements: this.agreements?.map(agreementData => agreementData.toHttpModel()) ?? [],
-      versions: this.builds?.map(build => build.toPublicHttpModel()) ?? [],
+      versions: branch.builds?.map(build => build.toPublicHttpModel()) ?? [],
 
       // TODO: transfer former contentful spec to SQL
       supportedLanguages: ['mocklanguage1', 'mocklanguage2'],

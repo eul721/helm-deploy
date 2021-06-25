@@ -16,9 +16,8 @@ import { malformedRequestPastValidation } from '../models/http/serviceresponse';
 
 /**
  * @apiDefine AuthorizeResourceAccessMiddleware
- * @apiDescription Checks if the caller has required permissions to modify resource, sets ResourceContext
- * @apiHeader {Boolean} x-bds-ids if set it means BDS ids are used rather than PS ones
  * @apiVersion 0.0.1
+ * @apiDescription Checks if the caller has required permissions to modify resource, sets ResourceContext
  */
 async function resourceAccessAuth(
   req: Request,

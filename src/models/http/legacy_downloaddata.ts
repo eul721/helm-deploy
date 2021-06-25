@@ -15,7 +15,7 @@ export interface LegacyDownloadData {
   branchId: number;
   versions: {
     buildId: number;
-    releaseNotes: LocalizedHashmap;
+    releaseNotes: string;
     mandatory: boolean;
     version: string;
   }[];

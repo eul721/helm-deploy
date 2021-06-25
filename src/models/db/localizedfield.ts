@@ -42,7 +42,6 @@ export interface LocalizedFieldAttributes {
 export enum Fields {
   name = 'name',
   description = 'description',
-  patchnotes = 'patchnotes',
   url = 'url',
 }
 

@@ -1,3 +1,5 @@
+import { HashmapChangeRequest } from '../../../utils/language';
+
 /**
  * An object containing title information to update
  * This class should match modifyGameRequest from BDS swagger
@@ -11,4 +13,10 @@ export interface ModifyTitleRequest {
 
   // The contentful id to assign to the title
   contentfulId?: string;
+
+  // Names to modify
+  names?: HashmapChangeRequest;
+
+  // Installation directory
+  installDir?: string;
 }

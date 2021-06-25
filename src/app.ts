@@ -14,6 +14,7 @@ import { licensingApiRouter } from './controllers/licensing';
 import { debug, error, info } from './logger';
 import { rbacApiRouter } from './controllers/rbac/basic';
 import { name, version } from '../package.json';
+import { bdcCliApiRouter } from './controllers/bdccli';
 
 export const app = express();
 
@@ -32,6 +33,7 @@ DNA.initialize({
     });
 
     app.use('/api/games', downloadApiRouter);
+    app.use('/api/publisher/bdccli', bdcCliApiRouter);
     app.use('/api/publisher', publishApiRouter);
     app.use('/api/rbac', rbacApiRouter);
     app.use('/api/licensing', licensingApiRouter);

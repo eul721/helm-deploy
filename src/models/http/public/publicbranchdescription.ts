@@ -1,4 +1,5 @@
 import { LocalizedHashmap } from '../../../utils/language';
+import { PublicBuildDescription } from './publicbuilddescription';
 
 /**
  * @apiDefine PublicBranchDescription
@@ -9,6 +10,7 @@ import { LocalizedHashmap } from '../../../utils/language';
  * @apiSuccess (200) {Boolean} passwordProtected Whether the branch is password protected or not
  * @apiSuccess (200) {Number} ownerId Id of the owning game
  * @apiSuccess (200) {Number} bdsBranchId Branch bds id
+ * @apiSuccess (200) {Build[]} versions Version history of this branch
  */
 export interface PublicBranchDescription {
   // Internal PS id
@@ -25,6 +27,9 @@ export interface PublicBranchDescription {
 
   // Branch bds id
   bdsBranchId: number;
+
+  // Version history of this branch
+  versions?: PublicBuildDescription[];
 }
 
 /**
@@ -37,6 +42,7 @@ export interface PublicBranchDescription {
  * @apiSuccess (200) {Boolean} items.passwordProtected Whether the branch is password protected or not
  * @apiSuccess (200) {Number} items.ownerId Id of the owning game
  * @apiSuccess (200) {Number} items.bdsBranchId Branch bds id
+ * @apiSuccess (200) {Build[]} items.versions Version history of this branch
  */
 export interface PublicBranchResponse {
   items: PublicBranchDescription[];

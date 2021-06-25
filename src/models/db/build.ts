@@ -5,17 +5,15 @@ import {
   HasManyCreateAssociationMixin,
   HasManyGetAssociationsMixin,
   HasManyRemoveAssociationMixin,
+  Model,
   ModelAttributes,
   Optional,
 } from 'sequelize';
 import { AtLeastOne, INTERNAL_ID, INTERNAL_ID_REFERENCE } from '../../utils/database';
-import { Locale, LocalizedHashmap } from '../../utils/language';
 import { PublicBuildDescription } from '../http/public/publicbuilddescription';
 import { PublisherBuildDescription } from '../http/rbac/publisherbuilddescription';
 import { BranchCreationAttributes, BranchModel } from './branch';
 import { GameModel } from './game';
-import { Fields, LocalizedFieldModel } from './localizedfield';
-import { LocalizableModel } from './mixins/localizablemodel';
 
 export const BuildDef: ModelAttributes = {
   id: INTERNAL_ID(),
@@ -29,6 +27,10 @@ export const BuildDef: ModelAttributes = {
     allowNull: true,
     type: DataTypes.BOOLEAN,
   },
+  patchNotesId: {
+    allowNull: true,
+    type: DataTypes.STRING(64),
+  },
 };
 
 export interface BuildAttributes {
@@ -36,15 +38,16 @@ export interface BuildAttributes {
   ownerId: number;
   bdsBuildId: number;
   mandatory: boolean;
+  patchNotesId: string;
   readonly branches?: BranchModel[];
   readonly owner?: GameModel;
 }
 
-export type BuildCreationAttributes = Optional<BuildAttributes, 'id' | 'mandatory' | 'ownerId'>;
+export type BuildCreationAttributes = Optional<BuildAttributes, 'id' | 'mandatory' | 'ownerId' | 'patchNotesId'>;
 
 export type BuildUniqueIdentifier = AtLeastOne<Pick<BuildAttributes, 'id' | 'bdsBuildId'>>;
 
-export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationAttributes> implements BuildAttributes {
+export class BuildModel extends Model<BuildAttributes, BuildCreationAttributes> implements BuildAttributes {
   public id!: number;
 
   public bdsBuildId!: number;
@@ -52,6 +55,8 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
   public mandatory!: boolean;
 
   public ownerId!: number;
+
+  public patchNotesId!: string;
 
   // #region association: branches
   public readonly branches?: BranchModel[];
@@ -73,29 +78,14 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
   public getOwner!: BelongsToGetAssociationMixin<GameModel>;
   // #endregion
 
-  // #region association: localized fields
-
-  public get notes(): LocalizedHashmap {
-    return this.reduceFields(Fields.patchnotes);
-  }
-
-  public getNotesLoaded(locale: Locale) {
-    const [nameObj] =
-      this.fields?.filter(locField => locField.field === Fields.patchnotes && locField.locale === locale) ?? [];
-    return nameObj?.value;
-  }
-
-  // #endregion
-
   public static associations: {
-    fields: Association<BuildModel, LocalizedFieldModel>;
     owner: Association<BuildModel, GameModel>;
     branches: Association<GameModel, BranchModel>;
   };
 
   public toPublicHttpModel(): PublicBuildDescription {
     return {
-      patchNotes: this.notes,
+      patchNotesId: this.patchNotesId,
       mandatory: this.mandatory,
     };
   }
@@ -103,7 +93,7 @@ export class BuildModel extends LocalizableModel<BuildAttributes, BuildCreationA
   public toPublisherHttpModel(): PublisherBuildDescription {
     return {
       id: this.id,
-      patchNotes: this.notes,
+      patchNotesId: this.patchNotesId,
       ownerId: this.ownerId,
       bdsBuildId: this.bdsBuildId,
       mandatory: this.mandatory,

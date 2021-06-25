@@ -15,6 +15,7 @@ import { PublicGameDescription } from './publicgamedescription';
  * @apiSuccess (200) {Build[]} versions Versions (builds) history of the selected branch
  * @apiSuccess (200) {Agreement[]} agreements Agreements required to access this title
  * @apiSuccess (200) {String[]} supportedLanguages Array of supported languages
+ * @apiSuccess (200) {String} installDir Installation folder, if not set a default is meant to be used
  */
 export interface DownloadData extends PublicGameDescription {
   // Description of the requested (default if not specified) branch
@@ -28,6 +29,9 @@ export interface DownloadData extends PublicGameDescription {
 
   // Array of supported languages
   supportedLanguages: string[];
+
+  // Installation folder, if not set a default is meant to be used
+  installDir: string;
 }
 
 /**
@@ -43,6 +47,7 @@ export interface DownloadData extends PublicGameDescription {
  * @apiSuccess (200) {Build[]} items.versions Versions (builds) history of the selected branch
  * @apiSuccess (200) {Agreement[]} items.agreements Agreements required to access this title
  * @apiSuccess (200) {String[]} items.supportedLanguages Array of supported languages
+ * @apiSuccess (200) {String} items.installDir Installation folder, if not set a default is meant to be used
  */
 export interface DownloadDataResponse {
   items: DownloadData[];

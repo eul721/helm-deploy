@@ -1,4 +1,4 @@
-export type HeaderParam = 'authorization' | 'webhookToken' | 'deviceId' | 'deviceName' | 'useBdsIds';
+export type HeaderParam = 'authorization' | 'webhookToken' | 'deviceId' | 'deviceName';
 
 export type QueryParam =
   | 'divisionId'
@@ -19,7 +19,11 @@ export enum PathParam {
   divisionId = 'divisionId',
   roleId = 'roleId',
   gameId = 'gameId',
+  bdsGameId = 'bdsGameId',
   branchId = 'branchId',
+  bdsBranchId = 'bdsBranchId',
+  buildId = 'buildId',
+  bdsBuildId = 'bdsBuildId',
   permissionId = 'permissionId',
   contentfulId = 'contentfulId',
   eulaId = 'eulaId',
@@ -33,7 +37,13 @@ export const Segment = {
   permissions: `permissions/:${PathParam.permissionId}`,
   games: 'games',
   gameById: `games/:${PathParam.gameId}`,
-  branches: `branches/:${PathParam.branchId}`,
+  gameByBdsId: `games/:${PathParam.bdsGameId}`,
+  branches: 'branches',
+  branchById: `branches/:${PathParam.branchId}`,
+  branchByBdsId: `branches/:${PathParam.bdsBranchId}`,
+  builds: 'builds',
+  buildById: `builds/:${PathParam.buildId}`,
+  buildByBdsId: `builds/:${PathParam.bdsBuildId}`,
   contentful: `contentful/:${PathParam.contentfulId}`,
   eula: `eulas/:${PathParam.eulaId}`,
 };
@@ -43,7 +53,6 @@ export const headerParamLookup: { [K in HeaderParam]: string } = {
   webhookToken: 'x-t2-shared-secret',
   deviceId: 'x-t2-device-id',
   deviceName: 'x-t2-device-name',
-  useBdsIds: 'x-bds-ids',
 };
 
 export const authBearerPrefix = 'Bearer '; // prefix of the authorization header value
