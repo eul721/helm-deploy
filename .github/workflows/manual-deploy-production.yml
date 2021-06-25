@@ -36,10 +36,6 @@ jobs:
           echo TARGET_ENV=production >> $GITHUB_ENV
           echo CLUSTER=t2gp-production >> $GITHUB_ENV
           echo APP_VERSION=${{ github.event.inputs.version }} >> $GITHUB_ENV
-      - name: Stop if branch is not master
-        if: ${{ env.BRANCH != 'master'}}
-        run: |
-          exit 1
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
