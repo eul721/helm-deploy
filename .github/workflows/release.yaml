@@ -51,3 +51,16 @@ jobs:
           AWS_REGION: "us-west-2"
           SOURCE_DIR: "docs"
           DEST_DIR: "t2gp-publisher-service/latest"
+      - name: build image
+        run: |
+          docker build -t t2gp-publisher-service --build-arg NPM_TOKEN="${{ secrets.T2GP_BUILD_TOKEN }}" .
+      - name: push to ECR
+        uses: jwalton/gh-ecr-push@v1
+        with:
+          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: us-east-1
+          local-image: t2gp-publisher-service
+          image: t2gp-publisher-service:${{ env.VER }}
+      - name: clean up
+        run: docker image prune -a --force --filter "until=48h"
