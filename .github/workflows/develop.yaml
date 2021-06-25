@@ -115,10 +115,10 @@ jobs:
           command: |-
             kubectl config set-cluster cluster \
               --server=${{ env.CLUSTER_ENDPOINT }} \
-              --insecure-skip-tls-verify && \
+              --insecure-skip-tls-verify
             kubectl config set-context cluster \
-              --cluster=cluster && \
-            kubectl config use-context cluster && \
+              --cluster=cluster
+            kubectl config use-context cluster
             helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
               publisher-service-${{ env.BRANCH }} /github/workspace/helm_chart \
