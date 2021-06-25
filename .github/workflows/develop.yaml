@@ -110,7 +110,7 @@ jobs:
       - name: Helm Diffs
         id: helm_diffs
         if: github.event_name == 'pull_request'
-        uses: nmasur/alpine-kubectl@master
+        uses: eul721/alpine-kubectl@master
         with:
           command: |-
             kubectl config set-cluster cluster \
