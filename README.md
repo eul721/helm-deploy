@@ -115,6 +115,14 @@ Under `/helm_values/` folder contains configuration for deployments to each envi
 
 Application specific values are populated by [config management](https://github.com/take-two-t2gp/d2c-config-mgmt/) under flux branch.
 
+### Database Migrations
+
+Migrating the database should have great care taken with live data
+
+To assist, you can use `mysqldump` to export the schema to prepare for migrations
+
+    $ mysqldump -v --user=root --password=password --host=127.0.0.1 --port=3306 --no-data --column-statistics=0 publisher_dev
+
 ## Lint
 
 Make sure to use the linter at least before submitting a PR:

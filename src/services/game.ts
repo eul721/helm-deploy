@@ -414,7 +414,7 @@ export class GameService {
         game.builds?.map(branchData => ({
           buildId: branchData.bdsBuildId,
           mandatory: branchData.mandatory ?? false,
-          releaseNotes: { [Locale.en]: '' /* TODO (migration||drop) branchData.patchNotesId */ },
+          releaseNotes: branchData.patchNotesId,
           version: branchData.id.toString(),
         })) ?? [],
       // TODO: transfer former contentful spec to SQL

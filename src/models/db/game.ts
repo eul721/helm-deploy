@@ -37,12 +37,11 @@ export const GameDef: ModelAttributes = {
   },
   defaultBranch: INTERNAL_ID_REFERENCE(),
   ownerId: INTERNAL_ID_REFERENCE(),
-  /* TODO (migration||drop)
   installDir: {
     allowNull: true,
     type: DataTypes.STRING(256),
     unique: true,
-  }, */
+  },
 };
 
 export interface GameAttributes {
