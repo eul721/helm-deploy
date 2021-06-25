@@ -29,7 +29,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.T2GP_BUILD_TOKEN }}
         run: npm ci
       - name: "document generation"
-        run: npm run doc:build
+        run: npm run doc
       - name: Get version
         run:
           echo VER=${{ github.event.release.tag_name }} >> $GITHUB_ENV
