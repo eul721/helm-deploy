@@ -83,7 +83,7 @@ jobs:
       - name: Update R53 (Temporary, until migration to flux)
         run: |-
           HOSTEDZONE_ID=$(aws route53 list-hosted-zones-by-name --dns-name "d2dragon.net" --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.HostedZones[0].Id' | sed 's/\/hostedzone\///g')
-          LB_ARN=$(aws resourcegroupstaggingapi get-resources --tag-filters Key=elbv2.k8s.aws/cluster,Values=t2gp-debugging Key=ingress.k8s.aws/stack,Values=publisher-service-${{ env.TARGET_ENV }} Key=ingress.k8s.aws/resource,Values=LoadBalancer --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.ResourceTagMappingList[0].ResourceARN')
+          LB_ARN=$(aws resourcegroupstaggingapi get-resources --tag-filters Key=elbv2.k8s.aws/cluster,Values=${{ env.CLUSTER }} Key=ingress.k8s.aws/stack,Values=publisher-service-${{ env.TARGET_ENV }} Key=ingress.k8s.aws/resource,Values=LoadBalancer --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.ResourceTagMappingList[0].ResourceARN')
           LB_DNSNAME=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN  --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].DNSName')
           LB_HOSTED_ZONE=$(aws elbv2 describe-load-balancers --load-balancer-arns $LB_ARN --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.LoadBalancers[0].CanonicalHostedZoneId')
           aws route53 change-resource-record-sets --hosted-zone-id $HOSTEDZONE_ID --region ${{ env.REGION }} --change-batch "{ \
