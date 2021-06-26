@@ -120,20 +120,26 @@ jobs:
               --cluster=cluster
             kubectl config use-context cluster
             helm plugin install https://github.com/databus23/helm-diff
-            helm diff upgrade --install \
+            PUBLISHER_DIFF=$( \
+              helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
               publisher-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
-              --set app.tag=${{ env.VER }}
-            helm diff upgrade --install \
+              --set app.tag=${{ env.VER }} \
+            )
+            echo "::set-output name=publisher_diff::$PUBLISHER_DIFF"
+            DOWNLOAD_DIFF=$( \
+              helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
               download-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
-              --set app.tag=${{ env.VER }}
+              --set app.tag=${{ env.VER }} \
+            )
+            echo "::set-output name=download_diff::$DOWNLOAD_DIFF"
       - name: Comment PR
         if: github.event_name == 'pull_request'
         uses: unsplash/comment-on-pr@master
@@ -141,7 +147,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: |
-            ${{ steps.helm_diffs.outputs.result }}
+            ${{ steps.helm_diffs.outputs.publisher_diff }}
+            ${{ steps.helm_diffs.outputs.download_diff }}
           check_for_duplicate_msg: true
       - name: Deploy Helm Chart
         if: github.event_name == 'push'
