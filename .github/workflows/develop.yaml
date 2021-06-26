@@ -141,15 +141,30 @@ jobs:
             )
             echo "::set-output name=download_diff::$DOWNLOAD_DIFF"
       - name: Comment PR
+        uses: actions/github-script@0.9.0
         if: github.event_name == 'pull_request'
-        uses: unsplash/comment-on-pr@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISHER_OUTPUT: "```${{ steps.helm_diffs.outputs.publisher_diff }}```"
+          DOWNLOAD_OUTPUT: "```${{ steps.helm_diffs.outputs.download_diff }}```"
         with:
-          msg: |
-            ${{ steps.helm_diffs.outputs.publisher_diff }}
-            ${{ steps.helm_diffs.outputs.download_diff }}
-          check_for_duplicate_msg: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            output = `<details><summary>publisher:</summary>\n\n${process.env.PUBLISHER_OUTPUT}\n\n</details>`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+            output = `<details><summary>download:</summary>\n\n${process.env.DOWNLOAD_OUTPUT}\n\n</details>`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
       - name: Deploy Helm Chart
         if: github.event_name == 'push'
         uses: nmasur/alpine-kubectl@master
