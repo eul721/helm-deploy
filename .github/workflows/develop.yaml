@@ -110,7 +110,7 @@ jobs:
       - name: Helm Diffs
         id: helm_diffs
         if: github.event_name == 'pull_request'
-        uses: eul721/alpine-kubectl@master
+        uses: nmasur/alpine-kubectl@master
         with:
           command: |-
             kubectl config set-cluster cluster \
@@ -119,9 +119,7 @@ jobs:
             kubectl config set-context cluster \
               --cluster=cluster
             kubectl config use-context cluster
-            helm env
-            helm plugin list
-            helm version
+            helm plugin install https://github.com/databus23/helm-diff
             helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
               publisher-service-${{ env.BRANCH }} /github/workspace/helm_chart \
