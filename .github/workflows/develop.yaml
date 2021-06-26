@@ -120,25 +120,27 @@ jobs:
               --cluster=cluster
             kubectl config use-context cluster
             helm plugin install https://github.com/databus23/helm-diff
-            PUBLISHER_DIFF="$( \
+            PUBLISHER_DIFF=$( \
               helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
+              --no-color \
               publisher-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
               --set app.tag=${{ env.VER }} \
-            )"
+            )
             echo "::set-output name=publisher_diff::$PUBLISHER_DIFF"
-            DOWNLOAD_DIFF="$( \
+            DOWNLOAD_DIFF=$( \
               helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
+              --no-color \
               download-service-${{ env.BRANCH }} /github/workspace/helm_chart \
               -n publisher-service \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
               -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
               --set app.tag=${{ env.VER }} \
-            )"
+            )
             echo "::set-output name=download_diff::$DOWNLOAD_DIFF"
       - name: Comment PR
         uses: actions/github-script@0.9.0
