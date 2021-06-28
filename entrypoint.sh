@@ -24,5 +24,21 @@ kubectl config set-context cluster \
     --cluster=cluster
 kubectl config use-context cluster
 
+CMD_VALUE_FILES=
+for path in $(echo $VALUE_FILES | sed "s/,/ /g")
+do
+    # call your procedure/other scripts here below
+    CMD_VALUE_FILES+="-f $path\n"
+done
+
+echo $CMD_VALUE_FILES
+
+# if [ $DRY_RUN = "true" ]; then
+#     # Do helm diff and print out result
+
+# else
+#     # Actually deploy
+# fi
+
 
 
