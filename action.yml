@@ -1,0 +1,43 @@
+name: 'Helm Deploy'
+author: 'Jack Chao'
+description: 'Performs Helm deploy with dry-run/diffing support'
+inputs:
+  aws-access-key-id:
+    description: AWS access key
+    required: true
+  aws-secret-access-key:
+    description: AWS secret
+    required: true
+  cluster:
+    description: cluster to deploy to
+    required: true
+  dry-run:
+    description: whether to actually deploy, or to generate a diff
+    required: true
+    default: 'true'
+  chart-location:
+    description: chart location relative to repository root
+    required: true
+  values-files:
+    description: list of paths to values values-files. (list of strings and comma delimited)
+    required: false
+    default: '' # in the format of 'path1,path2,path3'
+  values:
+    description: list of kv pairs that will be appended to values file
+    required: false
+    default: '' # in the format 'key="value",key="value"'
+outputs:
+  results:
+    description: results from running deploy/dry-run
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.aws-access-key-id }}
+    - ${{ inputs.aws-secret-access-key }}
+    - ${{ inputs.cluster }}
+    - ${{ inputs.dry-run }}
+    - ${{ inputs.chart-location }}
+    - ${{ inputs.values-files }}
+    - ${{ inputs.values }}

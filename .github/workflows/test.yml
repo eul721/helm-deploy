@@ -1,0 +1,25 @@
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  hello_world_job:
+    runs-on: ubuntu-latest
+    name: A job to say hello
+    steps:
+      # To use this repository's private action,
+      # you must check out the repository
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Hello world action step
+        uses: ./ # Uses an action in the root directory
+        id: hello
+        with:
+          aws-access-key-id: aws_access_key
+          aws-secret-access-key: aws_secret_access
+          cluster: t2gp-debugging
+          dry-run: true
+          chart-location: hello
+          values-files: asd
+          values: asdasdasd,asdasdasd
