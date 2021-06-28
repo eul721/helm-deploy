@@ -10,7 +10,7 @@ VALUES=$7
 
 export AWS_ACCESS_KEY_ID=$1
 export AWS_SECRET_ACCESS_KEY=$2
-export AWS_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-east-1
 
 KUBETOKEN=$(aws eks get-token --cluster-name $CLUSTER  | jq -c -r '.status.token')
 CLUSTER_ENDPOINT=$(aws eks describe-cluster --name $CLUSTER  | jq -c -r '.cluster.endpoint')
