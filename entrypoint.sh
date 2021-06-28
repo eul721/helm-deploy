@@ -1,5 +1,7 @@
 #!/bin/sh -l
 
+set -e
+
 AWS_ACCESS_KEY_ID=$1
 AWS_SECRET_ACCESS_KEY=$2
 CLUSTER=$3
