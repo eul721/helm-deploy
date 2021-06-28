@@ -15,5 +15,5 @@ export AWS_DEFAULT_REGION=us-east-1
 KUBETOKEN=$(aws eks get-token --cluster-name $CLUSTER  | jq -c -r '.status.token')
 CLUSTER_ENDPOINT=$(aws eks describe-cluster --name $CLUSTER  | jq -c -r '.cluster.endpoint')
 
-echo $KUBETOKEN
-echo $CLUSTER_ENDPOINT
+ls -al ./
+helm
