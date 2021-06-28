@@ -16,8 +16,8 @@ jobs:
         uses: ./ # Uses an action in the root directory
         id: hello
         with:
-          aws-access-key-id: aws_access_key
-          aws-secret-access-key: aws_secret_access
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           cluster: t2gp-debugging
           dry-run: true
           chart-location: hello
