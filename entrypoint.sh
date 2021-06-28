@@ -28,7 +28,7 @@ CMD_VALUE_FILES=
 for path in $(echo $VALUE_FILES | sed "s/,/ /g")
 do
     # call your procedure/other scripts here below
-    CMD_VALUE_FILES+="-f $path\n"
+    CMD_VALUE_FILES+="-f $path "
 done
 
 echo $CMD_VALUE_FILES
