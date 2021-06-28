@@ -18,7 +18,7 @@ inputs:
   chart-location:
     description: chart location relative to repository root
     required: true
-  values-files:
+  value-files:
     description: list of paths to values values-files. (list of strings and comma delimited)
     required: false
     default: '' # in the format of 'path1,path2,path3'
@@ -39,5 +39,5 @@ runs:
     - ${{ inputs.cluster }}
     - ${{ inputs.dry-run }}
     - ${{ inputs.chart-location }}
-    - ${{ inputs.values-files }}
+    - ${{ inputs.value-files }}
     - ${{ inputs.values }}
