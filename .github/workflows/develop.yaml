@@ -67,7 +67,6 @@ jobs:
         run: docker image prune -a --force --filter "until=48h"
   k8s-deploy:
     name: Deploy to EKS
-    environment: develop
     runs-on: ubuntu-latest
     # runs-on: ubuntu-latest
     needs: docker
@@ -152,8 +151,8 @@ jobs:
         uses: actions/github-script@0.9.0
         if: github.event_name == 'pull_request'
         env:
-          PUBLISHER_OUTPUT: "```${{ steps.helm_diffs.outputs.publisher_diff }}```"
-          DOWNLOAD_OUTPUT: "```${{ steps.helm_diffs.outputs.download_diff }}```"
+          PUBLISHER_OUTPUT: "```\n${{ steps.helm_diffs.outputs.publisher_diff }}\n```"
+          DOWNLOAD_OUTPUT: "```\n${{ steps.helm_diffs.outputs.download_diff }}\n```"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
