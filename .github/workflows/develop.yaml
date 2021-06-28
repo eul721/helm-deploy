@@ -130,7 +130,10 @@ jobs:
               -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
               --set app.tag=${{ env.VER }} \
             )
-            echo "publisher_diff=$PUBLISHER_DIFF" >> $GITHUB_ENV
+            PUBLISHER_DIFF="${PUBLISHER_DIFF//'%'/'%25'}"
+            PUBLISHER_DIFF="${PUBLISHER_DIFF//$'\n'/'%0A'}"
+            PUBLISHER_DIFF="${PUBLISHER_DIFF//$'\r'/'%0D'}"
+            echo "::set-output name=publisher_diff::$PUBLISHER_DIFF"
             DOWNLOAD_DIFF=$( \
               helm diff upgrade --install \
               --kube-token=${{ env.KUBETOKEN }} \
@@ -141,13 +144,16 @@ jobs:
               -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
               --set app.tag=${{ env.VER }} \
             )
-            echo "download_diff=$DOWNLOAD_DIFF" >> $GITHUB_ENV
+            DOWNLOAD_DIFF="${DOWNLOAD_DIFF//'%'/'%25'}"
+            DOWNLOAD_DIFF="${DOWNLOAD_DIFF//$'\n'/'%0A'}"
+            DOWNLOAD_DIFF="${DOWNLOAD_DIFF//$'\r'/'%0D'}"
+            echo "::set-output name=download_diff::$DOWNLOAD_DIFF"
       - name: Comment PR
         uses: actions/github-script@0.9.0
         if: github.event_name == 'pull_request'
         env:
-          PUBLISHER_OUTPUT: "```${{ env.publisher_diff }}```"
-          DOWNLOAD_OUTPUT: "```${{ env.download_diff }}```"
+          PUBLISHER_OUTPUT: "```${{ steps.helm_diffs.outputs.publisher_diff }}```"
+          DOWNLOAD_OUTPUT: "```${{ steps.helm_diffs.outputs.download_diff }}```"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
