@@ -15,5 +15,14 @@ export AWS_DEFAULT_REGION=us-east-1
 KUBETOKEN=$(aws eks get-token --cluster-name $CLUSTER  | jq -c -r '.status.token')
 CLUSTER_ENDPOINT=$(aws eks describe-cluster --name $CLUSTER  | jq -c -r '.cluster.endpoint')
 
-ls -al ./
-helm
+helm plugin install https://github.com/databus23/helm-diff # this can't be in Dockerfile due to user pathing issue
+
+kubectl config set-cluster cluster \
+    --server=$CLUSTER_ENDPOINT \
+    --insecure-skip-tls-verify
+kubectl config set-context cluster \
+    --cluster=cluster
+kubectl config use-context cluster
+
+
+
