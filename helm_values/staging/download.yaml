@@ -3,7 +3,7 @@ hpa:
   minReplicas: 1
   maxReplicas: 3
 app:
-  configToUse: publisher-production
+  configToUse: publisher-service-production
   name: download
   requests:
     cpu: 0.5
