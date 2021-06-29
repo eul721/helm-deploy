@@ -36,7 +36,7 @@ CMD_VALUES=" --set $VALUES "
 echo $CMD_VALUE_FILES
 
 OUTPUT=
-if [ $DRY_RUN = "true" ]; then
+if [ "$DRY_RUN" = "true" ]; then
     # Do helm diff and print out result
     OUTPUT=$( \
         helm diff upgrade --install \
