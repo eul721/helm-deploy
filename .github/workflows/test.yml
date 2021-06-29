@@ -20,6 +20,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           cluster: t2gp-debugging
           dry-run: true
+          namespace: cicd-test
+          release-name: helm-deploy-test
           chart-location: helm_chart
           value-files: helm_values/test_values.yml
           values: replicaCount=2
