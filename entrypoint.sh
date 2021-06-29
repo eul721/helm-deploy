@@ -25,6 +25,8 @@ kubectl config set-context cluster \
     --cluster=cluster
 kubectl config use-context cluster
 
+helm plugin install https://github.com/databus23/helm-diff # this can't be in Dockerfile due to user pathing issue
+
 CMD_VALUE_FILES=
 for path in $(echo $VALUE_FILES | sed "s/,/ /g")
 do
