@@ -2,13 +2,13 @@
 
 set -e
 
-AWS_ACCESS_KEY_ID=$1
-AWS_SECRET_ACCESS_KEY=$2
 CLUSTER=$3
 DRY_RUN=$4
-CHART_LOCATION=$5
-VALUE_FILES=$6
-VALUES=$7
+NAMESPACE=$5
+RELEASE_NAME=$6
+CHART_LOCATION=$7
+VALUE_FILES=$8
+VALUES=$9
 
 export AWS_ACCESS_KEY_ID=$1
 export AWS_SECRET_ACCESS_KEY=$2
@@ -30,17 +30,36 @@ CMD_VALUE_FILES=
 for path in $(echo $VALUE_FILES | sed "s/,/ /g")
 do
     # call your procedure/other scripts here below
-    CMD_VALUE_FILES="${CMD_VALUE_FILES} -f $path "
+    CMD_VALUE_FILES="${CMD_VALUE_FILES} -f ./$path "
 done
 
+CMD_VALUES=" --set $VALUES "
 echo $CMD_VALUE_FILES
 
-# if [ $DRY_RUN = "true" ]; then
-#     # Do helm diff and print out result
+OUTPUT=
+if [ $DRY_RUN = "true" ]; then
+    # Do helm diff and print out result
+    OUTPUT=$( \
+        helm diff upgrade --install \
+            --kube-token=$KUBETOKEN \
+            --no-color \
+            $RELEASE_NAME $CHART_LOCATION \
+            -n $NAMESPACE \
+            $CMD_VALUE_FILES \
+            $CMD_VALUES \
+    )
+else
+    OUTPUT=$( \
+        helm upgrade --install \
+            --kube-token=${{ env.KUBETOKEN }} \
+            --create-namespace \
+            $RELEASE_NAME $CHART_LOCATION \
+            -n $NAMESPACE \
+            $CMD_VALUE_FILES \
+            $CMD_VALUES \
+    )
+fi
 
-# else
-#     # Actually deploy
-# fi
-
+echo $OUTPUT
 
 

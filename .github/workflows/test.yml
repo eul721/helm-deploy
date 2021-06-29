@@ -20,6 +20,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           cluster: t2gp-debugging
           dry-run: true
-          chart-location: hello
-          value-files: path1,path2,path3
-          values: asdasdasd,asdasdasd
+          chart-location: helm_chart
+          value-files: helm_values/test_values.yml
+          values: replicaCount=2

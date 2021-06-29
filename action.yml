@@ -15,6 +15,12 @@ inputs:
     description: whether to actually deploy, or to generate a diff
     required: true
     default: 'true'
+  namespace:
+    description: namespace to deploy chart in
+    required: true
+  release-name:
+    description: name of the release
+    required: true
   chart-location:
     description: chart location relative to repository root
     required: true
@@ -38,6 +44,8 @@ runs:
     - ${{ inputs.aws-secret-access-key }}
     - ${{ inputs.cluster }}
     - ${{ inputs.dry-run }}
+    - ${{ inputs.namespace }}
+    - ${{ inputs.release_name }}
     - ${{ inputs.chart-location }}
     - ${{ inputs.value-files }}
     - ${{ inputs.values }}
