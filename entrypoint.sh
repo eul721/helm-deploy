@@ -1,6 +1,6 @@
 #!/bin/sh -l
 
-set -e
+set -xe
 
 CLUSTER=$3
 DRY_RUN=$4
