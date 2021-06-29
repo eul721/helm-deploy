@@ -50,7 +50,7 @@ if [ "$DRY_RUN" = "true" ]; then
 else
     OUTPUT=$( \
         helm upgrade --install \
-            --kube-token=${{ env.KUBETOKEN }} \
+            --kube-token=$KUBETOKEN \
             --create-namespace \
             $RELEASE_NAME $CHART_LOCATION \
             -n $NAMESPACE \
