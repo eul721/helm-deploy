@@ -45,7 +45,7 @@ runs:
     - ${{ inputs.cluster }}
     - ${{ inputs.dry-run }}
     - ${{ inputs.namespace }}
-    - ${{ inputs.release_name }}
+    - ${{ inputs.release-name }}
     - ${{ inputs.chart-location }}
     - ${{ inputs.value-files }}
     - ${{ inputs.values }}
