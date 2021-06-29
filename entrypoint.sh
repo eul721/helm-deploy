@@ -60,6 +60,8 @@ else
     )
 fi
 
-echo $OUTPUT
-
+OUTPUT="${OUTPUT//'%'/'%25'}"
+OUTPUT="${OUTPUT//$'\n'/'%0A'}"
+OUTPUT="${OUTPUT//$'\r'/'%0D'}"
+echo "::set-output name=results::$OUTPUT"
 

@@ -4,7 +4,7 @@ on:
       - develop
 
 jobs:
-  hello_world_job:
+  test_job:
     runs-on: ubuntu-latest
     name: A job to say hello
     steps:
@@ -12,9 +12,9 @@ jobs:
       # you must check out the repository
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Hello world action step
+      - name: Test run
         uses: ./ # Uses an action in the root directory
-        id: hello
+        id: test
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -25,3 +25,6 @@ jobs:
           chart-location: helm_chart
           value-files: helm_values/test_values.yml
           values: replicaCount=2
+      - name: Get output
+        run: |
+          echo "${{ steps.test.outputs.results }}"
