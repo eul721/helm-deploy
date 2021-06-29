@@ -102,57 +102,41 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           echo BRANCH=${{ env.GITHUB_BASE_REF_SLUG }} >> $GITHUB_ENV
-      - name: Authenticate to EKS Cluster
-        run: |
-          echo KUBETOKEN=$(aws eks get-token --cluster-name ${{ env.CLUSTER }} --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.status.token') >> $GITHUB_ENV
-          echo CLUSTER_ENDPOINT=$(aws eks describe-cluster --name ${{ env.CLUSTER }} --region ${{ env.REGION }} | docker run --rm -i imega/jq -c -r '.cluster.endpoint') >> $GITHUB_ENV
-      - name: Helm Diffs
-        id: helm_diffs
+      - name: Helm Diff Publisher
+        id: helm_diff_publisher
         if: github.event_name == 'pull_request'
-        uses: nmasur/alpine-kubectl@master
+        uses: take-two-t2gp/helm-deploy@develop
         with:
-          command: |-
-            kubectl config set-cluster cluster \
-              --server=${{ env.CLUSTER_ENDPOINT }} \
-              --insecure-skip-tls-verify
-            kubectl config set-context cluster \
-              --cluster=cluster
-            kubectl config use-context cluster
-            helm plugin install https://github.com/databus23/helm-diff
-            PUBLISHER_DIFF=$( \
-              helm diff upgrade --install \
-              --kube-token=${{ env.KUBETOKEN }} \
-              --no-color \
-              publisher-service-${{ env.BRANCH }} /github/workspace/helm_chart \
-              -n publisher-service \
-              -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
-              -f /github/workspace/helm_values/${{ env.BRANCH }}/publisher.yaml \
-              --set app.tag=${{ env.VER }} \
-            )
-            PUBLISHER_DIFF="${PUBLISHER_DIFF//'%'/'%25'}"
-            PUBLISHER_DIFF="${PUBLISHER_DIFF//$'\n'/'%0A'}"
-            PUBLISHER_DIFF="${PUBLISHER_DIFF//$'\r'/'%0D'}"
-            echo "::set-output name=publisher_diff::$PUBLISHER_DIFF"
-            DOWNLOAD_DIFF=$( \
-              helm diff upgrade --install \
-              --kube-token=${{ env.KUBETOKEN }} \
-              --no-color \
-              download-service-${{ env.BRANCH }} /github/workspace/helm_chart \
-              -n publisher-service \
-              -f /github/workspace/helm_values/${{ env.BRANCH }}/base.yaml \
-              -f /github/workspace/helm_values/${{ env.BRANCH }}/download.yaml \
-              --set app.tag=${{ env.VER }} \
-            )
-            DOWNLOAD_DIFF="${DOWNLOAD_DIFF//'%'/'%25'}"
-            DOWNLOAD_DIFF="${DOWNLOAD_DIFF//$'\n'/'%0A'}"
-            DOWNLOAD_DIFF="${DOWNLOAD_DIFF//$'\r'/'%0D'}"
-            echo "::set-output name=download_diff::$DOWNLOAD_DIFF"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          cluster: ${{ env.CLUSTER }}
+          dry-run: true
+          namespace: publisher-service
+          release-name: publisher-service-${{ env.BRANCH }}
+          chart-location: helm_chart
+          value-files: helm_values/${{ env.BRANCH }}/base.yaml,helm_values/${{ env.BRANCH }}/publisher.yaml
+          values: "app.tag=${{ env.VER }}"
+      - name: Helm Diff Download
+        id: helm_diff_download
+        if: github.event_name == 'pull_request'
+        uses: take-two-t2gp/helm-deploy@develop
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          cluster: ${{ env.CLUSTER }}
+          dry-run: true
+          namespace: publisher-service
+          release-name: download-service-${{ env.BRANCH }}
+          chart-location: helm_chart
+          value-files: helm_values/${{ env.BRANCH }}/base.yaml,helm_values/${{ env.BRANCH }}/publisher.yaml
+          values: "app.tag=${{ env.VER }}"
+
       - name: Comment PR
         uses: actions/github-script@0.9.0
         if: github.event_name == 'pull_request'
         env:
-          PUBLISHER_OUTPUT: "```\n${{ steps.helm_diffs.outputs.publisher_diff }}\n```"
-          DOWNLOAD_OUTPUT: "```\n${{ steps.helm_diffs.outputs.download_diff }}\n```"
+          PUBLISHER_OUTPUT: "```\n${{ steps.helm_diff_publisher.outputs.results }}\n```"
+          DOWNLOAD_OUTPUT: "```\n${{ steps.helm_diff_download.outputs.results }}\n```"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
