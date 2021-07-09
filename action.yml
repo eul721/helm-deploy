@@ -17,7 +17,7 @@ inputs:
     default: 'false'
   dry-run:
     description: whether to actually deploy, or to generate a diff
-    required: true
+    required: false
     default: 'true'
   namespace:
     description: namespace to deploy chart in
@@ -27,7 +27,8 @@ inputs:
     required: true
   chart-location:
     description: chart location relative to repository root
-    required: true
+    required: false
+    default: 'helm_chart'
   value-files:
     description: list of paths to values values-files. (list of strings and comma delimited)
     required: false
