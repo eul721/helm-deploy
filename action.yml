@@ -11,6 +11,10 @@ inputs:
   cluster:
     description: cluster to deploy to
     required: true
+  uninstall:
+    description: perform an uninstall instead of install
+    required: false
+    default: 'false'
   dry-run:
     description: whether to actually deploy, or to generate a diff
     required: true
@@ -43,6 +47,7 @@ runs:
     - ${{ inputs.aws-access-key-id }}
     - ${{ inputs.aws-secret-access-key }}
     - ${{ inputs.cluster }}
+    - ${{ inputs.uninstall }}
     - ${{ inputs.dry-run }}
     - ${{ inputs.namespace }}
     - ${{ inputs.release-name }}

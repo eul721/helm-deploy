@@ -3,12 +3,13 @@
 set -xe
 
 CLUSTER=$3
-DRY_RUN=$4
-NAMESPACE=$5
-RELEASE_NAME=$6
-CHART_LOCATION=$7
-VALUE_FILES=$8
-VALUES=$9
+UNINSTALL=$4
+DRY_RUN=$5
+NAMESPACE=$6
+RELEASE_NAME=$7
+CHART_LOCATION=$8
+VALUE_FILES=$9
+VALUES=${10}
 
 export AWS_ACCESS_KEY_ID=$1
 export AWS_SECRET_ACCESS_KEY=$2
@@ -38,27 +39,34 @@ CMD_VALUES=" --set $VALUES "
 echo $CMD_VALUE_FILES
 
 OUTPUT=
-if [ "$DRY_RUN" = "true" ]; then
-    # Do helm diff and print out result
+if [ "$UNINSTALL" = "true" ]; then
+    # Uninstall release
     OUTPUT=$( \
-        helm diff upgrade --install \
-            --kube-token=$KUBETOKEN \
-            --no-color \
-            $RELEASE_NAME $CHART_LOCATION \
-            -n $NAMESPACE \
-            $CMD_VALUE_FILES \
-            $CMD_VALUES \
+        helm uninstall -n $NAMESPACE $RELEASE_NAME \
     )
 else
-    OUTPUT=$( \
-        helm upgrade --install \
-            --kube-token=$KUBETOKEN \
-            --create-namespace \
-            $RELEASE_NAME $CHART_LOCATION \
-            -n $NAMESPACE \
-            $CMD_VALUE_FILES \
-            $CMD_VALUES \
-    )
+    if [ "$DRY_RUN" = "true" ]; then
+        # Do helm diff and print out result
+        OUTPUT=$( \
+            helm diff upgrade --install \
+                --kube-token=$KUBETOKEN \
+                --no-color \
+                $RELEASE_NAME $CHART_LOCATION \
+                -n $NAMESPACE \
+                $CMD_VALUE_FILES \
+                $CMD_VALUES \
+        )
+    else
+        OUTPUT=$( \
+            helm upgrade --install \
+                --kube-token=$KUBETOKEN \
+                --create-namespace \
+                $RELEASE_NAME $CHART_LOCATION \
+                -n $NAMESPACE \
+                $CMD_VALUE_FILES \
+                $CMD_VALUES \
+        )
+    fi
 fi
 
 OUTPUT="${OUTPUT//'%'/'%25'}"
