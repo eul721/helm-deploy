@@ -42,7 +42,9 @@ OUTPUT=
 if [ "$UNINSTALL" = "true" ]; then
     # Uninstall release
     OUTPUT=$( \
-        helm uninstall -n $NAMESPACE $RELEASE_NAME \
+        helm uninstall \
+            --kube-token=$KUBETOKEN \
+            -n $NAMESPACE $RELEASE_NAME \
     )
 else
     if [ "$DRY_RUN" = "true" ]; then
