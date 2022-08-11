@@ -1,6 +1,6 @@
 #!/bin/sh -l
 
-set -xe
+set -x
 
 CLUSTER=$1
 UNINSTALL=$2
