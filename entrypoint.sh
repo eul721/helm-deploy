@@ -40,7 +40,7 @@ OUTPUT=
 if [ "$UNINSTALL" = "true" ]; then
     # Uninstall release
     helm status --kube-token=$KUBETOKEN -n $NAMESPACE $RELEASE_NAME
-    if [ $? -ne 0 ]
+    if [ $? -eq 0 ]
     then
         OUTPUT=$( \
             helm uninstall \
