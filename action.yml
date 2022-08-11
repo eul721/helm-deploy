@@ -2,12 +2,6 @@ name: 'Helm Deploy'
 author: 'Jack Chao'
 description: 'Performs Helm deploy with dry-run/diffing support'
 inputs:
-  aws-access-key-id:
-    description: AWS access key
-    required: true
-  aws-secret-access-key:
-    description: AWS secret
-    required: true
   cluster:
     description: cluster to deploy to
     required: true
@@ -45,8 +39,6 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
-    - ${{ inputs.aws-access-key-id }}
-    - ${{ inputs.aws-secret-access-key }}
     - ${{ inputs.cluster }}
     - ${{ inputs.uninstall }}
     - ${{ inputs.dry-run }}

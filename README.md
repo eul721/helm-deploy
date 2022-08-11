@@ -21,6 +21,12 @@ jobs:
     - name: Inject slug/short variables
         uses: rlespinasse/github-slug-action@v3.x
     - uses: actions/checkout@v2
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
     - name: Gen build info
         run: |
           echo VER=$(git rev-parse --short=8 ${{ github.sha }}) >> $GITHUB_ENV
@@ -31,8 +37,6 @@ jobs:
     - name: Helm Deploy
         uses: eul721/helm-deploy@v1.0.0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           cluster: ${{ env.CLUSTER }}
           dry-run: true
           namespace: app_namespace
@@ -45,8 +49,6 @@ jobs:
 ## Arguments
 |Argument|Description|Default|Notes|
 |-|-|-|-|
-|`aws-access-key-id`|AWS Access Key|-|Required (Role must have access to cluster)|
-|`aws-secret-access-key`|AWS Secret Access Key|-|Required|
 |`cluster`|Cluster to deploy to|-|Required|
 |`dry-run`|Whether to perform a dry run|`'true'`|If `'true'`, helm will not actually deploy to the cluster, but perform a dry-run and present a changeset to output|
 |`namespace`|K8s namespace to deploy to|-|Required. If doesn't exist, will be created on the fly.|
@@ -65,8 +67,6 @@ You can use the same action to run a [helm diff](https://www.google.com/url?sa=t
   if: github.event_name == 'pull_request'
   uses: eul721/helm-deploy@v1.0.0
   with:
-    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     cluster: ${{ env.CLUSTER }}
     dry-run: true
     namespace: publisher-service

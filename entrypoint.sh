@@ -2,17 +2,15 @@
 
 set -xe
 
-CLUSTER=$3
-UNINSTALL=$4
-DRY_RUN=$5
-NAMESPACE=$6
-RELEASE_NAME=$7
-CHART_LOCATION=$8
-VALUE_FILES=$9
-VALUES=${10}
+CLUSTER=$1
+UNINSTALL=$2
+DRY_RUN=$3
+NAMESPACE=$4
+RELEASE_NAME=$5
+CHART_LOCATION=$6
+VALUE_FILES=$7
+VALUES=${8}
 
-export AWS_ACCESS_KEY_ID=$1
-export AWS_SECRET_ACCESS_KEY=$2
 export AWS_DEFAULT_REGION=us-east-1
 
 KUBETOKEN=$(aws eks get-token --cluster-name $CLUSTER  | jq -c -r '.status.token')
@@ -41,11 +39,15 @@ echo $CMD_VALUE_FILES
 OUTPUT=
 if [ "$UNINSTALL" = "true" ]; then
     # Uninstall release
-    OUTPUT=$( \
-        helm uninstall \
-            --kube-token=$KUBETOKEN \
-            -n $NAMESPACE $RELEASE_NAME \
-    )
+    helm status --kube-token=$KUBETOKEN -n $NAMESPACE $RELEASE_NAME
+    if [ $? -ne 0 ]
+    then
+        OUTPUT=$( \
+            helm uninstall \
+                --kube-token=$KUBETOKEN \
+                -n $NAMESPACE $RELEASE_NAME \
+        )
+    fi
 else
     if [ "$DRY_RUN" = "true" ]; then
         # Do helm diff and print out result
