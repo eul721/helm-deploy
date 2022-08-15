@@ -49,6 +49,7 @@ if [ "$UNINSTALL" = "true" ]; then
         )
     fi
 else
+    set -e
     if [ "$DRY_RUN" = "true" ]; then
         # Do helm diff and print out result
         OUTPUT=$( \
