@@ -33,9 +33,6 @@ do
     CMD_VALUE_FILES="${CMD_VALUE_FILES} -f ./$path "
 done
 
-CMD_VALUES=" --set $VALUES "
-echo $CMD_VALUE_FILES
-
 OUTPUT=
 if [ "$UNINSTALL" = "true" ]; then
     # Uninstall release
@@ -50,26 +47,27 @@ if [ "$UNINSTALL" = "true" ]; then
     fi
 else
     set -e
+    params="$RELEASE_NAME $CHART_LOCATION -n $NAMESPACE"
+    if [ -n "$CMD_VALUE_FILES" ]; then
+        params+=" $CMD_VALUE_FILES"
+    fi
+    if [ -n "$VALUES" ]; then
+        params+=" --set $CMD_VALUES"
+    fi
     if [ "$DRY_RUN" = "true" ]; then
         # Do helm diff and print out result
         OUTPUT=$( \
             helm diff upgrade --install \
                 --kube-token=$KUBETOKEN \
                 --no-color \
-                $RELEASE_NAME $CHART_LOCATION \
-                -n $NAMESPACE \
-                $CMD_VALUE_FILES \
-                $CMD_VALUES \
+                $params
         )
     else
         OUTPUT=$( \
             helm upgrade --install \
                 --kube-token=$KUBETOKEN \
                 --create-namespace \
-                $RELEASE_NAME $CHART_LOCATION \
-                -n $NAMESPACE \
-                $CMD_VALUE_FILES \
-                $CMD_VALUES \
+                $params
         )
     fi
 fi
